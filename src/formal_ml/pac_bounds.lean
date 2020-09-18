@@ -29,6 +29,7 @@ import formal_ml.ennreal
 import formal_ml.nnreal
 import formal_ml.sum
 import formal_ml.exp_bound
+import formal_ml.classical
 
 structure PAC_problem :=
    (Ω:Type*)
@@ -186,7 +187,7 @@ noncomputable def test_error (P:PAC_problem)
 -/
 noncomputable def fake_hypothesis (P:PAC_problem) (ε:nnreal)
   (i:P.Hi):event P.p :=
-  ((training_error P i) =ᵣ (to_nnreal_rv 0)) ∧ᵣ (event_const (test_error P i > ε))
+  ((training_error P i) =ᵣ (to_nnreal_rv 0)) ∧ₑ (event_const (test_error P i > ε))
 
 /-
   The event that all hypotheses with training error zero have test error ≤ ε.

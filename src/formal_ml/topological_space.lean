@@ -28,16 +28,6 @@ import topology.instances.ennreal
 -/
 
 
---import measure_theory.measurable_space
-
---import measure_theory.measurable_space
-
---import measure_theory.measure_space
---import measure_theory.outer_measure
---import measure_theory.lebesgue_measure
---import measure_theory.integration
---import measure_theory.borel_space
-
 
 
 
@@ -103,7 +93,7 @@ lemma topological_space_induced_fst_def {α β:Type*} {Bα:set (set α)}:
   @topological_space.generate_from (α × β) {U:set (α × β)|∃ A∈ Bα, U = set.prod A set.univ} :=
 begin
   rw topological_space_induced_def,
-  rw preimage_fst_def,
+  rw set.preimage_fst_def,
 end
 
 lemma topological_space_induced_snd_def {α β:Type*} {Bβ:set (set β)}:
@@ -111,7 +101,7 @@ lemma topological_space_induced_snd_def {α β:Type*} {Bβ:set (set β)}:
   @topological_space.generate_from (α × β) {U:set (α × β)|∃ B∈ Bβ, U = set.prod set.univ B} :=
 begin
   rw topological_space_induced_def,
-  rw preimage_snd_def,
+  rw set.preimage_snd_def,
 end
 
 
@@ -340,7 +330,7 @@ begin
   cases A4 with X A5,
   cases A5 with A6 A7,
   rw A7,
-  rw preimage_sUnion,
+  rw set.preimage_sUnion',
   apply is_open_sUnion,
   intro T,
   intro A8,
@@ -415,7 +405,7 @@ begin
     },
     {
       rw ← A4,
-      rw preimage_sUnion,
+      rw set.preimage_sUnion',
       apply is_open_sUnion,
       intros t A5,
       cases A5 with B A6,
@@ -426,11 +416,11 @@ begin
     },
   },
   {
-    rw preimage_inter,
+    rw set.preimage_inter,
     apply is_open_inter;assumption,
   },
   {
-    rw preimage_sUnion,
+    rw set.preimage_sUnion',
     apply is_open_sUnion,
     intros t A5,
     cases A5 with B A6,
@@ -508,7 +498,7 @@ begin
     cases B11 with tB₂ B12,
     cases B12 with B13 B14,
     subst t₂,
-    rw set_prod_inter at B3,
+    rw set.prod_inter_prod at B3,
     cases B3 with B15 B16,
     have B17:(∃ (tA₃ : set α) (H : tA₃ ∈ Bα), x.fst ∈ tA₃ ∧ tA₃ ⊆ tA₁ ∩ tA₂),
     {
@@ -551,8 +541,8 @@ begin
       },
       {
         rw set.prod_inter_prod,
-        apply (set_prod_subset tA₃ (tA₁ ∩ tA₂) tB₃ (tB₁ ∩ tB₂) (x.fst) (x.snd) B22 B27).mpr,
-        split;assumption,
+        rw set.prod_subset_prod_iff,
+        left,split;assumption,
       }
     }
   },
@@ -616,7 +606,7 @@ begin
            cases D1 with S D2,
            cases D2 with D3 D4,
            rw ← A9 at D4,
-           rw set_prod_sUnion_right at D4,
+           rw set.prod_sUnion_right at D4,
            subst X,
            apply topological_space.generate_open.sUnion,
            intros ST D5,
@@ -637,7 +627,7 @@ begin
            cases D1 with T D2,
            cases D2 with D3 D4,
            rw ← A5 at D4,
-           rw set_prod_sUnion_left at D4,
+           rw set.prod_sUnion_left at D4,
            subst X,
            apply topological_space.generate_open.sUnion,
            intros ST D5,

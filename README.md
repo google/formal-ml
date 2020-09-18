@@ -17,14 +17,14 @@ The library can be used in other packages as well.
 
 ## Building the Package
 
-This package is compatible with LEAN 3.18.4.
+This package is compatible with LEAN 3.20.0.
 
 
-### Download and Install LEAN 3.18.4
+### Download and Install LEAN 3.20.0
 This package is based upon the LEAN community version of lean, specifically version
-3.18.4. Before building the package, one must download [LEAN 3.18.4](https://github.com/leanprover-community/lean/releases/tag/v3.18.4).
+3.20.0. Before building the package, one must download [LEAN 3.20.0](https://github.com/leanprover-community/lean/releases/tag/v3.20.0).
 
-For Linux versions, you can download [https://github.com/leanprover-community/lean/releases/download/v3.18.4/lean-3.18.4-linux.tar.gz](https://github.com/leanprover-community/lean/releases/download/v3.18.4/lean-3.18.4-linux.tar.gz). After unzipping the
+For Linux versions, you can download [https://github.com/leanprover-community/lean/releases/download/v3.20.0/lean-3.20.0-linux.tar.gz](https://github.com/leanprover-community/lean/releases/download/v3.20.0/lean-3.20.0-linux.tar.gz). After unzipping the
 file, you can include the bin subdirectory in your PATH (no need to recompile).
 To test your framework, run:
 
@@ -36,9 +36,9 @@ To test your framework, run:
 
 To download this package, run:
 
-`git clone https://github.com/google/formal_ml.git`
+`git clone https://github.com/google/formal-ml.git`
 
-`cd formal_ml`
+`cd formal-ml`
 
 ### Build the Package
 To build the package, run:
@@ -46,4 +46,4 @@ To build the package, run:
 `leanpkg build`
 
 This will download mathlib, and compile both mathlib and this package, so it may
-take an hour.
+take a few minutes.

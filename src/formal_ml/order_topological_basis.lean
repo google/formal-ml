@@ -478,7 +478,7 @@ begin
   unfold topological_space.is_topological_basis at A1,
   cases A1 with A2 A3,
   cases A3 with A4 A5,
-  have A6:a∈ set.univ := mem_set_univ_intro α a,
+  have A6:a∈ set.univ := set.mem_univ a,
   rw ← A4 at A6,
   cases A6 with V A7,
   cases A7 with A8 A9,

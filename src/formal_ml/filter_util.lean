@@ -1147,8 +1147,6 @@ begin
         set.range (λ (a : α), filter.principal {b : α | a ≤ b}),
     {
       simp,
-      apply exists.intro a_w,
-      refl,
     },
     apply exists.intro A4,
     apply a_h,
@@ -1179,8 +1177,6 @@ begin
     {
       unfold set.range,
       simp,
-      apply exists.intro c,
-      refl,
     },
     apply A1,
   },
@@ -1218,7 +1214,7 @@ begin
   intros,
   have A1:{x:β |f x ∈ S} ⊆ {x:β |f x ∈ T},
   {
-    apply preimage_superset,
+    apply set.preimage_mono,
     assumption,
   },
   apply B.sets_of_superset,
@@ -1305,30 +1301,6 @@ begin
   }
 end
 
-/-
-  Unused.
--/
-lemma mem_nhds_elim_helper2 (b:set nnreal) (x:nnreal) (s:set nnreal)
-  (H2 : s ∉ {s : set nnreal | x ∈ s ∧ is_open s}):
- (set.range (λ (H : s ∈ {s : set nnreal | x ∈ s ∧ is_open s}), filter.principal s)) = ∅
-  :=
-begin
-  unfold set.range,
-  simp,
-  apply emptyset_intro,
-  intros,
-  simp at H,
-  simp at H2,
-  cases H,
-  cases H_left,
-  have A1:(¬ is_open s),
-  {
-    apply H2,
-    assumption,
-  },
-  apply A1,
-  apply H_left_right
-end
 
 
 
@@ -1346,11 +1318,12 @@ lemma set_in_lattice_infih (α:Type*) (s:set α) (S:set (set α))
 begin
   unfold set.range,
   simp,
-  apply emptyset_intro,
-  intros,
-  simp at H,
+  rw set.eq_empty_iff_forall_not_mem,
+  intros F,
+  simp,
+  intros B1 B2,
   apply H2,
-  apply H.left
+  apply B1
 end
 
 lemma set_in_lattice_infih2 (α:Type*) (s:set α) (S:set (set α))
@@ -1443,13 +1416,13 @@ lemma set_in_lattice_infi (α:Type*) (S:set (set α)):
 (⨅ (s∈ S), (filter.principal s)) = Inf  (set.image (filter.principal) S) :=
 begin
   unfold infi,
-  rw (set_range_split (set α) _ S),
+  rw (set.range_eq_image_compl (set α) _ S),
   have A1:(λ (s : set α), Inf (set.range (λ (H : s ∈ S), filter.principal s))) '' (S)ᶜ =
     (λ (s : set α), ⊤) '' Sᶜ,
   {
-    rw image_subst,
+    rw set.image_congr,
     intros,
-    have A1AA:set.range (λ (H : s ∈ S), filter.principal s) = ∅,
+    have A1AA:set.range (λ (H : a ∈ S), filter.principal a) = ∅,
     {
       apply set_in_lattice_infih,
       apply H,
@@ -1461,9 +1434,9 @@ begin
   have A2:(λ (s : set α), Inf (set.range (λ (H : s ∈ S), filter.principal s))) '' (S) =
     (λ (s : set α), filter.principal s) '' S,
   {
-    rw image_subst,
+    rw set.image_congr,
     intros,
-    have A2A:set.range (λ (H : s ∈ S), filter.principal s) = {filter.principal s},
+    have A2A:set.range (λ (H : a ∈ S), filter.principal a) = {filter.principal a},
     {
       apply set_in_lattice_infih2,
       apply H,
@@ -1473,9 +1446,9 @@ begin
   },
   rw A2,
 
-  have A4:(Sᶜ = ∅)∨(∃ x, x ∈ Sᶜ), --eq_or_noteq (set α) Sᶜ ∅),
+  have A4:(Sᶜ = ∅)∨ set.nonempty Sᶜ,
   {
-    apply empty_or_contains,
+    apply set.eq_empty_or_nonempty,
   },
   cases A4,
   {
@@ -1483,6 +1456,7 @@ begin
     simp,
   },
   {
+    rw set.nonempty_def at A4,
     cases A4,
     have A4A:∀ k:filter α,(λ (s : set α), k) '' Sᶜ = {k},
     {
@@ -1808,4 +1782,3 @@ begin
     apply A1,
   },
 end
-

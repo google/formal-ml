@@ -513,7 +513,10 @@ lemma is_measurable_of_is_closed {α:Type*} [topological_space α]
 begin
   intro A1,
   unfold is_closed at A1,
-  have A2:S = ((Sᶜ)ᶜ) := double_neg_set α S,
+  have A2:S = ((Sᶜ)ᶜ),
+  {
+    rw set.compl_compl,
+  },
   rw A2,
   apply measurable_space.is_measurable_compl,
   apply is_measurable_of_is_open,

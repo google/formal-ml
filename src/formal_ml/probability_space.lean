@@ -26,6 +26,7 @@ import data.set.countable
 import formal_ml.nnreal
 import formal_ml.sum
 import formal_ml.measurable_space
+import formal_ml.classical
 
 ----------------------------------------------------------------------------------------------------
 
@@ -410,16 +411,16 @@ def eand {Ω:Type*} {p:probability_space Ω} (A B:event p):event p :=
   property := is_measurable.inter A.property B.property,
 }-/
 
-infixr `∧ᵣ`:100 := eand
+infixr `∧ₑ`:100 := eand
 
 lemma eand_val_def {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  (A ∧ᵣ B).val = A.val ∩ B.val :=
+  (A ∧ₑ B).val = A.val ∩ B.val :=
 begin
   refl,
 end
 
 lemma eand_comm {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  (A ∧ᵣ B) = (B ∧ᵣ A) :=
+  (A ∧ₑ B) = (B ∧ₑ A) :=
 begin
   apply event.eq,
   rw eand_val_def,
@@ -429,7 +430,7 @@ end
 
 lemma eand_eq_self_of_subset_left {Ω:Type*} {p:probability_space Ω} (A B:event p):
   (A.val ⊆ B.val) →
-  (A ∧ᵣ B) = A :=
+  (A ∧ₑ B) = A :=
 begin
   intro A1,
   apply event.eq,
@@ -440,7 +441,7 @@ end
 
 lemma eand_eq_self_of_subset_right {Ω:Type*} {p:probability_space Ω} (A B:event p):
   (B.val ⊆ A.val) →
-  (A ∧ᵣ B) = B :=
+  (A ∧ₑ B) = B :=
 begin
   intro A1,
   rw eand_comm,
@@ -448,23 +449,26 @@ begin
   exact A1,
 end
 
+
 lemma Pr_eand_le_left {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  Pr[A ∧ᵣ B]≤ Pr[A] :=
+  Pr[A ∧ₑ B]≤ Pr[A] :=
 begin
   apply event_prob_mono2,
   rw eand_val_def,
   apply set.inter_subset_left,
 end
 
+
 lemma Pr_eand_le_right {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  Pr[A ∧ᵣ B]≤ Pr[B] :=
+  Pr[A ∧ₑ B]≤ Pr[B] :=
 begin
   rw eand_comm,
   apply Pr_eand_le_left,
 end
 
+
 lemma Pr_eand_le_min {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  Pr[A ∧ᵣ B]≤ min Pr[A]  Pr[B] :=
+  Pr[A ∧ₑ B]≤ min Pr[A]  Pr[B] :=
 begin
   apply le_min,
   {
@@ -474,6 +478,7 @@ begin
     apply Pr_eand_le_right,
   }
 end
+
 
 def measurable_union {Ω:Type*} {p:measurable_space Ω} (A B:measurable_set p):measurable_set p := {
   val:=A.val ∪  B.val,
@@ -490,16 +495,16 @@ def eor {Ω:Type*} {p:probability_space Ω} (A B:event p):event p := measurable_
   property := is_measurable.union A.property B.property,
 }-/
 
-infixr `∨ᵣ`:100 := eor
+infixr `∨ₑ`:100 := eor
 
 lemma eor_val_def {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  (A ∨ᵣ B).val = A.val ∪ B.val :=
+  (A ∨ₑ B).val = A.val ∪ B.val :=
 begin
   refl,
 end
 
 lemma eor_comm {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  (A ∨ᵣ B) = (B ∨ᵣ A) :=
+  (A ∨ₑ B) = (B ∨ₑ A) :=
 begin
   apply event.eq,
   rw eor_val_def,
@@ -509,7 +514,7 @@ end
 
 
 lemma Pr_le_eor_left {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  Pr[A] ≤ Pr[A ∨ᵣ B] :=
+  Pr[A] ≤ Pr[A ∨ₑ B] :=
 begin
   apply event_prob_mono2,
   rw eor_val_def,
@@ -517,16 +522,16 @@ begin
 end
 
 lemma Pr_le_eor_right {Ω:Type*} {p:probability_space Ω} (A B:event p):
-   Pr[B] ≤ Pr[A ∨ᵣ B] :=
+   Pr[B] ≤ Pr[A ∨ₑ B] :=
 begin
   rw eor_comm,
   apply Pr_le_eor_left,
 end
 
 lemma Pr_le_eor_sum {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  Pr[A ∨ᵣ B]≤ Pr[A] + Pr[B] :=
+  Pr[A ∨ₑ B]≤ Pr[A] + Pr[B] :=
 begin
-  have A1:↑(Pr[A ∨ᵣ B])≤ (Pr[A]:ennreal) + (Pr[B]:ennreal),
+  have A1:↑(Pr[A ∨ₑ B])≤ (Pr[A]:ennreal) + (Pr[B]:ennreal),
   {
     rw event_prob_def,
     rw event_prob_def,
@@ -534,7 +539,7 @@ begin
     rw eor_val_def,
     apply measure_theory.outer_measure.union,
   },
-  have A2:↑(Pr[A ∨ᵣ B])≤ ((Pr[A] + Pr[B]):ennreal) → Pr[A ∨ᵣ B]≤ Pr[A] + Pr[B],
+  have A2:↑(Pr[A ∨ₑ B])≤ ((Pr[A] + Pr[B]):ennreal) → Pr[A ∨ₑ B]≤ Pr[A] + Pr[B],
   {
     apply to_nnreal_almost_monotonic,
     {
@@ -556,10 +561,10 @@ end
 
 lemma Pr_disjoint_eor {Ω:Type*} {p:probability_space Ω} (A B:event p):
   disjoint A.val B.val →
-  Pr[A ∨ᵣ B] =  Pr[A] + Pr[B] :=
+  Pr[A ∨ₑ B] =  Pr[A] + Pr[B] :=
 begin
   intro A1,
-  have A2:↑(Pr[A ∨ᵣ B])= (Pr[A]:ennreal) + (Pr[B]:ennreal),
+  have A2:↑(Pr[A ∨ₑ B])= (Pr[A]:ennreal) + (Pr[B]:ennreal),
   {
     rw event_prob_def,
     rw event_prob_def,
@@ -571,7 +576,7 @@ begin
     apply A.property,
     apply B.property,
   },
-  have A3:((Pr[A ∨ᵣ B]):ennreal).to_nnreal= ((Pr[A]:ennreal) + (Pr[B]:ennreal)).to_nnreal,
+  have A3:((Pr[A ∨ₑ B]):ennreal).to_nnreal= ((Pr[A]:ennreal) + (Pr[B]:ennreal)).to_nnreal,
   {
     rw A2,
   },
@@ -584,8 +589,10 @@ def enot {Ω:Type*} {p:probability_space Ω} (A:event p):event p := {
   property := is_measurable.compl A.property,
 }
 
+prefix `¬ₑ` :100 := enot
+
 lemma enot_val_def {Ω:Type*} {p:probability_space Ω} (A:event p):
-  (enot A).val = (A.val)ᶜ :=
+  (¬ₑ A).val = (A.val)ᶜ :=
 begin
   refl,
 end
@@ -594,7 +601,7 @@ end
   Double negation elimination. However, it is hard to avoid in measure theory.
 -/
 lemma enot_enot_eq_self {Ω:Type*} {p:probability_space Ω} (A:event p):
-  (enot (enot A)) = (A) :=
+  (¬ₑ (¬ₑ A)) = (A) :=
 begin
   apply event.eq,
   rw enot_val_def,
@@ -626,17 +633,18 @@ end
 
 
 lemma em_event {Ω:Type*} {p:probability_space Ω} (A:event p):
-    A ∨ᵣ (enot A)=event_univ :=
+    A ∨ₑ (¬ₑ A)=event_univ :=
 begin
   apply event.eq,
   rw event_univ_val_def,
   rw eor_val_def,
   rw enot_val_def,
-  rw union_compl_set_univ,
+  rw set.union_compl_self,
 end
 
+
 lemma Pr_add_enot_eq_1 {Ω:Type*} {p:probability_space Ω} (A:event p):
-  Pr[A] + Pr[enot A] = 1 :=
+  Pr[A] + Pr[¬ₑ A] = 1 :=
 begin
   have A1:disjoint (A.val) (enot A).val,
   {
@@ -644,11 +652,11 @@ begin
     rw enot_val_def,
     simp,
   },
-  have A2:A∨ᵣ (enot A) = event_univ,
+  have A2:A∨ₑ (¬ₑ A) = event_univ,
   {
     apply em_event,
   },
-  have A3:Pr[A∨ᵣ (enot A)] = Pr[event_univ],
+  have A3:Pr[A∨ₑ (¬ₑ A)] = Pr[event_univ],
   {
     rw A2,
   },
@@ -659,7 +667,7 @@ begin
 end
 
 lemma Pr_one_minus_eq_not {Ω:Type*} {p:probability_space Ω} (A:event p):
-  1 - Pr[A] = Pr[enot A] :=
+  1 - Pr[A] = Pr[¬ₑ A] :=
 begin
   apply nnreal_add_sub_left,
   apply Pr_add_enot_eq_1,
@@ -674,40 +682,40 @@ begin
 end
 
 lemma em_event_cond {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  (A ∧ᵣ B) ∨ᵣ (A ∧ᵣ enot B) = A :=
+  (A ∧ₑ B) ∨ₑ (A ∧ₑ ¬ₑ B) = A :=
 begin
   apply event.eq,
   rw eor_val_def,
   rw eand_val_def,
   rw eand_val_def,
-  apply union_inter_compl,
+  apply set.union_inter_compl,
 end
 
 lemma Pr_em {Ω:Type*} {p:probability_space Ω} (A B:event p):
-  Pr[A ∧ᵣ B] + Pr[A ∧ᵣ enot B] = Pr[A] :=
+  Pr[A ∧ₑ B] + Pr[A ∧ₑ ¬ₑ B] = Pr[A] :=
 begin
   rw ← Pr_disjoint_eor,
-  { --Pr[(A∧ᵣ B)∨ᵣ A∧ᵣ enot B] = Pr[A]
+  { --Pr[(A∧ₑ B)∨ₑ A∧ₑ ¬ₑ B] = Pr[A]
     rw em_event_cond,
   },
-  { --disjoint ((A∧ᵣ B).val) ((A∧ᵣ enot B).val)
+  { --disjoint ((A∧ₑ B).val) ((A∧ₑ ¬ₑ B).val)
     rw eand_val_def,
     rw eand_val_def,
     rw enot_val_def,
-    apply disjoint_inter_compl,
+    apply set.disjoint_inter_compl,
   }
 end
 
 lemma Pr_diff {Ω:Type*} {p:probability_space Ω} (A B:event p):
     A.val ⊆ B.val →
-    Pr[B ∧ᵣ enot A] = Pr[B] - Pr[A] :=
+    Pr[B ∧ₑ ¬ₑ A] = Pr[B] - Pr[A] :=
 begin
   intro A1,
-  have A2:Pr[B ∧ᵣ A] + Pr[B ∧ᵣ enot A] = Pr[B],
+  have A2:Pr[B ∧ₑ A] + Pr[B ∧ₑ ¬ₑ A] = Pr[B],
   {
     apply Pr_em,
   },
-  have A3:B ∧ᵣ A = A,
+  have A3:B ∧ₑ A = A,
   {
     apply eand_eq_self_of_subset_right,
     apply A1,
@@ -718,10 +726,16 @@ begin
   exact A2,
 end
 
+
+def event_eqv {Ω:Type*} {p:probability_space Ω} (A B:event p):event p :=
+    (A ∧ₑ B) ∨ₑ ((¬ₑ A) ∧ₑ (¬ₑ B))
+
+infixr `=ₑ`:100 := event_eqv
+
 /-
 -- Should prove this.
 lemma Pr_eor_eq_minus_eand {Ω:Type*} [ Ω] {p:probability_space Ω} (A B:event p):
-  Pr[A ∨ᵣ B] =  Pr[A] + Pr[B] - Pr[A ∧ᵣ B]
+  Pr[A ∨ₑ B] =  Pr[A] + Pr[B] - Pr[A ∧ₑ B]
 -/
 
 def eall {Ω β:Type*} {p:probability_space Ω} [encodable β] (A:β → event p):event p := {
@@ -931,7 +945,7 @@ end
 
 lemma eany_finset_insert {Ω β:Type*} [D:decidable_eq β] {p:probability_space Ω}
   {S:finset β} {A:β → event p} {a:β}:
-  eany_finset (insert a S) A = (A a) ∨ᵣ eany_finset S A  :=
+  eany_finset (insert a S) A = (A a) ∨ₑ eany_finset S A  :=
 begin
   apply event.eq,
   rw eany_finset_val_def,
@@ -991,7 +1005,7 @@ end
 
 def independent_event_pair {Ω:Type*} {p:probability_space Ω} (A B:event p):Prop :=
   --(event_prob (eand A B)) = (event_prob A) * (event_prob B)
-  Pr[ A ∧ᵣ B] = Pr[A] * Pr[B]
+  Pr[ A ∧ₑ B] = Pr[A] * Pr[B]
 
 
 def independent_events {Ω β:Type*} {p:probability_space Ω} [fintype β]
@@ -1096,7 +1110,7 @@ end
 
 lemma rv_event_measurable_union {α:Type*} {p:probability_space α} {β:Type*}
   [Mβ:measurable_space β] (X:random_variable p Mβ) 
-  {A B:measurable_set Mβ}:X ∈r (measurable_union A B) = (X ∈r A) ∨ᵣ (X∈r B) :=
+  {A B:measurable_set Mβ}:X ∈r (measurable_union A B) = (X ∈r A) ∨ₑ (X∈r B) :=
 begin
   apply event.eq,
   repeat {rw rv_event_val_def},
@@ -1214,7 +1228,7 @@ begin
 end
 
 lemma neg_eq_not {Ω:Type*} {p:probability_space Ω} (A:event p):
-  Aᶜ = enot A :=
+  Aᶜ = ¬ₑ A :=
 begin
   apply event.eq,
   rw event_neg_val_def,
@@ -1285,7 +1299,7 @@ lemma rv_top_event_val_def  {α:Type*} {p:probability_space α}
 -/
 def rv_eq {α:Type*} {p:probability_space α} {β:Type*}
   [encodable β] [Mβ:top_measurable β] (X Y:random_variable p Mβ.to_measurable_space):event p :=
-  eany (λ b:β,  (X ∈t {b}) ∧ᵣ (Y ∈t {b}))
+  eany (λ b:β,  (X ∈t {b}) ∧ₑ (Y ∈t {b}))
 
 
 lemma rv_eq_val_def {α:Type*} {p : probability_space α} {β : Type*}
@@ -1328,7 +1342,7 @@ end
 
 def rv_ne {α:Type*} {p:probability_space α} {β:Type*}
   [encodable β] [Mβ:top_measurable β] (X Y:random_variable p Mβ.to_measurable_space):event p :=
-  enot (rv_eq X Y)
+  ¬ₑ (rv_eq X Y)
 
 lemma rv_ne_val_def {α:Type*} {p : probability_space α} {β : Type*}
   [encodable β] [Mβ : top_measurable β] (X Y:p →r Mβ.to_measurable_space):
@@ -1690,26 +1704,7 @@ begin
   }
 end
 
-
-
-
-
-
 --For Pr_disjoint_summable below.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 lemma union_disjoint {Ω β:Type*} {p:probability_space Ω} [E:encodable β] 
     [D:decidable_eq β]
@@ -1718,8 +1713,8 @@ lemma union_disjoint {Ω β:Type*} {p:probability_space Ω} [E:encodable β]
     disjoint (A a).val (⋃ (b:β) (H:b∈ S), (A b).val) :=
 begin
   intros A1 A2,
-  apply set_disjoint_intro,
-  intros ω A3 A4,
+  rw set.disjoint_right,
+  intros ω A4 A3,
   simp at A4,
   cases A4 with i A4,
   have A5:a ≠ i,
@@ -1731,7 +1726,7 @@ begin
   },
   have A7 := A1 a i A5,
   unfold function.on_fun at A7,
-  have A8 := set_disjoint_elim A7,
+  have A8 := set.disjoint_iff_inter_eq_empty.mp A7,
   have A9:ω ∈ (A a).val ∩ (A i).val,
   {
     simp,
@@ -1862,7 +1857,7 @@ lemma mem_prod_random_variable_prod_measurable_set
   (X:random_variable P Mβ) (Y:random_variable P Mγ) 
   (S:measurable_set Mβ) (T:measurable_set Mγ):
   (X ×r Y) ∈r (prod_measurable_set S T) =
-  (X ∈r S) ∧ᵣ (Y∈r T) :=
+  (X ∈r S) ∧ₑ (Y∈r T) :=
 begin
   apply event.eq,
   rw rv_event_val_def,

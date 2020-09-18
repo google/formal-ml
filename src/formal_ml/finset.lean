@@ -19,6 +19,8 @@ import order.bounded_lattice
 import formal_ml.set
 import data.real.basic
 import data.finset
+import formal_ml.classical
+
 open finset
 
 --Noncomputability is probably unavoidable, one way or another.

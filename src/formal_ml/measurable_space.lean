@@ -16,12 +16,9 @@ limitations under the License.
 import measure_theory.measurable_space
 
 import measure_theory.measure_space
---import measure_theory.outer_measure
---import measure_theory.lebesgue_measure
---import measure_theory.integration
---import measure_theory.borel_space
 import formal_ml.set
 import formal_ml.finset
+import formal_ml.classical
 
 lemma set_Prop_le_def {α:Type*}
   (M M2:set α → Prop):
@@ -237,7 +234,7 @@ lemma comap_fst_def {α β:Type*} {Bα:set (set α)}:
   measurable_space.generate_from {U:set (α × β)|∃ A∈ Bα, U = set.prod A set.univ} :=
 begin
   rw measurable_space.comap_generate_from,
-  rw preimage_fst_def,
+  rw set.preimage_fst_def,
 end
 
 lemma comap_snd_def {α β:Type*} {Bβ:set (set β)}:
@@ -245,7 +242,7 @@ lemma comap_snd_def {α β:Type*} {Bβ:set (set β)}:
   measurable_space.generate_from {U:set (α × β)|∃ B∈ Bβ, U = set.prod set.univ B} :=
 begin
   rw measurable_space.comap_generate_from,
-  rw preimage_snd_def,
+  rw set.preimage_snd_def,
 end
 
 
@@ -277,7 +274,7 @@ lemma set.sUnion_eq_univ_elim {α:Type*} {S:set (set α)} (a:α):
   (set.sUnion S = set.univ) → (∃ T∈S, a∈ T) :=
 begin
   intro A1,
-  have A2:a∈ set.univ := mem_set_univ_intro α a,
+  have A2:a∈ set.univ := set.mem_univ a,
   rw ← A1 at A2,
   simp at A2,
   cases A2 with T A2,

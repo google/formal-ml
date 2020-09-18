@@ -27,7 +27,7 @@ import formal_ml.sum
 import formal_ml.real
 import formal_ml.classical_deriv
 import formal_ml.classical_limit
-
+import formal_ml.classical
 
 lemma tsum_replace {α β:Type*} [add_comm_monoid α] [topological_space α] [t2_space α] {g:β  → α} {x:α}:
   (has_sum g x) →
@@ -484,14 +484,7 @@ begin
       cases A4 with n A5,
       subst a,
       apply exists.intro (finset.sum (finset.range n) f),
-      simp,split,
-      {
-        apply exists.intro (finset.range n),
-        refl,
-      },
-      {
-        apply le_refl,
-      }
+      simp,
     },
     {
       apply set_range_inhabited_domain,
@@ -512,8 +505,6 @@ begin
         split,
         {
           simp,
-          apply exists.intro n,
-          refl,
         },
         {
           apply sum_monotone_of_nonneg A1,
@@ -1656,8 +1647,9 @@ begin
     have A2:∀ n', 0 < n' → (λ (n:ℕ),(0:ℝ)) n' = (λ (n : ℕ), 0 ^ n * ((nat.fact n):ℝ)⁻¹) n',
     {
       intros n' A2A,
-      simp,left,
-      rw pow_zero_eq_zero_if_pos A2A,
+      simp,
+      left,
+      apply A2A,
     },
     apply has_classical_limit_eq_after (@has_classical_limit_const 0) A2,
   },
@@ -1875,7 +1867,6 @@ begin
       subst x,
       simp,
       left,
-      apply pow_zero_eq_zero_if_pos,
       apply lt_of_le_of_lt,
       apply nat.zero_le n,
       apply A6A,
@@ -2046,9 +2037,6 @@ begin
     rw conditional_sum_zero_of_not_conditionally_summable C1,
   },
 end
-
---conditional_sum (λ n, if (m ≤ n) then f n else 0)
-
 
 
 lemma injective_prod_mk_left {m:ℕ}:function.injective (λ n:ℕ, prod.mk m n) :=
@@ -3943,9 +3931,6 @@ begin
     {
       ext n,
       simp,
-      left,
-      apply pow_zero_eq_zero_if_pos,
-      simp,
     },
     rw A3,
     apply has_classical_limit_const,
@@ -5354,3 +5339,4 @@ begin
   rw A3 at A2,
   exact A2,
 end
+

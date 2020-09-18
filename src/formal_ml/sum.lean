@@ -43,22 +43,6 @@ open finset
 -/
 
 
---This could be replaced with canonically_ordered_add_monoid
-def is_nonnegative (α:Type*) [preorder α] [has_zero α]:Prop := ∀ a:α, 0 ≤ a
-
-
-lemma nonnegative_nnreal:is_nonnegative nnreal :=
-begin
-  intro a,
-  simp,
-end
-
-lemma nonnegative_ennreal:is_nonnegative ennreal := 
-begin
-  intro a,
-  simp,
-end
-
 
 lemma le_add_of_nonneg {β:Type*} [ordered_add_comm_monoid β] (a b:β):
   0 ≤ b → a ≤ a + b :=
@@ -74,14 +58,13 @@ begin
   apply B1,
 end
 
-lemma le_add_nonnegative {β:Type*} [ordered_add_comm_monoid β] (a b:β):
-  (is_nonnegative β) → a ≤ a + b :=
-begin
-  intros A1,
-  apply le_add_of_nonneg,
-  apply A1,
-end
 
+lemma le_add_nonnegative {β:Type*} [canonically_ordered_add_monoid β] (a b:β):
+  a ≤ a + b :=
+begin
+  apply le_add_of_nonneg,
+  apply zero_le,
+end
 
 
 --The core of this is finset.sum_const. However, there are not many lemmas that I found
@@ -199,42 +182,39 @@ end
 
 
 
-lemma finset.sum_monotone {α β:Type*} [decidable_eq α] [ordered_add_comm_monoid β] {S T:finset α}
-  {f:α → β}:(is_nonnegative β) → S ⊆ T → S.sum f ≤ T.sum f  :=
+lemma finset.sum_monotone {α β:Type*} [decidable_eq α] [canonically_ordered_add_monoid β] {S T:finset α}
+  {f:α → β}:S ⊆ T → S.sum f ≤ T.sum f  :=
 begin
-  intros A1 A2,
+  intros A2,
   rw ← finset.sum_sdiff A2,
   rw add_comm,
   apply le_add_nonnegative,
-  apply A1,
 end
 
 
-lemma finset.element_le_sum {α β:Type*} [D:decidable_eq α] [ordered_add_comm_monoid β] {S:finset α} {a:α}
-  {f:α → β}:(is_nonnegative β) → (a ∈ S) → f a ≤ S.sum f  :=
+lemma finset.element_le_sum {α β:Type*} [D:decidable_eq α] [canonically_ordered_add_monoid β] {S:finset α} {a:α}
+  {f:α → β}:(a ∈ S) → f a ≤ S.sum f  :=
 begin
-  intros A1 A2,
+  intros A2,
   rw ← @finset.sum_singleton α β a f,
-  apply finset.sum_monotone A1,
+  apply finset.sum_monotone,
   simp,
   apply A2,
-  apply D,
 end
 
 
-lemma finset.sum_monotone' {α β:Type*} [D:decidable_eq α] [ordered_add_comm_monoid β] 
-  {f:α → β}:(is_nonnegative β) → monotone (λ S:finset α, S.sum f) :=
+lemma finset.sum_monotone' {α β:Type*} [D:decidable_eq α] [canonically_ordered_add_monoid β] 
+  {f:α → β}:monotone (λ S:finset α, S.sum f) :=
 begin
-  intros A1, 
   intros S T B1,
-  apply finset.sum_monotone A1 B1,
+  apply finset.sum_monotone B1,
 end
 
 lemma ennreal.sum_monotone {α:Type*} [decidable_eq α] {S T:finset α}
   {f:α → ennreal}:S ⊆ T → S.sum f ≤ T.sum f  :=
 begin
   intro A1,
-  apply finset.sum_monotone nonnegative_ennreal A1,
+  apply finset.sum_monotone A1,
 end
 
 
@@ -265,8 +245,7 @@ end
 lemma sum_monotonic_of_nnreal {α:Type*} [D:decidable_eq α] (f:α → nnreal) (S T:finset α):
   (S⊆ T)→ ((S.sum f) ≤ (T.sum f)) :=
 begin
-  apply finset.sum_monotone nonnegative_nnreal,
-  apply D
+  apply finset.sum_monotone,
 end
 
 
@@ -283,8 +262,7 @@ end
 lemma sum_monotone_of_nnreal {α:Type*} [D:decidable_eq α] {f:α → nnreal}:
   monotone (λ s:finset α, s.sum f) :=
 begin
-  apply finset.sum_monotone' nonnegative_nnreal,
-  apply D
+  apply finset.sum_monotone',
 end
 
 /-
@@ -926,8 +904,6 @@ begin
   split,
   {
     simp,
-    apply exists.intro S,
-    refl,
   },
   {
     rw sub_inv at A8,
@@ -981,8 +957,6 @@ begin
   unfold set.range,
   apply exists.intro (f A1.default),
   simp,
-  apply exists.intro (A1.default),
-  refl
 end
 
 
@@ -1103,8 +1077,6 @@ begin
       apply le_cSup,
       apply AX,
       simp,
-      apply exists.intro V,
-      refl,
     },
     apply lt_of_le_of_lt,
     apply A20,
@@ -2114,8 +2086,6 @@ begin
     unfold supr at A2,
     apply A2,
     simp,
-    apply exists.intro S,
-    refl,
   },
   rw @all_finset_sum_eq_zero_iff_eq_zero α D f at A3, 
   apply A3
@@ -2253,3 +2223,4 @@ begin
     subst a,
     apply A1,  
 end
+
