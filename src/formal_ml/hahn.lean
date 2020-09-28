@@ -1,3 +1,4 @@
+
 /-
 Copyright 2020 Google LLC
 
@@ -277,7 +278,6 @@ begin
   apply A1,
 end
 
-
 lemma with_top.not_none_lt {α:Type*} [preorder α] (a:with_top α):
   ¬(@has_lt.lt (with_top α) _  (none:with_top α) a):=
 begin
@@ -285,7 +285,7 @@ begin
   rw lt_iff_le_not_le at A1,
   cases A1 with A1 A2,
   apply A2,
-  apply with_top.none_le,
+  apply with_top.le_none,
 end
 
 lemma with_top.not_none_le_some {α:Type*} [partial_order α] (a:α):
@@ -296,7 +296,7 @@ begin
   {
     simp,
   },
-  have B3:(@has_le.le (with_top α) _ (some a) (none)) := with_top.none_le,
+  have B3:(@has_le.le (with_top α) _ (some a) (none)) := with_top.le_none,
   have B4 := @le_antisymm (with_top α) _ (some a) (none) B3 A1,
   apply B1,
   apply B4
@@ -332,7 +332,7 @@ begin
   cases a;cases b;cases c;try {simp},
   {
     rw ← ennreal.coe_add,
-    apply with_top.none_lt_some,
+    apply with_top.some_lt_none,
   },
   {
     repeat {rw ← ennreal.coe_sub 
@@ -493,7 +493,7 @@ begin
     rw ← ennreal.coe_sub,
     rw B1,
     rw ← B2,
-    apply with_top.none_lt_some,
+    apply with_top.some_lt_none,
   },
   repeat {rw B2},
   repeat {rw ← ennreal.coe_sub},
@@ -2744,7 +2744,6 @@ begin
   apply supr_sum_eq_sum_supr,
   intros x y A4,
   simp,
-  rw le_func_def2,
   intro n,
   apply H,
   apply A4,
@@ -3409,7 +3408,7 @@ begin
   intros A1 AX A2 A3,
   have B1:(g '' S).nonempty,
   {
-    apply set.nonempty_image_of_nonempty A2,
+    apply set.nonempty_image_iff.mpr A2,
   },
   have B1X := ennreal.Sup_eq_supr B1,
   cases B1X with f' B1X,
@@ -3979,7 +3978,7 @@ begin
   begin
     have A2:(f '' S).nonempty,
     {
-      apply set.nonempty_image_of_nonempty A1,
+      apply set.nonempty_image_iff.mpr A1,
     },
     have A3 := nat.Inf_of_nonempty A2,
     simp at A3,
@@ -4010,7 +4009,7 @@ begin
   intros A1,
   have B1:(f '' S).nonempty,
   {
-    apply set.nonempty_image_of_nonempty A1,
+    apply set.nonempty_image_iff.mpr A1,
   },
 
   have B2 := nat.Inf_of_nonempty B1,
@@ -4264,6 +4263,25 @@ begin
   },
 end
 
+lemma directed_superset_of_monotone {α:Type*} {f:ℕ → set α}:
+  (∀ n:ℕ,  f n.succ ⊆ f n) → directed superset f :=
+begin
+  intros A1,
+  unfold directed superset,
+  intros x y,
+  apply exists.intro (max x y),
+  split,
+  {
+    rw ← set.le_eq_subset,
+    apply @neg_monotone_of_succ_le (set α) _ f  A1,
+    apply le_max_left,
+  },
+  {
+    rw ← set.le_eq_subset,
+    apply @neg_monotone_of_succ_le (set α) _ f  A1,
+    apply le_max_right,
+  },
+end
 
 lemma measure_Inter_eq_infi_nat' {α:Type*} [measurable_space α]
   {μ:measure_theory.measure α} {f:ℕ → set α}:
@@ -4273,16 +4291,10 @@ lemma measure_Inter_eq_infi_nat' {α:Type*} [measurable_space α]
   μ (⋂ n, f n) =  ⨅ n, μ (f n)  :=
 begin
   intros A1 A2 A3,
-  apply measure_theory.measure_Inter_eq_infi_nat,
+  apply measure_theory.measure_Inter_eq_infi,
   apply A2,
   {
-    intros i j B1,
-    have B2:∀ n:ℕ, f (n.succ) ≤ f n,
-    {
-      intro n,
-      apply A1 n,
-    },
-    apply neg_monotone_of_succ_le B2 i j B1,
+    apply directed_superset_of_monotone A1,
   },
   apply exists.intro 0,
   apply A3,
@@ -5444,7 +5456,7 @@ begin
   intros A1 AX A2 A3,
   have B1:(g '' S).nonempty,
   {
-    apply set.nonempty_image_of_nonempty A2,
+    apply set.nonempty_image_iff.mpr A2,
   },
   have B1X := ennreal.Sup_eq_supr B1,
   cases B1X with f' B1X,
@@ -5686,9 +5698,8 @@ begin
         apply @set.disjoint_of_subset_left _ _ _ ((supr g)ᶜ),
         apply set.subset.trans D4.left D1,
         apply set.disjoint.symm,
-        apply set.disjoint_compl,
+        apply set.disjoint_compl_right,
       },
     },
   end
 end
-

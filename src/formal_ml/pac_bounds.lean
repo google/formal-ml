@@ -32,35 +32,31 @@ import formal_ml.exp_bound
 import formal_ml.classical
 
 structure PAC_problem :=
-   (Ω:Type*)
-   (p:probability_space Ω)
-                                       -- Underlying outcome type
-                                       -- underlying probability space
-    (β:Type*)                          -- instance type
-    (Mβ:measurable_space β)            -- Measurable space for the instances
-(γ:Type*)                              -- label type, with ⊤ measurable space
-(TMγ:top_measurable γ)                 -- Measurable space for the labels
-(Eγ:encodable γ)                       -- Encodable labels is very useful
-(Di:Type*)                             -- number of examples
-(FDi:fintype Di)                       -- number of examples are finite
-(EDi:encodable Di)                     -- example index is encodable
-                                       -- see trunc_encodable_of_fintype
-(Hi:Type*)                             -- number of examples
-(FHi:fintype Hi)                       -- number of examples are finite
-(EHi:encodable Hi)                     -- hypothesis index is encodable
-                                       -- see trunc_encodable_of_fintype
-(H:Hi → (measurable_fun Mβ TMγ.to_measurable_space))            -- hypothesis space
-(D:Di → random_variable p (prod_space Mβ TMγ.to_measurable_space))     -- example distribution
-(IID:random_variables_IID D)            -- examples are IID
-(has_example:inhabited Di)             -- there exists an example
+  (Ω:Type*)                           -- Underlying outcome type
+  (p:probability_space Ω)             -- underlying probability space
+  (β:Type*)                           -- instance type
+  (Mβ:measurable_space β)             -- Measurable space for the instances
+(γ:Type*)                             -- label type, with ⊤ measurable space
+(Mγ:measurable_space γ)               -- Measurable space for the labels
+(HMEγ:has_measurable_equality Mγ)     -- Measurable equality for the labels
+(Eγ:encodable γ)                      -- Encodable labels is very useful
+(Di:Type*)                            -- number of examples
+(FDi:fintype Di)                      -- number of examples are finite
+(EDi:encodable Di)                    -- example index is encodable
+                                      -- see trunc_encodable_of_fintype
+(Hi:Type*)                            -- number of examples
+(FHi:fintype Hi)                      -- number of examples are finite
+(EHi:encodable Hi)                    -- hypothesis index is encodable
+                                      -- see trunc_encodable_of_fintype
+(H:Hi → (Mβ →ₘ Mγ))                   -- hypothesis space
+(D:Di → (p →ᵣ (Mβ ×ₘ Mγ)))            -- example distribution
+(IID:random_variables_IID D)          -- examples are IID
+(has_example:inhabited Di)            -- there exists an example
 
 
 
 
 
---the measurable space on the labels.
-def PAC_problem.Mγ (P:PAC_problem):
-  measurable_space P.γ := P.TMγ.to_measurable_space
 
 --example_instance P j is the jth instance (the features of an example)
 def example_instance (P:PAC_problem)
@@ -69,27 +65,28 @@ def example_instance (P:PAC_problem)
 
 --the measurable space on the examples.
 def PAC_problem.Mβγ (P:PAC_problem):
-    measurable_space (P.β × P.γ) := P.Mβ ×m P.Mγ
+    measurable_space (P.β × P.γ) := P.Mβ ×ₘ P.Mγ
 
 /-
   rv_label_eq X Y is the event that X and Y are equal, where X and Y are labels.
 -/
 def rv_label_eq (P:PAC_problem)
   (X Y:random_variable P.p P.Mγ):event  P.p :=
-  @rv_eq _ P.p P.γ P.Eγ P.TMγ X Y
+  @random_variable_eq P.Ω P.p P.γ P.Mγ P.HMEγ  X Y
 
 /-
   rv_label_ne X Y is the event that X and Y are not equal, where X and Y are labels.
 -/
 def rv_label_ne (P:PAC_problem)
   (X Y:random_variable P.p P.Mγ):event  P.p :=
-  @rv_ne _ P.p P.γ P.Eγ P.TMγ X Y
+  @random_variable_ne P.Ω P.p P.γ P.Mγ P.HMEγ  X Y
+
 
 /-
   example_label P j is the label of the jth example.
 -/
 def example_label (P:PAC_problem)
-  (j:P.Di):P.p →r P.Mγ :=
+  (j:P.Di):P.p →ᵣ P.Mγ :=
   mf_snd ∘r (P.D j)
 
 
@@ -97,7 +94,7 @@ def example_label (P:PAC_problem)
   example_classification P i j is the classification by the ith hypothesis of the jth example.
 -/
 def example_classification (P:PAC_problem)
-  (i:P.Hi) (j:P.Di):P.p →r P.Mγ :=
+  (i:P.Hi) (j:P.Di):P.p →ᵣ P.Mγ :=
   (P.H i) ∘r (example_instance P j)
 
 /-
@@ -168,9 +165,10 @@ def num_hypotheses (P:PAC_problem):nat
 /-
   The number of errors on the training set, divided by the size of the training set.
   training_error P i = (∑ (j:P.Di), (example_error P i j))/(num_exmaples P)
+  TODO: replace with average_indicator.
 -/
 noncomputable def training_error (P:PAC_problem)
-  (i:P.Hi):P.p →r (borel nnreal) :=
+  (i:P.Hi):P.p →ᵣ (borel nnreal) :=
   (count_finset_rv P.FDi.elems (example_error P i)) * (to_nnreal_rv ((num_examples P):nnreal)⁻¹)
 
 /-
@@ -200,15 +198,6 @@ def probably_approximately_correct (P:PAC_problem)
  (ε:nnreal) (δ:nnreal):Prop :=
   1 - δ ≤ Pr[approximately_correct_event P ε]
 
-
-
-
-
-lemma is_measurable_prod_label_set (P:PAC_problem)
-  {U:set (P.γ × P.γ)}:(P.Mγ ×m P.Mγ).is_measurable U :=
-begin
-  apply @top_measurable_prodh P.γ P.γ P.Eγ P.Eγ P.TMγ,
-end
 
 lemma enot_example_correct_eq_example_error
   (P:PAC_problem) (i:P.Hi) (j:P.Di):enot (example_correct P i j) = (example_error P i j) :=
@@ -252,7 +241,7 @@ begin
     of random variables, we must make a leap from the established IID random variable
     (the data), construct another IID random variable (the product of
     the classification and the label), and show that the set of all label/classification pairs
-    that aren't equal are a measurable set (because P.Mγ ×m P.Mγ = ⊤).
+    that aren't equal are a measurable set (because has_measurable_eq Mγ).
 
     The indexed set of events of each IID random variable being in a measurable set is IID,
     so the result holds.
@@ -261,25 +250,35 @@ begin
     the traditional and internal definitions of example error, and then using simp to show that
     they are equal on all outcomes.
   -/
-  let Y:(P.Mβ ×m P.Mγ)→m (P.Mγ ×m P.Mγ) := prod_measurable_fun ((P.H i) ∘m (mf_fst)) (mf_snd),
+  let Y:(P.Mβ ×ₘ P.Mγ)→ₘ (P.Mγ ×ₘ P.Mγ) := prod_measurable_fun ((P.H i) ∘m (mf_fst)) (mf_snd),
   begin
-  let S:@measurable_set _ (P.Mγ ×m P.Mγ) := {
+  let S:@measurable_set _ (P.Mγ ×ₘ P.Mγ) := @measurable_set_ne P.γ P.Mγ P.HMEγ,
+/-{
     val := {x:P.γ × P.γ|x.fst ≠ x.snd},
-    property := @top_measurable_prodh P.γ P.γ P.Eγ P.Eγ P.TMγ P.TMγ _,
-  },
+    property :=
+    begin
+      have A1:{x : P.γ × P.γ | x.fst ≠ x.snd}={x : P.γ × P.γ | x.fst = x.snd}ᶜ,
+      {
+        ext,split;intros A1A;simp;simp at A1A;apply A1A,
+      },
+      rw A1,
+      apply is_measurable.compl,
+      apply P.HMEγ.is_measurable_eq,
+    end
+  },-/
   begin
-  have A1:@random_variables_IID P.Ω P.p P.Di P.FDi (P.γ × P.γ) (P.Mγ ×m P.Mγ)
+  have A1:@random_variables_IID P.Ω P.p P.Di P.FDi (P.γ × P.γ) (P.Mγ ×ₘ P.Mγ)
   (λ j:P.Di, Y ∘r (P.D j) ),
   {
     apply compose_IID,
     apply P.IID,
   },
-  have A2:@events_IID  P.Ω P.Di P.p P.FDi (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×m P.Mγ) (Y ∘r (P.D j)) S),
+  have A2:@events_IID  P.Ω P.Di P.p P.FDi (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×ₘ P.Mγ) (Y ∘r (P.D j)) S),
   {
     apply rv_event_IID,
     apply A1,
   },
-  have A3: (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×m P.Mγ) (Y ∘r (P.D j)) S) = example_error P i,
+  have A3: (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×ₘ P.Mγ) (Y ∘r (P.D j)) S) = example_error P i,
   {
     apply funext,
     intro j,
@@ -312,25 +311,25 @@ begin
     Similar to example_error_IID. Theoretically, we could prove it from example_error_IID.
     However, it is easier for now to prove it from first principles.
   -/
-  let Y:(P.Mβ ×m P.Mγ)→m (P.Mγ ×m P.Mγ) := prod_measurable_fun ((P.H i) ∘m (mf_fst)) (mf_snd),
+  let Y:(P.Mβ ×ₘ P.Mγ)→ₘ (P.Mγ ×ₘ P.Mγ) := prod_measurable_fun ((P.H i) ∘m (mf_fst)) (mf_snd),
   begin
-  let S:@measurable_set _ (P.Mγ ×m P.Mγ) := {
+  let S:@measurable_set _ (P.Mγ ×ₘ P.Mγ) := {
     val := {x:P.γ × P.γ|x.fst = x.snd},
-    property := @top_measurable_prodh P.γ P.γ P.Eγ P.Eγ P.TMγ P.TMγ _,
+    property := P.HMEγ.is_measurable_eq,
   },
   begin
-  have A1:@random_variables_IID P.Ω P.p P.Di P.FDi (P.γ × P.γ) (P.Mγ ×m P.Mγ)
+  have A1:@random_variables_IID P.Ω P.p P.Di P.FDi (P.γ × P.γ) (P.Mγ ×ₘ P.Mγ)
   (λ j:P.Di, Y ∘r (P.D j) ),
   {
     apply compose_IID,
     apply P.IID,
   },
-  have A2:@events_IID  P.Ω P.Di P.p P.FDi (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×m P.Mγ) (Y ∘r (P.D j)) S),
+  have A2:@events_IID  P.Ω P.Di P.p P.FDi (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×ₘ P.Mγ) (Y ∘r (P.D j)) S),
   {
     apply rv_event_IID,
     apply A1,
   },
-  have A3: (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×m P.Mγ) (Y ∘r (P.D j)) S) = example_correct P i,
+  have A3: (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×ₘ P.Mγ) (Y ∘r (P.D j)) S) = example_correct P i,
   {
     apply funext,
     intro j,

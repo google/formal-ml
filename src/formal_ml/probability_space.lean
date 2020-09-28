@@ -22,22 +22,10 @@ import measure_theory.integration
 
 import measure_theory.borel_space
 import data.set.countable
---import formal_ml.set
 import formal_ml.nnreal
 import formal_ml.sum
 import formal_ml.measurable_space
 import formal_ml.classical
-
-----------------------------------------------------------------------------------------------------
-
-
-/-
-  A probability measure is a non-negative measure that sums to one over the universe.
-  This is no longer used. In Wikipedia, a probability measure is defined to be over a probability
-  space, which would make this of limited value.
--/
-structure probability_measure (α : Type*) [measurable_space α] extends measure_theory.measure α :=
-  (univ_one:measure_of (set.univ) = 1)
 
 
 class probability_space (α: Type*) extends measure_theory.measure_space α :=
@@ -47,14 +35,13 @@ class probability_space (α: Type*) extends measure_theory.measure_space α :=
 instance probability_space.to_measurable_space (α:Type*) [probability_space α]:measurable_space α :=
   measure_theory.measure_space.to_measurable_space
 
---instance probability_space_to_measurable_space {α:Type*} [
 
 /-
   In measure theory (and specifically, in probability theory), not all sets of outcomes have
   probabilities that can be measured. We represent those that can be measured as measurable
   sets.
 -/
-def measurable_set {α:Type*} (M:measurable_space α):Type* := subtype (M.is_measurable)
+def measurable_set {α:Type*} (M:measurable_space α):Type* := subtype (M.is_measurable')
 
 def measurable_set.mk {α:Type*} {M:measurable_space α} {S:set α} (H:is_measurable S):measurable_set M := ⟨S, H⟩
 
@@ -403,6 +390,14 @@ lemma measurable_inter_val_def {Ω:Type*} {p:measurable_space Ω} (A B:measurabl
   (measurable_inter A B).val= A.val ∩ B.val := rfl
 
 
+instance measurable_set_has_inter {Ω:Type*} {p:measurable_space Ω}:has_inter (measurable_set p) := {
+  inter := @measurable_inter Ω p,
+}
+
+lemma measurable_inter_val_def2 {Ω:Type*} {p:measurable_space Ω} (A B:measurable_set p):
+  (A ∩ B).val= A.val ∩ B.val := rfl
+
+
 def eand {Ω:Type*} {p:probability_space Ω} (A B:event p):event p := 
   measurable_inter A B
 
@@ -487,6 +482,15 @@ def measurable_union {Ω:Type*} {p:measurable_space Ω} (A B:measurable_set p):m
 
 lemma measurable_union_val_def {Ω:Type*} {p:measurable_space Ω} (A B:measurable_set p):
   (measurable_union A B).val=A.val ∪ B.val := rfl
+
+
+
+instance measurable_set_has_union {Ω:Type*} {p:measurable_space Ω}:has_union (measurable_set p) := {
+  union := @measurable_union Ω p,
+}
+
+lemma measurable_union_val_def2 {Ω:Type*} {p:measurable_space Ω} (A B:measurable_set p):
+  (A ∪ B).val = A.val ∪ B.val := rfl
 
 
 def eor {Ω:Type*} {p:probability_space Ω} (A B:event p):event p := measurable_union A B
@@ -688,7 +692,7 @@ begin
   rw eor_val_def,
   rw eand_val_def,
   rw eand_val_def,
-  apply set.union_inter_compl,
+  apply set.inter_union_compl,
 end
 
 lemma Pr_em {Ω:Type*} {p:probability_space Ω} (A B:event p):
@@ -731,6 +735,10 @@ def event_eqv {Ω:Type*} {p:probability_space Ω} (A B:event p):event p :=
     (A ∧ₑ B) ∨ₑ ((¬ₑ A) ∧ₑ (¬ₑ B))
 
 infixr `=ₑ`:100 := event_eqv
+
+
+lemma event_eqv_def {Ω:Type*} {p:probability_space Ω} (A B:event p):
+    (A =ₑ B) = ((A ∧ₑ B) ∨ₑ ((¬ₑ A) ∧ₑ (¬ₑ B))) := rfl
 
 /-
 -- Should prove this.
@@ -1045,12 +1053,12 @@ def measurable_fun {α:Type*}  {β:Type*} (Mα:measurable_space α) (Mβ:measura
 def random_variable {α:Type*} (p:probability_space α) {β:Type*}
   (Mβ:measurable_space β):Type* := measurable_fun (probability_space.to_measurable_space α) Mβ
 
-infixr  ` →m `:80 := measurable_fun
-infixr  ` →r `:80 := random_variable
+infixr  ` →ₘ `:80 := measurable_fun
+infixr  ` →ᵣ `:80 := random_variable
 
 
 lemma random_variable_val_eq_coe {Ω α:Type*} {P:probability_space Ω} {M:measurable_space α}  
-  (X:P →r M):X.val = 
+  (X:P →ᵣ M):X.val = 
   (@coe (subtype (@measurable Ω α _ _)) (Ω → α) _ X) :=
 begin
   refl
@@ -1080,18 +1088,18 @@ def rv_event {α:Type*} {p:probability_space α} {β:Type*}
    measurable_set_preimage X S
 
 
-infixr ` ∈r `:80 := rv_event
+infixr ` ∈ᵣ `:80 := rv_event
 
 
 lemma rv_event_val_def {α:Type*} {p : probability_space α} {β : Type*}
-  [Mβ : measurable_space β] (X:p →r Mβ) (S:measurable_set Mβ):(X ∈r S).val = {a:α|X.val a ∈ S.val} :=
+  [Mβ : measurable_space β] (X:p →ᵣ Mβ) (S:measurable_set Mβ):(X ∈ᵣ S).val = {a:α|X.val a ∈ S.val} :=
 begin
   refl
 end
 
 
 lemma rv_event_empty {α:Type*} {p:probability_space α} {β:Type*}
-  [Mβ:measurable_space β] (X:random_variable p Mβ):X ∈r ∅ = ∅ :=
+  [Mβ:measurable_space β] (X:random_variable p Mβ):X ∈ᵣ ∅ = ∅ :=
 begin
   apply event.eq,
   rw rv_event_val_def,
@@ -1108,9 +1116,11 @@ begin
   },
 end
 
+
+
 lemma rv_event_measurable_union {α:Type*} {p:probability_space α} {β:Type*}
   [Mβ:measurable_space β] (X:random_variable p Mβ) 
-  {A B:measurable_set Mβ}:X ∈r (measurable_union A B) = (X ∈r A) ∨ₑ (X∈r B) :=
+  {A B:measurable_set Mβ}:X ∈ᵣ (measurable_union A B) = (X ∈ᵣ A) ∨ₑ (X∈ᵣ B) :=
 begin
   apply event.eq,
   repeat {rw rv_event_val_def},
@@ -1121,8 +1131,8 @@ begin
 end
 
 lemma rv_event_val_def' {α:Type*} {p : probability_space α} {β : Type*}
-  [Mβ : measurable_space β] (X:p →r Mβ) (S:measurable_set Mβ) {ω:α}:
-  (ω ∈ ((X ∈r S)))↔ (X.val ω ∈ S.val) :=
+  [Mβ : measurable_space β] (X:p →ᵣ Mβ) (S:measurable_set Mβ) {ω:α}:
+  (ω ∈ ((X ∈ᵣ S)))↔ (X.val ω ∈ S.val) :=
 begin
   refl
 end
@@ -1134,8 +1144,8 @@ lemma set.mem_Prop_def {α:Type*} {P:α → Prop} {a:α}:
 
 lemma rv_event_measurable_Union {α:Type*} {p:probability_space α} {β:Type*}
   [Mβ:measurable_space β] {γ:Type*} [E:encodable γ] (X:random_variable p Mβ) 
-  {f:γ → measurable_set Mβ}:X ∈r (measurable_Union f) = 
-  measurable_Union (λ i, X ∈r (f i)) :=
+  {f:γ → measurable_set Mβ}:X ∈ᵣ (measurable_Union f) = 
+  measurable_Union (λ i, X ∈ᵣ (f i)) :=
 begin
   apply event.eq,
   ext ω,
@@ -1170,14 +1180,17 @@ instance measurable_set_has_compl {α:Type*} [M:measurable_space α]:has_compl (
   compl := λ E, ⟨ E.valᶜ, is_measurable.compl E.property⟩,
 }
 
+
+
 instance measurable_set_subtype_has_neg {α:Type*} [M:measurable_space α]:has_neg (subtype (@is_measurable α M)) := {
   neg := λ E, ⟨ E.valᶜ, is_measurable.compl E.property⟩,
 }
 
+
 lemma measurable_set_neg_def {α:Type*} [M:measurable_space α] {E:@measurable_set α M}:
     Eᶜ = ⟨ E.valᶜ, is_measurable.compl E.property⟩ :=rfl
 
-lemma measurable_set_neg_val_def {α:Type*} [M:measurable_space α] {E:@measurable_set α M}:
+lemma measurable_set_compl_val_def {α:Type*} [M:measurable_space α] {E:@measurable_set α M}:
     (Eᶜ).val = (E.val)ᶜ  :=rfl
 
 
@@ -1199,9 +1212,9 @@ lemma event_simp_def {α:Type*} [p:probability_space α] {X:set α} {H:is_measur
 lemma measurable_set_simp_def {α:Type*} [p:measurable_space α] {X:set α} {H:is_measurable X}:
   (subtype.mk X H).val = X := rfl
 
-lemma pr_comp_event {Ω:Type*} {p:probability_space Ω} {X:p →r borel real}
+lemma pr_comp_event {Ω:Type*} {p:probability_space Ω} {X:p →ᵣ borel real}
  {E:@measurable_set ℝ (borel ℝ)}:
- (X ∈r (Eᶜ)) = (X ∈r E)ᶜ :=
+ (X ∈ᵣ (Eᶜ)) = (X ∈ᵣ E)ᶜ :=
 begin
   apply event.eq,
   rw event_neg_def,
@@ -1214,14 +1227,13 @@ begin
   simp,
 end
 
---ᶜ
 lemma rv_event_compl {Ω:Type*} {MΩ:probability_space Ω} {β:Type*} [Mβ:measurable_space β]
-  (X:MΩ →r Mβ) (S:measurable_set Mβ):(X ∈r (Sᶜ)) = (rv_event X S)ᶜ :=
+  (X:MΩ →ᵣ Mβ) (S:measurable_set Mβ):(X ∈ᵣ (Sᶜ)) = (rv_event X S)ᶜ :=
 begin
   apply event.eq,
   rw event_neg_val_def,
   rw rv_event_val_def,
-  rw measurable_set_neg_val_def,
+  rw measurable_set_compl_val_def,
   rw rv_event_val_def,
   simp,
   refl,
@@ -1237,16 +1249,17 @@ end
 
 def random_variable_identical {α:Type*} {p:probability_space α} {β:Type*}
   [Mβ:measurable_space β] (X Y:random_variable p Mβ):Prop :=
-  ∀ (S:measurable_set Mβ), Pr[X ∈r S] = Pr[Y ∈r S]
+  ∀ (S:measurable_set Mβ), Pr[X ∈ᵣ S] = Pr[Y ∈ᵣ S]
 
 def random_variable_independent_pair {α:Type*} {p:probability_space α} {β:Type*}
-  [Mβ:measurable_space β] (X Y:random_variable p Mβ):Prop :=
-  ∀ (S T:measurable_set Mβ), independent_event_pair (X ∈r S) (Y ∈r T)
+  [Mβ:measurable_space β] {γ:Type*} [Mγ:measurable_space γ] (X:p →ᵣ Mβ)
+  (Y:p →ᵣ Mγ):Prop :=
+  ∀ (S:measurable_set Mβ) (T:measurable_set Mγ), independent_event_pair (X ∈ᵣ S) (Y ∈ᵣ T)
 
 def random_variable_independent {α:Type*} {p:probability_space α} {β:Type*}
   [fintype β]
   {γ:β → Type*} [Mγ:Π b, measurable_space (γ b)] (X:Π b, random_variable p (Mγ b)):Prop :=
-  ∀ (S:Π b, measurable_set (Mγ b)), independent_events (λ b:β, ((X b) ∈r (S b)))
+  ∀ (S:Π b, measurable_set (Mγ b)), independent_events (λ b:β, ((X b) ∈ᵣ (S b)))
 
 def random_variables_IID {α:Type*} {p:probability_space α} {β:Type*}
   [fintype β]
@@ -1293,66 +1306,6 @@ lemma rv_top_event_val_def  {α:Type*} {p:probability_space α}
   (rv_top_event X S).val = {a:α|X.val a ∈ S} := rfl
 
 
-/-
-  For encodable types where every event is measurable (bool, ℤ, ℕ, et cetera),
-  one can define equality of two random variables as an event.
--/
-def rv_eq {α:Type*} {p:probability_space α} {β:Type*}
-  [encodable β] [Mβ:top_measurable β] (X Y:random_variable p Mβ.to_measurable_space):event p :=
-  eany (λ b:β,  (X ∈t {b}) ∧ₑ (Y ∈t {b}))
-
-
-lemma rv_eq_val_def {α:Type*} {p : probability_space α} {β : Type*}
-  [encodable β] [Mβ : top_measurable β] (X Y:p →r Mβ.to_measurable_space):
-  (rv_eq X Y).val = {a:α| X.val a = Y.val a} :=
-begin
-  unfold rv_eq,
-  rw eany_val_def,
-  ext ω,
-  --simp,
-  split;intros A1,
-  {
-    rw set.mem_Union at A1,
-    rw set.mem_Prop_def,
-    cases A1 with i A2,
-    rw eand_val_def at A2,
-    rw rv_top_event_val_def at A2,
-    rw rv_top_event_val_def at A2,
-    cases A2 with A3 A4,
-    rw set.mem_Prop_def at A3,
-    rw set.mem_singleton_iff at A3,
-    rw set.mem_Prop_def at A4,
-    rw set.mem_singleton_iff at A4,
-    rw A3,
-    rw A4,
-  },
-  {
-    rw set.mem_Prop_def at A1,
-    rw set.mem_Union,
-    apply exists.intro (X.val ω),
-    rw eand_val_def,
-    rw rv_top_event_val_def,
-    rw rv_top_event_val_def,
-    apply set.mem_inter,
-    simp,
-    rw A1,
-    simp,
-  }
-end
-
-def rv_ne {α:Type*} {p:probability_space α} {β:Type*}
-  [encodable β] [Mβ:top_measurable β] (X Y:random_variable p Mβ.to_measurable_space):event p :=
-  ¬ₑ (rv_eq X Y)
-
-lemma rv_ne_val_def {α:Type*} {p : probability_space α} {β : Type*}
-  [encodable β] [Mβ : top_measurable β] (X Y:p →r Mβ.to_measurable_space):
-  (rv_ne X Y).val = {a:α| X.val a ≠ Y.val a} :=
-begin
-  unfold rv_ne,
-  rw enot_val_def,
-  rw rv_eq_val_def,
-  refl,
-end
 
 
 
@@ -1387,41 +1340,24 @@ infixr  ` ∘m `:80 := compose_measurable_fun
 
 lemma compose_measurable_fun_val_def {Ω : Type*} {β : Type*} {γ : Type*}
   [MΩ : measurable_space Ω] [Mβ : measurable_space β]
-  [Mγ : measurable_space γ] (Y:Mβ →m Mγ) (X:MΩ →m Mβ):
+  [Mγ : measurable_space γ] (Y:Mβ →ₘ Mγ) (X:MΩ →ₘ Mβ):
   (Y ∘m X).val = (λ ω:Ω, Y.val (X.val ω)) :=
 begin
   refl
 end
 
 
-
-/-
-Delete if doesn't cause errors.
-def rv_compose {α β γ:Type*}
-  [Mα:measurable_space α] [Mβ:measurable_space β] [Mγ:measurable_space γ] {p:probability_space α}
-  (X:measurable_fun Mβ Mγ) (Y:random_variable p Mβ):random_variable p Mγ :=
-  compose_measurable_fun X Y
-
-
-
-def rv_composeM {α : Type*} {β : Type*} {γ : Type*} [Mα : measurable_space α]
-  (p : probability_space α) (Mβ : measurable_space β)
-  (Mγ : measurable_space γ) (X:measurable_fun Mβ Mγ) (Y:random_variable p Mβ):random_variable p Mγ :=
-  rv_compose X Y
- -/
--- Used to be rv_composeM2
 def rv_compose {α : Type*} {β : Type*} {γ : Type*}
   {p : probability_space α} {Mβ : measurable_space β}
   {Mγ : measurable_space γ} (X:measurable_fun Mβ Mγ) (Y:random_variable p Mβ):random_variable p Mγ :=
   compose_measurable_fun X Y
 
---  rv_compose X Y
 
 infixr  ` ∘r `:80 := rv_compose
 
 lemma rv_compose_val_def {Ω : Type*} {β : Type*} {γ : Type*}
   [Mβ : measurable_space β]
-  [Mγ : measurable_space γ] {p : probability_space Ω} (Y:Mβ →m Mγ) (X:p →r Mβ):
+  [Mγ : measurable_space γ] {p : probability_space Ω} (Y:Mβ →ₘ Mγ) (X:p →ᵣ Mβ):
   (Y ∘r X).val = (λ ω:Ω, Y.val (X.val ω)) :=
 begin
   refl
@@ -1433,12 +1369,12 @@ end
 
 def prod_space {α β:Type*} (Mα:measurable_space α) (Mβ:measurable_space β):=(@prod.measurable_space α β Mα Mβ)
 
-infixr  ` ×m `:80 := prod_space
+infixr  ` ×ₘ `:80 := prod_space
 
 
 def mf_fst {α β:Type*}
   {Mα:measurable_space α} {Mβ:measurable_space β}:measurable_fun
-    (Mα ×m Mβ) Mα := {
+    (Mα ×ₘ Mβ) Mα := {
     val:= (λ x:(α × β), x.fst),
     property := fst_measurable,
   }
@@ -1454,7 +1390,7 @@ def mf_snd {α β:Type*}
     measurable (λ (ω : Ω), c)
 -/
 def const_measurable_fun {Ω : Type*} [MΩ : measurable_space Ω] {β : Type*}
-   [Mβ : measurable_space β] (c : β):MΩ →m Mβ := {
+   [Mβ : measurable_space β] (c : β):MΩ →ₘ Mβ := {
      val := (λ (ω : Ω), c),
      property := const_measurable c,
    }
@@ -1464,20 +1400,20 @@ lemma const_measurable_fun_val_def {Ω : Type*} [MΩ : measurable_space Ω] {β 
 
 def const_random_variable {Ω : Type*} {P:probability_space Ω}
    {β : Type*}
-   [Mβ : measurable_space β] (c : β):P →r Mβ := const_measurable_fun c
+   [Mβ : measurable_space β] (c : β):P →ᵣ Mβ := const_measurable_fun c
 
 
 def prod_measurable_fun
 {α β γ:Type*}
   {Mα:measurable_space α} {Mβ:measurable_space β} {Mγ:measurable_space γ}
-  (X:measurable_fun Mα Mβ) (Y:measurable_fun Mα Mγ):measurable_fun Mα (Mβ ×m Mγ) := {
+  (X:measurable_fun Mα Mβ) (Y:measurable_fun Mα Mγ):measurable_fun Mα (Mβ ×ₘ Mγ) := {
     val := (λ a:α, prod.mk (X.val a) (Y.val a)),
     property := measurable_fun_product_measurable X.val Y.val X.property Y.property,
   }
 
 lemma prod_measurable_fun_val_def {Ω : Type*} {β : Type*} {γ : Type*} {MΩ : measurable_space Ω}
-  {Mβ : measurable_space β} {Mγ : measurable_space γ} {X:MΩ  →m Mβ}
-  {Y:MΩ  →m Mγ}: (prod_measurable_fun X Y).val = λ ω:Ω, prod.mk (X.val ω) (Y.val ω) :=
+  {Mβ : measurable_space β} {Mγ : measurable_space γ} {X:MΩ  →ₘ Mβ}
+  {Y:MΩ  →ₘ Mγ}: (prod_measurable_fun X Y).val = λ ω:Ω, prod.mk (X.val ω) (Y.val ω) :=
 begin
   refl
 end
@@ -1485,15 +1421,15 @@ end
 def prod_random_variable
 {α β γ:Type*}
   {P:probability_space α} {Mβ:measurable_space β} {Mγ:measurable_space γ}
-  (X:random_variable P Mβ) (Y:random_variable P Mγ):random_variable P (Mβ ×m Mγ) :=
+  (X:random_variable P Mβ) (Y:random_variable P Mγ):random_variable P (Mβ ×ₘ Mγ) :=
   prod_measurable_fun X Y
 
-infixr  ` ×r `:80 := prod_random_variable
+infixr  ` ×ᵣ `:80 := prod_random_variable
 
 
 lemma prod_random_variable_val_def {Ω : Type*} {β : Type*} {γ : Type*}
-  {P : probability_space Ω} {Mβ : measurable_space β} {Mγ : measurable_space γ} {X:P →r Mβ}
-  {Y:P →r Mγ}: (X ×r Y).val = λ ω:Ω, prod.mk (X.val ω) (Y.val ω) :=
+  {P : probability_space Ω} {Mβ : measurable_space β} {Mγ : measurable_space γ} {X:P →ᵣ Mβ}
+  {Y:P →ᵣ Mγ}: (X ×ᵣ Y).val = λ ω:Ω, prod.mk (X.val ω) (Y.val ω) :=
 begin
   refl
 end
@@ -1502,7 +1438,7 @@ end
 def prod_measurable_set {β : Type*} {γ : Type*}
   {Mβ : measurable_space β} 
   {Mγ : measurable_space γ} 
-  (X:measurable_set Mβ) (Y:measurable_set Mγ):measurable_set (Mβ ×m Mγ) := {
+  (X:measurable_set Mβ) (Y:measurable_set Mγ):measurable_set (Mβ ×ₘ Mγ) := {
   val := (set.prod X.val Y.val),
   property := is_measurable_prod' X.property Y.property
 }
@@ -1512,6 +1448,113 @@ lemma prod_measurable_set_val_def {β : Type*} {γ : Type*}
   {Mγ : measurable_space γ} 
   (X:measurable_set Mβ) (Y:measurable_set Mγ):
   (prod_measurable_set X Y).val = set.prod X.val Y.val := rfl
+
+
+class has_measurable_equality {α:Type*} (M:measurable_space α):Prop := (is_measurable_eq:is_measurable {p:α × α|p.fst = p.snd})
+
+def measurable_set_eq {α:Type*} {M:measurable_space α} [E:has_measurable_equality M]
+  :measurable_set (M ×ₘ M) := measurable_set.mk E.is_measurable_eq
+
+
+
+lemma measurable_set_eq_val {α:Type*} {M:measurable_space α} [E:has_measurable_equality M]:
+  (@measurable_set_eq α M E).val = {p:α × α|p.fst = p.snd} := rfl
+
+
+def measurable_set_ne {α:Type*} {M:measurable_space α} [E:has_measurable_equality M]
+  :measurable_set (M ×ₘ M) := measurable_set.mk (is_measurable.compl E.is_measurable_eq)
+
+
+
+lemma measurable_set_ne_val {α:Type*} {M:measurable_space α} [E:has_measurable_equality M]:
+  (@measurable_set_ne α M E).val = {p:α × α|p.fst ≠ p.snd} := rfl
+
+
+
+
+lemma diagonal_eq {α:Type*}:{p:α × α|p.fst  = p.snd}=⋃ (a:α), set.prod {a} {a} :=
+begin
+    ext,split;intros A1A;simp;simp at A1A,
+    {
+      apply exists.intro x.fst,
+      ext;simp,
+      rw A1A,
+    },
+    {
+      cases A1A with i A1A,
+      cases A1A,
+      simp,
+    },
+end
+
+
+instance measurable_set_eq_top_measurable {α:Type*} (E:encodable α) (M:top_measurable α):has_measurable_equality (M.to_measurable_space) :=  {
+  is_measurable_eq := begin
+  rw diagonal_eq,
+  apply is_measurable.Union,
+  intros a,
+  apply is_measurable_prod',
+  repeat {apply M.all_measurable},
+end
+}
+
+instance measurable_set_eq_bool:has_measurable_equality bool.measurable_space :=  {
+  is_measurable_eq := begin
+  rw diagonal_eq,
+  apply is_measurable.Union,
+  intros a,
+  apply is_measurable_prod',
+  repeat {apply measurable_space.is_measurable_top},
+end
+}
+
+instance measurable_set_eq_int:has_measurable_equality int.measurable_space :=  {
+  is_measurable_eq := begin
+  rw diagonal_eq,
+  apply is_measurable.Union,
+  intros a,
+  apply is_measurable_prod',
+  repeat {apply measurable_space.is_measurable_top},
+end
+}
+
+def random_variable_eq {Ω:Type*} {P:probability_space Ω} {α:Type*} [M:measurable_space α]
+   [E:has_measurable_equality M] (X Y:P →ᵣ M):event P := 
+    (X ×ᵣ Y) ∈ᵣ (measurable_set_eq)
+
+infixr  ` =ᵣ `:100 := random_variable_eq  
+
+
+
+lemma rv_eq_val_def {α:Type*} {p : probability_space α} {β : Type*}
+   [Mβ :measurable_space β] [has_measurable_equality Mβ] (X Y:p →ᵣ Mβ):
+  (X =ᵣ Y).val = {a:α| X.val a = Y.val a} :=
+begin
+  unfold random_variable_eq,
+  rw rv_event_val_def,
+  rw prod_random_variable_val_def,
+  rw measurable_set_eq_val,
+  simp,
+end
+
+
+def random_variable_ne {Ω:Type*} {P:probability_space Ω} {α:Type*} [M:measurable_space α]
+   [E:has_measurable_equality M] (X Y:P →ᵣ M):event P := 
+    ¬ₑ (X =ᵣ Y)
+
+infixr  ` ≠ᵣ `:100 := random_variable_ne
+
+lemma rv_ne_val_def {α:Type*} {p : probability_space α} {β : Type*}
+   [Mβ :measurable_space β] [has_measurable_equality Mβ] (X Y:p →ᵣ Mβ):
+  (X ≠ᵣ Y).val = {a:α| X.val a ≠ Y.val a} :=
+begin
+  unfold random_variable_ne,
+  rw enot_val_def,
+  rw rv_eq_val_def,
+  simp,
+  ext a,split;intros A1;simp;simp at A1;apply A1,
+end
+
 
 
 lemma union_func_eq_sUnion_image {α β:Type*}
@@ -1599,8 +1642,8 @@ def if_random_variable
   if_measurable_fun E D X Y
 
 lemma rv_event_IID {α : Type*} {p : probability_space α} {β : Type*}
-  [fintype β] {γ : Type*} [Mγ : measurable_space γ] (X:β → p →r Mγ) (S:measurable_set Mγ):
-  random_variables_IID X  → events_IID (λ b:β, (X b) ∈r S) :=
+  [fintype β] {γ : Type*} [Mγ : measurable_space γ] (X:β → p →ᵣ Mγ) (S:measurable_set Mγ):
+  random_variables_IID X  → events_IID (λ b:β, (X b) ∈ᵣ S) :=
 begin
   intro A1,
   unfold random_variables_IID at A1,
@@ -1624,7 +1667,7 @@ lemma measurable_set_preimage_val_def {α:Type*}  {β:Type*} [Mα:measurable_spa
 
 lemma compose_measurable_fun_measurable_set {Ω : Type*} {β : Type*} {γ : Type*}
   [MΩ : measurable_space Ω] [Mβ : measurable_space β]
-  [Mγ : measurable_space γ] (Y:Mβ →m Mγ) (X:MΩ →m Mβ) (S:measurable_set Mγ):
+  [Mγ : measurable_space γ] (Y:Mβ →ₘ Mγ) (X:MΩ →ₘ Mβ) (S:measurable_set Mγ):
   measurable_set_preimage (Y ∘m X) S = measurable_set_preimage X (measurable_set_preimage Y S) :=
 begin
   apply subtype.eq,
@@ -1638,7 +1681,7 @@ end
 lemma rv_compose_measurable_set  {α : Type*} {β : Type*} {γ : Type*}
   {p : probability_space α} {Mβ : measurable_space β}
   {Mγ : measurable_space γ} (X:measurable_fun Mβ Mγ) (Y:random_variable p Mβ) (S:measurable_set Mγ):
-  (X ∘r Y) ∈r S = (Y ∈r (measurable_set_preimage X S)) :=
+  (X ∘r Y) ∈ᵣ S = (Y ∈ᵣ (measurable_set_preimage X S)) :=
 begin
   apply compose_measurable_fun_measurable_set,
 end
@@ -1646,21 +1689,21 @@ end
 lemma compose_independent {α:Type*} {p:probability_space α} {β:Type*}
   [fintype β]
   {γ:Type*} [Mγ:measurable_space γ]
-  {κ:Type*} [Mκ:measurable_space κ] (X:β → random_variable p Mγ) (Y:Mγ →m  Mκ):
+  {κ:Type*} [Mκ:measurable_space κ] (X:β → random_variable p Mγ) (Y:Mγ →ₘ  Mκ):
   random_variable_independent X → random_variable_independent (λ b:β, Y ∘r (X b)) :=
 begin
   unfold random_variable_independent,
   intros A1 S T,
   unfold independent_events,
-  have A2:(λ (b : β), Pr[(Y ∘r X b) ∈r S b]) =
-      (λ (b : β), Pr[(X b) ∈r (measurable_set_preimage Y (S b))]),
+  have A2:(λ (b : β), Pr[(Y ∘r X b) ∈ᵣ S b]) =
+      (λ (b : β), Pr[(X b) ∈ᵣ (measurable_set_preimage Y (S b))]),
   {
     ext b,
     rw rv_compose_measurable_set,
   },
   rw A2,
-  have A3:(λ (b : β), (Y ∘r X b) ∈r S b) =
-      (λ (b : β), (X b) ∈r (measurable_set_preimage Y (S b))),
+  have A3:(λ (b : β), (Y ∘r X b) ∈ᵣ S b) =
+      (λ (b : β), (X b) ∈ᵣ (measurable_set_preimage Y (S b))),
   {
     ext b,
     rw rv_compose_measurable_set,
@@ -1672,7 +1715,7 @@ end
 
 lemma compose_identical {α:Type*} {p:probability_space α}
   {γ:Type*} [Mγ:measurable_space γ]
-  {κ:Type*} [Mκ:measurable_space κ] (X₁ X₂:random_variable p Mγ) (Y:Mγ →m  Mκ):
+  {κ:Type*} [Mκ:measurable_space κ] (X₁ X₂:random_variable p Mγ) (Y:Mγ →ₘ  Mκ):
   random_variable_identical X₁ X₂ → random_variable_identical (Y ∘r X₁) (Y ∘r X₂)  :=
 begin
   unfold random_variable_identical,
@@ -1686,7 +1729,7 @@ end
 lemma compose_IID {α:Type*} {p:probability_space α} {β:Type*}
   [fintype β]
   {γ:Type*} [Mγ:measurable_space γ]
-  {κ:Type*} [Mκ:measurable_space κ] (X:β → random_variable p Mγ) (Y:Mγ →m  Mκ):
+  {κ:Type*} [Mκ:measurable_space κ] (X:β → random_variable p Mγ) (Y:Mγ →ₘ  Mκ):
   random_variables_IID X → random_variables_IID (λ b:β, Y ∘r (X b)) :=
 begin
   unfold random_variables_IID,
@@ -1736,17 +1779,6 @@ begin
   apply A9
 end
 
-
-lemma finset.Union_insert {α β:Type*} [E:encodable β]
-    [D:decidable_eq β] {f:β → set α} {b:β} {S:finset β}:
-   (⋃ (b':β) (H:b'∈ (insert b S)), f b') = 
-   (f b) ∪ (⋃ (b':β) (H:b'∈ S), f b') := 
-begin
-  simp
-end
-
-
-
 lemma Pr_sum_disjoint_eq {Ω β:Type*} {p:probability_space Ω} [E:encodable β] 
     [D:decidable_eq β]
     (A:β → event p) {S:finset β}:(pairwise (disjoint on λ (i : β), (A i).val)) →
@@ -1770,7 +1802,7 @@ begin
     rw ennreal.coe_add,
     rw event_prob_def,
     rw eany_finset_val_def,
-    rw finset.Union_insert,
+    rw finset.Union_insert',
     have A4:measure_theory.measure_space.volume ((A a).val ∪ ⋃ (x : β) (H : x ∈ T), (A x).val) = 
 measure_theory.measure_space.volume ((A a).val) + 
 measure_theory.measure_space.volume (⋃ (x : β) (H : x ∈ T), (A x).val),
@@ -1856,8 +1888,8 @@ lemma mem_prod_random_variable_prod_measurable_set
   {P:probability_space α} {Mβ:measurable_space β} {Mγ:measurable_space γ}
   (X:random_variable P Mβ) (Y:random_variable P Mγ) 
   (S:measurable_set Mβ) (T:measurable_set Mγ):
-  (X ×r Y) ∈r (prod_measurable_set S T) =
-  (X ∈r S) ∧ₑ (Y∈r T) :=
+  (X ×ᵣ Y) ∈ᵣ (prod_measurable_set S T) =
+  (X ∈ᵣ S) ∧ₑ (Y∈ᵣ T) :=
 begin
   apply event.eq,
   rw rv_event_val_def,

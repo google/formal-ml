@@ -3,6 +3,5 @@ name = "formal_ml"
 version = "0.0.1"
 lean_version = "leanprover-community/lean:3.20.0"
 path = "src"
-
 [dependencies]
-mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "9a24f689077e11bad630eeb74d6cdd0977b40ab9"}
+mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "b6ce982d21eb3c536a11ac19f06e9fcaf10faf55"}

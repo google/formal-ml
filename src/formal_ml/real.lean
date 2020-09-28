@@ -33,62 +33,16 @@ lemma abs_eq_norm {a:ℝ}:abs a = ∥a∥ := rfl
 
 ---Results about the reals--------------------------------------------------------------------------
 
-lemma nat_succ_pow {n:ℕ} {x:ℝ}:x^(nat.succ n)=x*(x^n) :=
-begin
-  refl,
-end
 
-lemma pow_distrib (x y:ℝ) (n:ℕ):(x * y)^n = x^n * y^n :=
-begin
-  induction n,
-  {
-    simp,
-  },
-  {
-    rw nat_succ_pow,
-    rw nat_succ_pow,
-    rw nat_succ_pow,
-    rw n_ih,
-    rw mul_assoc x (x ^ n_n),
-    rw ← mul_assoc (x ^ n_n),
-    rw mul_comm (x ^ n_n) y,
-    rw mul_assoc x y,
-    rw ← mul_assoc y (x ^ n_n),
-  }
-end
 
-lemma inv_pow_comm {x:ℝ} {n:ℕ}:(x⁻¹)^n = ((x)^n )⁻¹ :=
-begin
-  simp,
-end
-lemma inv_pow_cancel (x:ℝ) (n:ℕ):(x≠ 0) → (x)^n * (x⁻¹)^n = 1 :=
-begin
-  intro A1,
-  rw ← pow_distrib,
-  rw mul_inv_cancel,
-  simp,
-  apply A1,
-end
-
+--Unused (except in classical_limit.lean)
 lemma inv_pow_cancel2 (x:ℝ) (n:ℕ):(x≠ 0) → (x⁻¹)^n * (x)^n = 1 :=
 begin
-  rw mul_comm,
-  apply inv_pow_cancel,
-end
-
-lemma pow_zero_eq_zero_if_pos {n:ℕ}:(0 < n) →
-  (0:ℝ)^n = 0 :=
-begin
   intro A1,
-  cases n,
-  {
-    exfalso,
-    apply lt_irrefl 0 A1,
-  },
-  {
-    rw nat_succ_pow,
-    simp
-  }
+  rw ← mul_pow,
+  rw inv_mul_cancel,
+  simp,
+  apply A1,
 end
 
 lemma abs_pow {x:ℝ} {n:ℕ}:(abs (x^n)) = (abs x)^n :=
@@ -98,8 +52,8 @@ begin
     simp,
   },
   {
-    rw nat_succ_pow,
-    rw nat_succ_pow,
+    rw pow_succ,
+    rw pow_succ,
     rw abs_mul,
     rw n_ih,
   }
@@ -150,7 +104,7 @@ begin
     apply zero_lt_one,
   },
   {
-    rw nat_succ_pow,
+    rw pow_succ,
     apply mul_nonneg,
     apply A1,
     apply k_ih,
@@ -167,8 +121,8 @@ begin
     simp,
   },
   {
-    rw nat_succ_pow,
-    rw nat_succ_pow,
+    rw pow_succ,
+    rw pow_succ,
     apply mul_le_mul,
     {
       exact A1,
@@ -296,56 +250,34 @@ end
 
 
 
+--Lift to division_ring, or delete
+lemma division_ring.div_def {α:Type*} [division_ring α] {a b:α}:a/b = a* b⁻¹ := rfl
 
 lemma div_def {a b:ℝ}:a/b = a * b⁻¹ := rfl
 
+--Raise to a linear ordered field (or a linear ordered division ring?).
+--Unused.
 lemma div_lt_div_of_lt_of_lt {a b c:ℝ}:(0<c) → (a < b) → (a/c < b/c) :=
 begin
   intros A1 A2,
-  rw div_def,
-  rw div_def,
+  rw division_ring.div_def,
+  rw division_ring.div_def,
   apply mul_lt_mul_of_pos_right,
   apply A2,
   apply inv_pos_of_pos,
   apply A1,
 end
 
---Remove
-lemma zero_lt_epsilon_half_of_zero_lt_epsilon {ε:ℝ}: 0 < ε → 0 < (ε / 2) :=
+--TODO: replace with half_lt_self
+lemma epsilon_half_lt_epsilon {α:Type*} [linear_ordered_field α] {ε:α}: 0 < ε → (ε / 2) < ε :=
 begin
-  apply half_pos,
+ apply half_lt_self,
 end
 
-
-lemma epsilon_half_lt_epsilon {ε:ℝ}: 0 < ε → (ε / 2) < ε :=
-begin
- intro A1,
- have A2:0 < ε/2 := zero_lt_epsilon_half_of_zero_lt_epsilon A1,
- have A3: ε/2 + 0 < ε/2 + ε/2,
- {
-   apply add_lt_add_left,
-   apply A2,
- },
- simp at A3,
- apply A3,
-end
-
-
+--TODO: replace with inv_nonneg.mpr.
 lemma inv_nonneg_of_nonneg {a:ℝ}:(0 ≤ a) → (0 ≤ a⁻¹) :=
 begin
-  intro A1,
-  have A2:0 < a ∨ 0 = a := lt_or_eq_of_le A1,
-  cases A2,
-  {
-    apply le_of_lt,
-    apply inv_pos_of_pos,
-    apply A2,
-  },
-  cases A2,
-  {
-    rw ← A2,
-    simp,
-  },
+  apply inv_nonneg.mpr,
 end
 
 lemma move_le {a b c:ℝ}:(0 < c) → (a ≤ b * c) → (a * c⁻¹) ≤ b :=
@@ -372,6 +304,7 @@ begin
   apply A4,
 end
 
+
 lemma move_le2 {a b c:ℝ}:(0 < c) → (a * c⁻¹) ≤ b → (a ≤ b * c) :=
 begin
   intros A1 A2,
@@ -396,6 +329,7 @@ begin
 end
 
 --Probably a repeat.
+--nlinarith failed.
 lemma inv_decreasing {x y:ℝ}:(0 < x) → (x < y)→ (y⁻¹ < x⁻¹) :=
 begin
   intros A1 A2,
@@ -441,7 +375,6 @@ begin
   }
 end
 
-
 lemma abs_nonzero_pos {x:ℝ}:(x ≠ 0) → (0 < abs (x)) :=
 begin
   intro A1,
@@ -464,19 +397,16 @@ begin
 end
 
 
+
 lemma diff_ne_zero_of_ne {x x':ℝ}:(x ≠ x') → (x - x' ≠ 0) :=
 begin
   intro A1,
   intro A2,
   apply A1,
-  have A1:x - x' + x' = 0 + x',
-  {
-    rw A2,
-  },
-  simp at A1,
-  apply A1,
+  linarith [A2],
 end
 
+--nlinarith failed
 lemma abs_diff_pos {x x':ℝ}:(x ≠ x') → (0 < abs (x - x')) :=
 begin
   intro A1,
@@ -485,6 +415,7 @@ begin
 end
 
 
+--nlinarith failed
 lemma neg_inv_of_neg {x:ℝ}:x < 0 → (x⁻¹ < 0) :=
 begin
   intro A1,
@@ -513,33 +444,13 @@ begin
   }
 end
 
-
-
-lemma zero_exp_zero {n:ℕ}:(0 < n) → (0:ℝ)^n = (0:ℝ) :=
-begin
-  cases n,
-  {
-    simp,
-  },
-  {
-    intro A1,
-    rw nat_succ_pow,
-    simp,
-  }
-end
-
-
 lemma sub_inv {a b:ℝ}:a - (a - b) = b :=
 begin
-  rw sub_eq_add_neg,
-  rw neg_sub,
-  rw sub_eq_add_neg,
-  rw add_comm b (-a),
-  rw ← add_assoc,
-  rw add_right_neg,
-  rw zero_add,
+  linarith,
 end
 
+
+--Classical, but filter_util.lean still has dependencies.
 lemma x_in_Ioo {x r:ℝ}:(0 < r) → (x∈ set.Ioo (x- r) (x + r)) :=
 begin
   intro A1,
@@ -555,7 +466,7 @@ begin
   }
 end
 
-
+--Classical.
 lemma abs_lt2 {x x' r:ℝ}:
   (abs (x' - x) < r) ↔ ((x - r < x') ∧  (x' < x + r)) :=
 begin
@@ -575,7 +486,7 @@ begin
   }
 end
 
-
+--Classical.
 lemma abs_lt_iff_in_Ioo {x x' r:ℝ}:
   (abs (x' - x) < r) ↔ x' ∈ set.Ioo (x - r) (x + r) :=
 begin
@@ -584,11 +495,13 @@ begin
   simp,
 end
 
+--TODO: replace with neg_neg_of_pos
 lemma neg_lt_of_pos {x:ℝ}:(0 < x) → (-x < 0) :=
 begin
   apply neg_neg_of_pos,
 end
 
+--Classical.
 lemma abs_lt_iff_in_Ioo2 {x x' r:ℝ}:
   (abs (x - x') < r) ↔ x' ∈ set.Ioo (x - r) (x + r) :=
 begin
@@ -606,7 +519,7 @@ begin
 end
 
 
-
+--Unlikely novel.
 lemma real_lt_coe {a b:ℕ}:a < b → (a:ℝ) < (b:ℝ) :=
 begin
   simp,
@@ -615,25 +528,18 @@ end
 
 lemma add_of_sub {a b c:ℝ}:a - b = c ↔ a = b + c :=
 begin
-  split;intros A1,
-  {
-    rw ← A1,
-    simp,
-  },
-  {
-    rw A1,
-    simp,
-  }
+  split;intros A1;linarith [A1],
 end
 
-
+--linarith and nlinarith fails.
 lemma sub_half_eq_half {a:ℝ}:(a - a * 2⁻¹)=a * 2⁻¹ :=
 begin
     rw add_of_sub,
-    rw ← div_def,
+    rw ← division_ring.div_def,
     simp,
 end
 
+--linarith and nlinarith fails.
 lemma half_pos2:0 < (2:ℝ)⁻¹ :=
 begin
   apply inv_pos_of_pos,
@@ -644,39 +550,19 @@ end
 lemma half_bound_lower {a b:ℝ}:a < b → a < (a + b)/2 :=
 begin
   intro A1,
-  rw div_def,
-  rw right_distrib,
-  apply lt_add_of_sub_left_lt,
-  have A2:(a - a * 2⁻¹)=a * 2⁻¹ := sub_half_eq_half,
-  rw A2,
-  apply mul_lt_mul_of_pos_right,
-  apply A1,
-  apply half_pos2,
+  linarith [A1],
 end
 
 lemma half_bound_upper {a b:ℝ}:a < b → (a + b)/2 < b :=
 begin
   intro A1,
-  rw div_def,
-  rw right_distrib,
-  apply add_lt_of_lt_sub_right,
-  have A2:(b - b * 2⁻¹)=b * 2⁻¹ := sub_half_eq_half,
-  rw A2,
-  apply mul_lt_mul_of_pos_right,
-  apply A1,
-  apply half_pos2,
+  linarith [A1],
 end
 
 lemma lt_of_sub_lt_sub {a b c:ℝ}:a - c < b - c → a < b :=
 begin
   intro A1,
-  have A2:(a - c) + c < (b - c) + c ,
-  {
-    apply add_lt_add_right,
-    apply A1,
-  },
-  simp at A2,
-  apply A2,
+  linarith [A1],
 end
 
 
@@ -692,19 +578,15 @@ end
 
 lemma add_sub_triangle {a b c:ℝ}:(a - b) = (a - c) + (c - b) :=
 begin
-  rw ← add_sub_assoc,
-  rw sub_add_cancel,
+  linarith,
 end
+
 lemma abs_triangle {a b c:ℝ}:abs (a - b) ≤ abs (a - c) + abs (c - b) :=
 begin
   have A1:(a - b) = (a - c) + (c - b) := add_sub_triangle,
   rw A1,
   apply abs_add_le_abs_add_abs,
 end
-
-
-
-
 
 lemma pow_complex {x:ℝ} {n:ℕ}:((x:ℂ)^n).re=(x^n) :=
 begin
@@ -776,7 +658,7 @@ end
 lemma half_lt_one:(2:ℝ)⁻¹ < 1 :=
 begin
   have A1:1/(2:ℝ) < 1 := epsilon_half_lt_epsilon zero_lt_one,
-  rw div_def at A1,
+  rw division_ring.div_def at A1,
   rw one_mul at A1,
   apply A1,
 end

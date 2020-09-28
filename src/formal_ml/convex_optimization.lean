@@ -23,6 +23,10 @@ import data.complex.exponential
 import formal_ml.real
 
 
+/-
+  Note: consider dropping this definition, and proving this using has_deriv_at already provided.
+  has_derivative f f' ↔ differentiable f ∧ deriv f = f'
+ -/
 def has_derivative (f f':ℝ → ℝ):Prop := (∀ x, has_deriv_at f (f' x) x)
 
 lemma has_derivative.differentiable (f f':ℝ → ℝ):(has_derivative f f') → differentiable ℝ f :=
@@ -34,6 +38,16 @@ begin
   apply A1,
 end
 
+lemma differentiable.has_derivative (f:ℝ → ℝ):differentiable ℝ f → (has_derivative f (deriv f)) :=
+begin
+  intro A1,
+  unfold differentiable at A1,
+  intro x,
+  apply differentiable_at.has_deriv_at,
+  apply A1,
+end
+
+--Unused
 lemma has_derivative_add (f f' g g':ℝ → ℝ):
   has_derivative f f' →
   has_derivative g g' →
@@ -49,6 +63,7 @@ begin
   }
 end
 
+--Used in exp_bound.lean
 lemma has_derivative_sub (f f' g g':ℝ → ℝ):
   has_derivative f f' →
   has_derivative g g' →
@@ -64,6 +79,7 @@ begin
   }
 end
 
+--Unused
 lemma has_derivative_const (k:ℝ):
   has_derivative (λ x:ℝ, k)  (λ x:ℝ, 0) :=
 begin
@@ -89,6 +105,7 @@ begin
   apply A1,
 end
 
+--Used in exp_bound.lean
 lemma has_derivative_add_const (f f':ℝ → ℝ) (k:ℝ):
   has_derivative f f' →
   has_derivative (λ x:ℝ, f x + k)  (f') :=
@@ -101,14 +118,6 @@ end
 
 section convex_optimization
 variables (f f' f'': ℝ → ℝ)
-
-
-lemma lt_or_eq_or_lt (x y:ℝ):(x < y)∨ (x=y) ∨ (y < x) :=
-begin
-  apply lt_trichotomy,
-end
-
-
 
 lemma exists_has_deriv_at_eq_slope_total (x y:ℝ):
   (has_derivative f f') →
@@ -138,12 +147,13 @@ lemma zero_lt_of_neg_lt (x:ℝ):(0 < x) → (-x < 0) := neg_lt_zero.mpr
 lemma div_pos_of_pos_of_pos {a b:ℝ}:(0 < a) → (0 < b) → 0 < (a/b) :=
 begin
   intros A1 A2,
-  rw div_def,
+  rw division_ring.div_def,
   apply mul_pos,
   apply A1,
   rw inv_pos,
   apply A2,
 end
+
 
 lemma is_minimum (x y:ℝ):
   (has_derivative f f') →
@@ -303,6 +313,33 @@ begin
   }
 end
 
+/-
+  Lifting the theorem to the mathlib terminology
+ -/
+lemma is_minimum' (x y:ℝ):
+  differentiable ℝ f →
+  differentiable ℝ (deriv f) →
+  (0 ≤ (deriv (deriv  f)))→
+  (deriv f x = 0) →
+  (f x ≤ f y) :=
+begin
+  intros A1 A2 A3 A4,
+  let f' := deriv f,
+  let f'' := deriv f',
+  begin
+    have B1:f' = deriv f := rfl,
+    have B2:f'' = deriv f' := rfl,
+    have C1:=differentiable.has_derivative f A1,
+    rw ← B1 at A2,
+    have C2:=differentiable.has_derivative f' A2,
+    rw ← B2 at C2,
+    rw ← B1 at C1,
+    rw ← B1 at A3,
+    rw ← B2 at A3,
+    rw ← B1 at A4,
+    apply is_minimum f f' f'' x y C1 C2 A3 A4,
+  end
+end
 
 end convex_optimization
 

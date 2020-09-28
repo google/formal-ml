@@ -20,20 +20,14 @@ import data.real.ennreal
 import data.complex.exponential
 import formal_ml.nat
 
-lemma lt_imp_le (x y:real):(x < y) → (x ≤ y) :=
-begin
-  intro A1,
-  have A2:x < y ↔ (x ≤ y ∧ ¬ y ≤ x),
-  {
-    apply decidable_linear_order.lt_iff_le_not_le,
-  },
-  apply (A2.mp A1).left,
-end
+
+
 
 
 lemma nnreal_add_sub_right (a b c:nnreal):a + b = c → c - b = a :=
 begin
   intro A1,
+  --apply linarith [A1],
   have A2:(a + b) - b = a,
   {
     apply nnreal.add_sub_cancel,
@@ -64,7 +58,7 @@ lemma nnreal_exp_eq (x:real):↑(nnreal.exp x) = real.exp x :=
 begin
   unfold nnreal.exp,
   rw nnreal.coe_of_real,
-  apply lt_imp_le,
+  apply le_of_lt,
   apply real.exp_pos,
 end
 
@@ -134,7 +128,7 @@ end
 lemma nnreal_lt_ennreal_top (x:nnreal):(x:ennreal) < (⊤:ennreal) :=
 begin
   rw to_ennreal_def,
-  apply with_top.none_lt_some,
+  apply with_top.some_lt_none,
 end
 
 lemma nnreal_lt_some_ennreal (x y:nnreal):(x < y) → (x:ennreal) < (some y:ennreal) :=

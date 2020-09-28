@@ -23,6 +23,9 @@ import formal_ml.classical
 
 open finset
 
+/-
+  There are more theorems about finsets in mathlib in data.finset.basic
+-/
 --Noncomputability is probably unavoidable, one way or another.
 noncomputable def set_fintype_finset (T:Type) (F:fintype T) (S:set T):finset T :=
   @finset.filter T S (classical_set T S) F.elems
@@ -60,83 +63,64 @@ begin
   apply (set_fintype_finset_mem T F ∅),
 end
 
+--TODO:replace with finset.range_zero
 lemma finset_zero:range 0 = ∅  :=
 begin
   apply finset.range_zero,
 end
 
+--TODO:replace with finset.mem_range
 lemma mem_finset_intro (n m:ℕ) :(n < m) → n ∈ range (m)  :=
 begin
   apply (@finset.mem_range m n).mpr,
 end
 
+--TODO:replace with finset.mem_range
 lemma mem_finset_elim (n m:ℕ) :n ∈ range (m) → (n < m) :=
 begin
   apply (@finset.mem_range m n).mp,
 end
 
 
---This is exactly finset.range_succ
+--TODO:replace with finset.range_succ
 lemma finset_succ (n:ℕ):range (nat.succ n) = insert n (range n)  :=
 begin
   apply finset.range_succ,
 end
 
+--Trivial, but novel?
 lemma finset_bot_eq_empty (T:Type) (D:decidable_eq T):
   @semilattice_inf_bot.bot (finset T) _ = ∅ :=
 begin
   refl
 end
 
+--Novel?
 lemma not_new_insert (P:Type) (D:decidable_eq P) (S:finset P) (p p':P):
   (p'∈ insert p S) → (p ≠ p') → (p' ∈ S) :=
 begin
-  intros,
-  rw finset.insert_def at a,
-  rw finset.mem_def,
-  rw finset.mem_def at a,
-  simp at a,
-  cases a,
-  {
-    exfalso,
-    apply a_1,
-    symmetry,
-    apply a,
-  },
-  {
-    assumption
-  }
+  intros A1 A2,
+  rw finset.mem_insert at A1,
+  cases A1 with A1 A1,
+  {exfalso, apply A2, rw A1},
+  {apply A1},
 end
 
+--TODO:replace with finset.mem_insert
 lemma insert_or (P:Type) (D:decidable_eq P) (S:finset P) (p p':P):
   (p'∈ insert p S) → (p' = p) ∨ (p' ∈ S) :=
 begin
-  intros,
-  rw finset.insert_def at a,
-  rw finset.mem_def at a,
-  simp at a,
-  cases a,
-  {
-    left,
-    assumption,
-  },
-  {
-    right,
-    rw finset.mem_def,
-    assumption
-  }
+  apply finset.mem_insert.mp,
 end
 
+--TODO:replace with finset.mem_insert_of_mem
 lemma insert_intro (P:Type*) (D:decidable_eq P) (S:finset P) (p p':P):
   (p' ∈ S) → (p'∈ insert p S) :=
 begin
-  intros,
-  rw finset.insert_def,
-  simp,
-  right,
-  apply a,
+  apply finset.mem_insert_of_mem,
 end
 
+--TODO:replace with finset.mem_insert_self
 lemma insert_intro2 (P:Type*) (D:decidable_eq P) (S:finset P) (p:P):
   (p∈ insert p S) :=
 begin
@@ -145,31 +129,34 @@ begin
   simp,
 end
 
+--TODO:replace with finset.disjoint_iff_inter_eq_empty or disjoint_iff.
 lemma finset_disjoint_def (T:Type*) (D:decidable_eq T)  (A B:finset T):
   disjoint A B ↔ A ∩ B ⊆ ∅ :=
 begin
   refl,
 end
 
+--TODO:replace with finset.disjoint_iff_inter_eq_empty.
 lemma finset_disjoint_def_fwd (T:Type*) (D:decidable_eq T)  (A B:finset T):
   disjoint A B → A ∩ B ⊆ ∅ :=
 begin
-  have A1:(disjoint A B ↔ A ∩ B ⊆ ∅),
-  apply finset_disjoint_def,
-  cases A1,
-  assumption
+  rw finset.disjoint_iff_inter_eq_empty,
+  intros A1,
+  rw A1,
+  simp,
 end
 
 lemma finset_disjoint_def_bck (T:Type*) (D:decidable_eq T)  (A B:finset T):
   A ∩ B ⊆ ∅ → disjoint A B :=
 begin
-  have A1:(disjoint A B ↔ A ∩ B ⊆ ∅),
-  apply finset_disjoint_def,
-  cases A1,
-  assumption
+  rw finset.disjoint_iff_inter_eq_empty,
+  intro A1,
+  apply finset.subset.antisymm,
+  apply A1,
+  simp,
 end
 
-
+--TODO: replace with finset.max (but defn slightly different).
 def finset_max (A:finset ℕ):ℕ :=
   (@finset.fold ℕ ℕ max _ _  0  id A)
 
@@ -212,6 +199,7 @@ begin
 end
 
 
+--This seems useful. It is probably in mathlib somewhere.
 lemma finset_range_bound (A:finset ℕ):∃ n, (A⊆ finset.range n) :=
 begin
   apply exists.intro (nat.succ (finset_max A)),
@@ -232,73 +220,26 @@ begin
   }
 end
 
+--TODO: replace with finset.range_subset.mpr
 lemma finset_range_monotonic (m n:ℕ):(m ≤ n) → (finset.range m ⊆ finset.range n) :=
 begin
-  intros,
-  rw finset.subset_iff,
-  intros,
-  apply mem_finset_intro,
-  have A1:x < m,
-  {
-    apply mem_finset_elim,
-    apply a_1,
-  },
-  apply lt_of_lt_of_le,
-  {
-    apply A1,
-  },
-  {
-    apply a,
-  }
+  apply finset.range_subset.mpr,
 end
 
 
 
 
-
+--TODO: replace with finset.disjoint_left
 lemma finset_disjoint_intro {α:Type*} [decidable_eq α] (S T:finset α):(∀ a∈ S, a∉ T)→ (disjoint S T) :=
 begin
-  intros,
-  apply (finset_disjoint_def α _ S T).mpr,
-  apply (@subset_iff α (S ∩ T) ∅).mpr,
-  intros,
-  exfalso,
-  have A1:x∉  T,
-  {
-    apply a,
-    apply finset.mem_of_mem_inter_left,
-    apply a_1,
-  },
-  apply A1,
-  apply finset.mem_of_mem_inter_right,
-  apply a_1,
-end
-
-lemma finset_subseteq_emptyset {α:Type*} [decidable_eq α] (S:finset α) (a:α): (a∈ S)→ (S⊆ ∅) → false :=
-begin
-  intros,
-  rw @subset_iff at a_2,
-  have A1:a∈ (@has_emptyc.emptyc (finset α) _) ,
-  {
-    apply a_2,
-    apply a_1,
-  },
-  have A2:a∉ (@has_emptyc.emptyc (finset α) _) ,
-  {
-    apply finset.not_mem_empty,
-  },
-  apply A2,
+  intros A1,
+  rw finset.disjoint_left,
   apply A1,
 end
 
-lemma finset_comp_elim {α:Type*} (T:finset α) (a:α):((a∈ T)→ false)→ (a∉ T) :=
-begin
-  intros,
-  intro,
-  apply a_1,
-  apply a_2,
-end
 
+
+--If this doesn't exist, it should definitely be added.
 lemma finset_disjoint_symm {α:Type*} [decidable_eq α] (S T:finset α):(disjoint S T)→ (disjoint T S) :=
 begin
   intros,
@@ -308,52 +249,24 @@ begin
   assumption
 end
 
+
+--TODO: replace with finset.disjoint_left or finset.disjoint_right
 lemma finset_disjoint_elim {α:Type*} [X:decidable_eq α] {S T:finset α} (a:α):(disjoint S T)→
     (a∈ S)→ (a∉ T) :=
 begin
-  intros,
-  have A1:S∩ T⊆ ∅,
-  {
-    apply (finset_disjoint_def α _ S T).mp,
-    apply a_1,
-  },
-  have A2:(a∈T) → false,
-  {
-    intros,
-
-    apply (@finset_subseteq_emptyset α X),
-    {
-      have A3:(a∈ S∩ T),
-      {
-        apply finset.mem_inter_of_mem;assumption,
-      },
-      apply A3,
-    },
-    apply A1,
-  },
-  intro,
-  apply A2,
-  apply a_3,
+  rw finset.disjoint_left,
+  intros A1 A2,
+  apply A1 A2,
 end
 
 
-
+--TODO: replace with finset.disjoint_insert_right
 lemma insert_disjoint_imp_disjoint {α:Type*} [decidable_eq α] (S T:finset α) (a:α):
   disjoint T (insert a S) → disjoint T S :=
 begin
-  intros,
-  apply finset_disjoint_intro,
-  intros,
-  have A2:a_2∉ (insert a S),
-  {
-    apply finset_disjoint_elim,
-    apply a_1,
-    apply H,
-  },
-  intro,
-  apply A2,
-  apply insert_intro,
-  assumption,
+  intros A1,
+  rw finset.disjoint_insert_right at A1,
+  apply A1.right,
 end
 
 
@@ -367,14 +280,12 @@ begin
   apply a_1,
 end
 
+--TODO: replace with finset.sdiff_subset
 lemma sdiff_subset {α:Type*} [decidable_eq α] (S T:finset α):(S \ T) ⊆ S :=
 begin
-  rw finset.subset_iff,
-  intro x,
-  intro A1,
-  simp at A1,
-  apply A1.left,
+  apply finset.sdiff_subset,
 end
+
 
 lemma sum_disjoint_add {α β:Type*} [decidable_eq α] [add_comm_monoid β] (f:α → β) (S T:finset α):
   disjoint S T →
@@ -453,4 +364,270 @@ lemma finite_finset {α:Type*} (S:finset α):set.finite {a:α| a∈ S} :=
 begin
   unfold set.finite,
   apply nonempty.intro (finset_fintype S),
+end
+
+
+def finset.Union {α:Type*} [decidable_eq α] (S:finset (finset α)):finset α :=
+  finset.fold (@has_union.union (finset α) _) (∅:finset α) id S
+
+
+def finset.Union_insert {α:Type*} [decidable_eq α] (S:finset (finset α)) (t:finset α):
+  finset.Union (insert t S) = t ∪ finset.Union S :=
+begin
+  unfold finset.Union,
+  simp,
+end
+
+lemma finset.mem_Union {α:Type*} [decidable_eq α] (S:finset (finset α)) {a:α}:
+  a ∈ S.Union  ↔ (∃ (T:finset α), a∈ T ∧ T ∈ S) :=
+begin
+  split,
+  {
+    apply finset.induction_on S,
+    {
+      unfold finset.Union,simp,
+    },
+    {
+      intros T S',
+      intros C1 C2 C3,
+      rw finset.Union_insert at C3,
+      simp at C3,
+      cases C3 with C3 C3,
+      {
+        apply exists.intro T,
+        simp [C3],
+      },
+      {
+        have C4 := C2 C3,
+        cases C4 with T C4,
+        apply exists.intro T,
+        simp [C4],
+      },
+    },
+  },
+  {
+    apply finset.induction_on S,
+    {
+      --intros A1,
+      simp,
+    },
+    {
+      intros T S' D1 D2 D3,
+      rw finset.Union_insert,
+      cases D3 with T' D3,
+      cases D3 with D3 D4,
+      simp at D4,
+      cases D4 with D4 D4,
+      {
+        subst T',
+        simp [D3],
+      },
+      {
+        simp,
+        right,
+        apply D2,
+        apply exists.intro T',
+        apply and.intro D3 D4,
+      },
+    },
+  },
+end
+
+
+
+--Cool, but unused.
+/-
+  Constructs a finset {u:finset α|∃ s∈ S, t∈ T, u = s ∪ t}
+ -/
+def finset.pairwise_union {α:Type*} [decidable_eq α] (S T:finset (finset α)):finset (finset α)
+  := finset.Union (finset.image (λ s:finset α, finset.image (λ t:finset α, s ∪ t) T) S) 
+
+lemma finset.mem_pairwise_union {α:Type*} [decidable_eq α] (S T:finset (finset α)) (z:finset α):
+  z ∈ finset.pairwise_union S T ↔ ∃ (s t:finset α), s∈ S ∧ t ∈ T ∧ z = s ∪ t :=
+begin
+  unfold finset.pairwise_union,
+  rw finset.mem_Union,
+  split;intros B1,
+  {
+    cases B1 with T' B1,
+    cases B1 with B1 B2,
+    simp at B2,
+    cases B2 with s B2,
+    cases B2 with B2 B3,
+    subst T',
+    simp at B1,
+    cases B1 with t B1,
+    
+    apply exists.intro s,
+    apply exists.intro t,
+    simp [B1,B2],
+  },
+  {
+    cases B1 with s B1,
+    cases B1 with t B1,
+    apply exists.intro (finset.image (λ (t : finset α), s ∪ t) T),
+    simp,    
+    split,
+    {
+      apply exists.intro t,
+      simp [B1],
+    },
+    {
+      apply exists.intro s,
+      simp [B1],
+    },
+  },
+end
+
+lemma finset.mem_union_pairwise_union_of_mem {α:Type*} [decidable_eq α] (S T:finset (finset α)) 
+  (s t:finset α):(s∈ S) → (t ∈ T) → (s ∪ t) ∈ finset.pairwise_union S T :=
+begin
+  intros A1 A2,
+  rw finset.mem_pairwise_union,
+  apply exists.intro s,
+  apply exists.intro t,
+  simp [A1,A2],
+end
+
+lemma finset.pairwise_union.comm {α:Type*} [decidable_eq α] (A B:finset (finset α)):
+  finset.pairwise_union A B = finset.pairwise_union B A :=
+begin
+  ext a,
+  rw finset.mem_pairwise_union,
+  rw finset.mem_pairwise_union,
+  split;
+  {
+    intros B1,cases B1 with s B1,cases B1 with t B1,
+    apply exists.intro t,apply exists.intro s,simp [B1,finset.union_comm],
+  },
+end
+
+lemma finset.pairwise_union.assoc {α:Type*} [decidable_eq α] (A B C:finset (finset α)):
+ finset.pairwise_union (finset.pairwise_union A B) C =
+  finset.pairwise_union A (finset.pairwise_union B C) :=
+begin
+  ext x,
+  --rw finset.mem_pairwise_union,
+  --rw finset.mem_pairwise_union,
+  split,
+  {
+    intro B1,
+    rw finset.mem_pairwise_union at B1,
+    cases B1 with ab B1,
+    cases B1 with c B1,
+    cases B1 with B1 B2,
+    cases B2 with B2 B3,
+    subst x,
+    rw finset.mem_pairwise_union at B1,
+    cases B1 with a B1,
+    cases B1 with b B1,
+    cases B1 with B1 B3,
+    cases B3 with B3 B4,
+    subst ab,
+    rw finset.union_assoc,
+    repeat {apply finset.mem_union_pairwise_union_of_mem},
+    repeat {assumption},
+  },
+  {
+    intros B1,
+    rw finset.mem_pairwise_union at B1,
+    cases B1 with a B1,
+    cases B1 with bc B1,
+    cases B1 with B1 B2,
+    cases B2 with B2 B3,
+    subst x,
+    rw finset.mem_pairwise_union at B2,
+    cases B2 with b B2,
+    cases B2 with c B2,
+    cases B2 with B2 B3,
+    cases B3 with B3 B4,
+    subst bc,
+    rw ← finset.union_assoc,
+    repeat {apply finset.mem_union_pairwise_union_of_mem},
+    repeat {assumption},
+  },
+end
+
+
+
+
+
+instance finset.pairwise_union.is_commutative {α:Type*} [D:decidable_eq α]:
+  is_commutative (finset (finset α)) (@finset.pairwise_union α D) := {
+  comm := finset.pairwise_union.comm
+}
+
+instance finset.pairwise_union.is_associative {α:Type*} [D:decidable_eq α]:
+  is_associative (finset (finset α)) (@finset.pairwise_union α D) := {
+  assoc := finset.pairwise_union.assoc
+}
+
+lemma finset.union_diff {α:Type*} [decidable_eq α] {S T:finset α}:S⊆T → 
+  S ∪ T \ S = T :=
+begin
+  intros A1,
+  ext a,
+  split;intros B1,
+  {
+    simp at B1,
+    cases B1,
+    apply A1,
+    apply B1,
+    apply B1,
+  },
+  {
+    simp,
+    apply or.inr B1,
+  },
+end
+
+lemma finset.diff_subset_insert {α:Type*} [decidable_eq α] {T S:finset α} {a:α}:T ⊆ insert a S  → 
+   (T \ {a}) ⊆ S := 
+begin
+  intros A1,
+  rw finset.subset_iff,
+  rw finset.subset_iff at A1,
+  intros x B1,
+  simp at B1,
+  have B2 := A1 B1.left,
+  simp at B2,
+  simp [B1] at B2,
+  apply B2,
+end
+
+
+lemma finset.subset_insert_of_not_mem {α:Type*} [decidable_eq α] {T S:finset α} {a:α}:a∉ T →
+   T ⊆ insert a S  → T ⊆ S := 
+begin
+  intros A1 A2,
+  rw finset.subset_iff,
+  intros x B1,
+  --simp at A2,
+  have B2 := A2 B1,
+  simp at B2,
+  cases B2,
+  {
+    subst x,
+    exfalso,
+    apply A1 B1,
+  },
+  {
+    apply B2,
+  },
+end
+
+--Probably already exists.
+lemma finset.singleton_union_eq_insert {α:Type*} [D:decidable_eq α] {a:α} {S:finset α}:{a} ∪ S =
+  insert a S :=
+begin
+  refl
+end
+
+
+lemma finset.Union_insert' {α β:Type*} [E:encodable β]
+    [D:decidable_eq β] {f:β → set α} {b:β} {S:finset β}:
+   (⋃ (b':β) (H:b'∈ (insert b S)), f b') = 
+   (f b) ∪ (⋃ (b':β) (H:b'∈ S), f b') := 
+begin
+  simp
 end

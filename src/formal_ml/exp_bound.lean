@@ -17,44 +17,20 @@ import analysis.calculus.mean_value
 import data.complex.exponential
 
 import formal_ml.convex_optimization
-import formal_ml.analytic_function
+--import formal_ml.analytic_function
+import analysis.special_functions.exp_log
+import formal_ml.nnreal
 
 /-
-  These theorems are much harder than they look, as they depend upon
-  has_deriv_at_exp, which in turn depends upon calculating the derivative of a exponential
-  function, which (for better or worse) I solved by calculating the derivative of an arbitrary
-  function that is analytic everywhere (e.g. sine, cosine, et cetera).
-
-  In hindsight, this might have been necessary. The key was to consider an analytic function
-  of a sum, e.g.:
-
-  F (x + y) = ∑ n:ℕ, (x+y)^n * (f n)
-
-
-  where ∑ n:ℕ means to sum over the natural numbers. This is equivalent to:
-
-  F (x + y) = ∑ m:ℕ n:ℕ, x^m * y^n * (nat.choose (m + n) m) (f n)
-
-  F (x + y) = ∑ m:ℕ, x^m * ∑ n:ℕ, y^n * (nat.choose (m + n) m) (f n)
-
-
-  Then, we can consider
-  (F (h + x) = (F x) + h * ∑ m:ℕ, h^m * ∑ n:ℕ, x^n * (nat.choose (m + n + 1) (m + 1)) (f n)
-
-  I made the proof much harder than it should be. First of all, I focused on conditional sums.
-
-  While conditional sums are sometimes necessary (e.g. the Gregory series), functions that
-  are analytic everywhere have a Maclaurin series that is absolutely summable everywhere.
-
-  Secondly, I went with the conventional derivative. Once I
-
-
+  Note: after I proved this, I found that it already was in mathlib.
 -/
+
+--TODO: lift this until it doesn't depend upon has_derivative
 lemma has_derivative_exp:has_derivative real.exp real.exp :=
 begin
   unfold has_derivative,
   intro x,
-  apply has_deriv_at_exp,
+  apply real.has_deriv_at_exp,
 end
 
 
@@ -164,7 +140,7 @@ begin
   {
     rw nnreal.sub_eq_zero,
     {
-      apply lt_imp_le,
+      apply le_of_lt,
       apply real.exp_pos,
     },
     {

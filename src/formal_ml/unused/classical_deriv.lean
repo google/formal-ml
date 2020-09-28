@@ -162,7 +162,7 @@ begin
   },
   {
     intros A1 ε A2,
-    have A3:0 < ε/2 := zero_lt_epsilon_half_of_zero_lt_epsilon A2,
+    have A3:0 < ε/2 := half_pos A2,
     have A4:=A1 A3,
     rw filter.eventually_iff at A4,
     -- This simp has caused issues. However, I don't know what

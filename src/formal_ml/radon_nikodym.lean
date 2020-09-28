@@ -52,7 +52,7 @@ lemma ennreal.ne_zero_iff_zero_lt {x:ennreal}:x ≠ 0 ↔ 0 < x :=
 begin
   split;intros A1,
   {
-    apply lt_of_not_le,
+    apply lt_of_not_ge,
     intro B1,
     apply A1,
     simp at B1,
@@ -425,19 +425,6 @@ begin
     intros ω;split;intros A3A;simp;simp at A3A;apply A3A,
 end
 
-
-lemma is_measurable_lt {δ α:Type*} [measurable_space δ] [measurable_space α] [topological_space α]
-  [opens_measurable_space α]
-  [linear_order α] [order_closed_topology α] [topological_space.second_countable_topology α]
-  {f g : δ → α} (hf : measurable f) (hg : measurable g) :
-  is_measurable {a | f a < g a} :=
-begin
-  rw lt_eq_le_compl,
-  apply is_measurable.compl,
-  apply is_measurable_le,
-  repeat {assumption},
-end
-
 lemma ennreal.lt_add_self {a b:ennreal}:a < ⊤ → 0 < b → a < a + b :=
 begin
   cases a;cases b;simp,
@@ -781,7 +768,7 @@ begin
   rw measure_theory.outer_measure.of_function_def2,
   have E1:((measure_theory.outer_measure.restrict T) '' S).nonempty,
   {
-    apply set.nonempty_image_of_nonempty B1,
+    apply set.nonempty_image_iff.mpr B1,
   },
   apply le_antisymm,
   {
@@ -1116,18 +1103,9 @@ begin
   rw B3,
   rw ← measure_theory.outer_measure.Inf_restrict _ A1,
   rw measure_theory.outer_measure.restrict_apply,
-  apply set.nonempty_image_of_nonempty,
+  apply set.nonempty_image_iff.mpr,
   apply AX,
 end  
-
-
-lemma set.subset_self {α:Type*} (S:set α):S ⊆ S :=
-begin
-  rw set.subset_def,
-  intros x A1,
-  apply A1,
-end
-
 
 lemma measure_theory.measure.restrict_le_restrict_of_le {Ω:Type*} [measurable_space Ω]
   (μ ν:measure_theory.measure Ω) {S:set Ω}:
@@ -1135,7 +1113,7 @@ lemma measure_theory.measure.restrict_le_restrict_of_le {Ω:Type*} [measurable_s
 begin
   intros A1,
   apply measure_theory.measure.restrict_mono,
-  apply set.subset_self,
+  apply set.subset.refl,
   apply A1,
 end
 
@@ -1150,7 +1128,7 @@ begin
 
   have B1:T = (T∩ S) ∪ (T∩ Sᶜ),
   {
-    rw set.union_inter_compl,
+    rw set.inter_union_compl,
   },
   --have B2:μ T =
   rw ← @measure_theory.measure_union Ω M μ (T∩ S) _,
@@ -2383,7 +2361,7 @@ begin
     apply B1,
   },
   {
-    have B2:=lt_of_not_le B1,
+    have B2:=lt_of_not_ge B1,
     have B3:=le_of_lt B2,
     rw max_eq_left B3,
     rw set.indicator_of_mem,
@@ -2712,9 +2690,7 @@ begin
         unfold set.range at B1G,
         rw set.subset_def at B1G,
         simp at B1G,
-        apply (B1G (f n) n _).left,
-        refl,
-        
+        apply (B1G n).left,
       },
     },
     cases B1 with h B1,

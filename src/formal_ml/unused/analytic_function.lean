@@ -25,8 +25,8 @@ import analysis.calculus.deriv
 import analysis.asymptotics
 import formal_ml.sum
 import formal_ml.real
-import formal_ml.classical_deriv
-import formal_ml.classical_limit
+import formal_ml.unused.classical_deriv
+import formal_ml.unused.classical_limit
 import formal_ml.classical
 
 lemma tsum_replace {α β:Type*} [add_comm_monoid α] [topological_space α] [t2_space α] {g:β  → α} {x:α}:
@@ -427,28 +427,21 @@ begin
   cases A2 with x A3;
   apply exists.intro x;
   simp;
-  simp at A3;
-  intros z,
+  simp at A3,
   {
-    intros S A4,
-    subst z,
+    intros S,
     let n := nat.succ ((finset.sup S) id),
     let T := finset.range n,
     begin
-      have A5:finset.sum T f = finset.sum T f := rfl,
-      have A6 := A3 n A5,
       have A7: S ≤ T := upper_bound_finset_range,
       have A8:= sum_monotone_of_nonneg A1 A7,
-      apply le_trans,
-      apply A8,
-      apply A6,
+      apply le_trans A8,
+      apply A3,
     end
   },
   {
-    intros n A4,
-    subst z,
-    have A5:finset.sum (finset.range n) f = finset.sum (finset.range n) f := rfl,
-    apply A3 (finset.range n) A5,
+    intros d,
+    apply A3,
   }
 end
 
@@ -686,7 +679,7 @@ begin
   cases A1 with x A3,
   unfold has_conditional_sum at A3,
   unfold has_classical_limit at A3,
-  have A4:0 < (ε/2) := zero_lt_epsilon_half_of_zero_lt_epsilon A2,
+  have A4:0 < (ε/2) := half_pos A2,
   have A5:= A3 (ε/2) A4,
   cases A5 with n A6,
   apply exists.intro n,
@@ -1120,7 +1113,7 @@ begin
   intros n' A5,
   have A6:abs ((2 * x) ^ n' * f n' - 0) < 1 := A4 n' A5,
   simp at A6,
-  rw pow_distrib at A6,
+  rw mul_pow at A6,
   rw mul_assoc at A6,
   rw abs_mul_eq_mul_abs at A6,
   --rw mul_assoc at A7,
@@ -1784,17 +1777,17 @@ begin
   {
     subst x,
     simp,
-    rw pow_zero_eq_zero_if_pos,
+    --intro A1,
+    rw zero_pow,
     simp,
   },
   {
-    rw @nat_succ_pow (nat.succ n),
+    rw @pow_succ _ _ _ (nat.succ n),
     rw ← mul_assoc,
     rw inv_mul_cancel A1,
     rw one_mul,
   }
 end
-
 
 lemma is_maclaurin_derivative_bounded (f:ℕ → ℝ):
   bounded_maclaurin f →
@@ -1885,7 +1878,7 @@ begin
 
         rw ← abs_mul,
 
-        rw ← nat_succ_pow,
+        rw ← pow_succ,
         rw mul_inv_cancel A6B_1,
         simp,
         rw abs_mul,
@@ -1900,14 +1893,14 @@ begin
           simp,
         },
         rw A6C3,
-        rw ← inv_pow_comm,
+        rw ← inv_pow',
         apply A4 (nat.succ n'),
         apply lt_trans,
         apply A6A,
         apply nat.lt_succ_self,
       },
       rw add_comm (n':ℝ) 1,
-      rw ← inv_pow_comm,
+      rw ← inv_pow',
       apply le_of_mul_le_mul_left A6C,
       apply abs_pos_of_nonzero A6B_1,
     }
@@ -3022,16 +3015,16 @@ end
 
 
 
-def finset.Union {α β:Type*} [Dβ:decidable_eq β] {S:finset α}
+def finset.Union' {α β:Type*} [Dβ:decidable_eq β] {S:finset α}
    (f:{x//x∈ S}→ finset β):finset β :=
   finset.fold (@has_union.union (finset β) (@finset.has_union β Dβ))
   ∅ f (finset.attach S)
 
 
 lemma finset_Union_empty {α β:Type*} [decidable_eq β]
-   (f:{x//x∈ (∅:finset α)}→ finset β):finset.Union f = (∅:finset β) :=
+   (f:{x//x∈ (∅:finset α)}→ finset β):finset.Union' f = (∅:finset β) :=
 begin
-  unfold finset.Union,
+  unfold finset.Union',
   simp,
 end
 
@@ -3054,12 +3047,12 @@ lemma finset_insert_constrain_def2 {α β:Type*} [decidable_eq α]   {a:α} {S:f
 -- This generalizes to when a∈S too...
 lemma finset_Union_insert {α β:Type*} [decidable_eq α] [decidable_eq β]  {a:α} {S:finset α}
    (f:{x//x∈ (insert a S)}→ finset β):a∉ S →
-   finset.Union f = (f (subtype.mk a (finset.mem_insert_self a S)))
-   ∪ (finset.Union (finset_insert_constrain f))
+   finset.Union' f = (f (subtype.mk a (finset.mem_insert_self a S)))
+   ∪ (finset.Union' (finset_insert_constrain f))
     :=
 begin
   intro A1,
-  unfold finset.Union finset_insert_constrain,
+  unfold finset.Union' finset_insert_constrain,
   rw finset.attach_insert,
   rw finset.fold_insert,
   rw finset_insert_constrain_def2,
@@ -3072,7 +3065,7 @@ lemma finset_mem_Union_intro {α β:Type*} [decidable_eq α] [decidable_eq β]  
    ∀ a:{x//x∈ S},
    ∀ f:{x//x∈ S}→ finset β,
    b∈ f a →
-   b∈ finset.Union f :=
+   b∈ finset.Union' f :=
 begin
   apply finset.induction_on S,
   {
@@ -3111,7 +3104,7 @@ end
 
 lemma finset_mem_Union_elim {α β:Type*} [decidable_eq α] [decidable_eq β]  {S:finset α}:
    ∀ f:{x//x∈ S}→ finset β,
-   ∀ b∈ finset.Union f,
+   ∀ b∈ finset.Union' f,
    ∃ a:{x//x∈ S},
    b∈ f a :=
 begin
@@ -3152,7 +3145,7 @@ end
 
 def finset.relation {α β:Type*} [decidable_eq α] [decidable_eq β] {S:finset α}
    (f:{x//x∈ S}→ finset β):finset (α × β) :=
-  finset.Union (λ x, finset.product ({x.val}) (f x))
+  finset.Union' (λ x, finset.product ({x.val}) (f x))
 
 
 lemma finset_relation_empty {α β:Type*} [decidable_eq α] [decidable_eq β]
@@ -3553,8 +3546,7 @@ begin
   intro A1,
   unfold upper_bounds at A1,
   simp at A1,
-  have A2:f a = f a := rfl,
-  apply A1 a A2,
+  apply A1,
 end
 
 lemma summable_function_uncurry4 {f:ℕ → ℕ → ℝ}:
@@ -3955,7 +3947,7 @@ begin
   {
     ext n,
     simp,
-    rw nat_succ_pow,
+    rw pow_succ,
     rw ← mul_assoc,
     rw ← mul_assoc,
     rw inv_mul_cancel A2,
@@ -5339,4 +5331,3 @@ begin
   rw A3 at A2,
   exact A2,
 end
-

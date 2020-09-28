@@ -86,7 +86,7 @@ end
 
 lemma measurable_space_le_def {α:Type*}
   (M:measurable_space α) (M2:measurable_space α):
-  M.is_measurable ≤  M2.is_measurable
+  M.is_measurable' ≤  M2.is_measurable'
   ↔  M ≤ M2 :=
 begin
   refl,
@@ -94,7 +94,7 @@ end
 
 lemma measurable_space_le_def2 {α:Type*}
   (M:measurable_space α) (M2:measurable_space α):
-  (∀ X:set α, M.is_measurable X → M2.is_measurable X) ↔
+  (∀ X:set α, M.is_measurable' X → M2.is_measurable' X) ↔
    M ≤ M2 :=
 begin
   intros,
@@ -110,18 +110,18 @@ end
 -- Delete?
 lemma measurable_space_le_intro {α:Type*}
   (M:measurable_space α) (M2:measurable_space α):
-  (∀ X:set α, M.is_measurable X → M2.is_measurable X) →
+  (∀ X:set α, M.is_measurable' X → M2.is_measurable' X) →
    M ≤ M2 :=
 begin
   intros,
-  have A1:M.is_measurable ≤  M2.is_measurable
+  have A1:M.is_measurable' ≤  M2.is_measurable'
   ↔  M ≤ M2,
   {
     apply measurable_space_le_def,
   },
   apply A1.mp,
-  have A2:M.is_measurable ≤ M2.is_measurable ↔
-  (∀ X:set α, M.is_measurable X → M2.is_measurable X),
+  have A2:M.is_measurable' ≤ M2.is_measurable' ↔
+  (∀ X:set α, M.is_measurable' X → M2.is_measurable' X),
   {
     apply set_Prop_le_def,
   },
@@ -168,7 +168,7 @@ end
 
 lemma comap_elim {α β:Type*} [M2:measurable_space β] (f:α → β) (B:set β):
   (is_measurable B) →
-  (M2.comap f).is_measurable  (set.preimage f B) :=
+  (M2.comap f).is_measurable'  (set.preimage f B) :=
 begin
   intros,
   unfold measurable_space.comap,
@@ -186,7 +186,7 @@ begin
   intros,
   apply measurable_intro,
   intros,
-  have A1:(M2.comap f).is_measurable  (set.preimage f B),
+  have A1:(M2.comap f).is_measurable'  (set.preimage f B),
   {
     apply comap_elim,
     apply a_1,
@@ -560,7 +560,7 @@ end
 
 lemma generate_from_self {α:Type*}
   (M:measurable_space α):
-  M = measurable_space.generate_from {s : set α|measurable_space.is_measurable M s} :=
+  M = measurable_space.generate_from {s : set α|measurable_space.is_measurable' M s} :=
 begin
   ext,
   split;intros,
@@ -591,7 +591,7 @@ end
 lemma measurable_fun_comap_def {α β:Type*}
   [M2:measurable_space β]  (f:α → β):
   measurable_space.comap f M2 = measurable_space.generate_from
-  {s : set α|∃ (s' : set β), measurable_space.is_measurable M2 s' ∧ f ⁻¹' s' = s} :=
+  {s : set α|∃ (s' : set β), measurable_space.is_measurable' M2 s' ∧ f ⁻¹' s' = s} :=
 begin
   unfold measurable_space.comap,
   apply generate_from_self,
@@ -611,8 +611,8 @@ begin
   have A1:@measurable _ _ _ (@prod.measurable_space β γ M2 M3) (λ a:α, prod.mk (X a) (Y a)),
   {
     have A1A:(@prod.measurable_space β  γ  M2 M3)=measurable_space.generate_from (
-      {s : set (β × γ) | ∃ (s' : set β), measurable_space.is_measurable M2 s' ∧ prod.fst ⁻¹' s' = s} ∪
-      {s : set (β  × γ) | ∃ (s' : set γ), measurable_space.is_measurable M3 s' ∧ prod.snd ⁻¹' s' = s}),
+      {s : set (β × γ) | ∃ (s' : set β), measurable_space.is_measurable' M2 s' ∧ prod.fst ⁻¹' s' = s} ∪
+      {s : set (β  × γ) | ∃ (s' : set γ), measurable_space.is_measurable' M3 s' ∧ prod.snd ⁻¹' s' = s}),
     {
       rw measurable_fun_product_measurableh,
       rw measurable_fun_comap_def,
@@ -705,8 +705,8 @@ lemma is_measurable_of_le_of_is_measurable
 {α : Type*} {M1 : measurable_space α} {M2 : measurable_space α} 
   {X:set α}:
   M1 ≤ M2 →
-measurable_space.is_measurable M1 X →
-   measurable_space.is_measurable M2 X :=
+measurable_space.is_measurable' M1 X →
+   measurable_space.is_measurable' M2 X :=
 begin
   intros A2 A1,
   rw ← measurable_space_le_def2 at A2,

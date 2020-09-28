@@ -86,7 +86,6 @@ begin
     simp at A1,
     cases A1 with y A1,
     subst V,
-    --apply measurable_space.is_measurable_generate_from,
     rw ← set.compl_Iic,
     apply measurable_space.generate_measurable.compl,
     apply measurable_space.generate_measurable.basic,
@@ -100,7 +99,6 @@ begin
     simp at A1,
     cases A1 with y A1,
     subst V,
-    --apply measurable_space.is_measurable_generate_from,
     rw ← set.compl_Ioi,
     apply measurable_space.generate_measurable.compl,
     apply measurable_space.generate_measurable.basic,
@@ -502,14 +500,14 @@ end
 
 -- Note: there used to be theorems like this in mathlib, but they disappeared
 lemma is_measurable_of_is_open {α:Type*} [topological_space α]
-    (S:set α):is_open S → measurable_space.is_measurable (borel α) S :=
+    (S:set α):is_open S → measurable_space.is_measurable' (borel α) S :=
 begin
   rw borel_def,
   apply measurable_space.is_measurable_generate_from,
 end
 
 lemma is_measurable_of_is_closed {α:Type*} [topological_space α]
-    (S:set α):is_closed S → measurable_space.is_measurable (borel α) S :=
+    (S:set α):is_closed S → measurable_space.is_measurable' (borel α) S :=
 begin
   intro A1,
   unfold is_closed at A1,
@@ -526,7 +524,7 @@ end
 lemma is_open_is_measurable_binary {α β:Type*} [topological_space α] [topological_space β]
     [topological_space.second_countable_topology α]
     [topological_space.second_countable_topology β]
-    (S:set (α × β)):is_open S → measurable_space.is_measurable (@prod.measurable_space α β (borel α) (borel β)) S :=
+    (S:set (α × β)):is_open S → measurable_space.is_measurable' (@prod.measurable_space α β (borel α) (borel β)) S :=
 begin
   rw borel_def_prod_second_countable,
   apply is_measurable_of_is_open,
@@ -535,7 +533,7 @@ end
 lemma is_closed_is_measurable_binary {α β:Type*} [topological_space α] [topological_space β]
     [topological_space.second_countable_topology α]
     [topological_space.second_countable_topology β]
-    (S:set (α × β)):is_closed S → measurable_space.is_measurable (@prod.measurable_space α β (borel α) (borel β)) S :=
+    (S:set (α × β)):is_closed S → measurable_space.is_measurable' (@prod.measurable_space α β (borel α) (borel β)) S :=
 begin
   rw borel_def_prod_second_countable,
   apply is_measurable_of_is_closed,
@@ -790,7 +788,7 @@ end
 
 lemma is_measurable_of_le {α:Type*} [T:topological_space α]
       [SC:topological_space.second_countable_topology α] [P:linear_order α]
-      [OT:order_topology α]:measurable_space.is_measurable 
+      [OT:order_topology α]:measurable_space.is_measurable' 
       (@prod.measurable_space α α (borel α) (borel α))
       {p:α × α|p.fst ≤ p.snd} :=
 begin
@@ -800,7 +798,7 @@ end
 
 lemma is_measurable_of_eq {α:Type*} [T:topological_space α]
       [SC:topological_space.second_countable_topology α]
-      [T2:t2_space α]:measurable_space.is_measurable 
+      [T2:t2_space α]:measurable_space.is_measurable'
       (@prod.measurable_space α α (borel α) (borel α))
       {p:α × α|p.fst = p.snd} :=
 begin

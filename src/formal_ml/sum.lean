@@ -135,14 +135,6 @@ begin
 end
 
 
---Drop, and use finset_sum_le2
-lemma finset_sum_le {α:Type*} [decidable_eq α] {S:finset α} {f g:α → nnreal}:
-  (∀ s∈ S, f s ≤ g s) →  S.sum f ≤ S.sum g :=
-begin
-  apply finset_sum_le2,
-end
-
-
 lemma finset_sum_le3 {α β:Type*}  [decidable_eq α] [ordered_add_comm_monoid β] {f g:α → β} {S:finset α}:
   f ≤ g →
   S.sum f ≤ S.sum g :=
@@ -668,7 +660,7 @@ begin
   },
   intro A2,
   rw ← A1,
-  apply finset_sum_le,
+  apply finset_sum_le2,
   intros s A4,
   apply A2,
   apply A4,
@@ -882,8 +874,6 @@ begin
   cases A2 with A3 A4,
   unfold upper_bounds,
   simp,
-  intros a S A5,
-  subst a,
   apply A4,
   apply A1
 end
@@ -1001,9 +991,7 @@ begin
     simp at A3,
     cases A3 with y A5,
     subst x2,
-    have A6:y.sum f = y.sum f := rfl,
-    have A6 := A4 y A6,
-    apply A6,
+    apply A4,
   },
   {
     intros w A7,
@@ -1120,17 +1108,15 @@ begin
   apply exists.intro x,
   unfold upper_bounds,
   simp,
-  intros x2 S A4,
-  subst x2,
-  have A5:S.sum g = S.sum g := rfl,
-  have A6 := A3 S A5,
+  intros S,
   have A7:S.sum f ≤ S.sum g,
   {
     apply finset_sum_le2,
     intros a A7A,
     apply A1,
   },
-  apply le_trans A7 A6,
+  apply le_trans A7,
+  apply A3,
 end
 
 lemma has_sum_of_le_of_le_of_has_sum {α:Type*} {f g:α → ℝ} [D:decidable_eq α]:
@@ -1547,8 +1533,7 @@ begin
     unfold upper_bounds,
     apply exists.intro z,
     simp,
-    intros x2 T B2,
-    subst x2,
+    intros T,
     have B3:T.sum f = (T ∪ S).sum f - (S \ T).sum f := finset_sum_diff,
     rw B3,
     have B4:(T ∪ S).sum f - (S \ T).sum f ≤ (T ∪ S).sum f - S.sum (neg_only ∘ f),
@@ -1672,16 +1657,13 @@ begin
   cases A2 with x A3,
   apply exists.intro x,
   simp,
-  intros x2 S A4,
-  subst x2,
+  intros S,
   have A5 := @finset_sum_pos_only_eq_sum α _ f S,
   cases A5 with T A6,
   cases A6 with A7 A8,
   rw ← A8,
   simp at A3,
-  have A9:T.sum f = T.sum f := rfl,
-  have A10 := A3 T A9,
-  apply A10,
+  apply A3,
 end
 
 lemma summable_neg_only_of_summable {α:Type*} [decidable_eq α] {f:α → ℝ}:
@@ -2091,29 +2073,8 @@ begin
   apply A3
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-noncomputable def nnreal.conditionally_complete_lattice:conditionally_complete_lattice nnreal := conditionally_complete_linear_order_bot.to_conditionally_complete_lattice nnreal
+noncomputable def nnreal.conditionally_complete_lattice:conditionally_complete_lattice nnreal :=
+  infer_instance
 
 noncomputable instance nnreal.conditionally_complete_linear_order:conditionally_complete_linear_order nnreal := {
   .. nnreal.conditionally_complete_lattice,
@@ -2219,8 +2180,6 @@ begin
     unfold upper_bounds,
     apply @set.nonempty_of_mem _ _ v,
     simp,
-    intros a S A3,
-    subst a,
-    apply A1,  
+    apply A1,
 end
 

@@ -1404,10 +1404,6 @@ begin
   apply is_glb.Inf_eq A3,
 end
 
-
-
-
-
 /-
   If we unfold infi in nhds, we get a doubly-nested Infimum that is hard to
   work with. This rewrites it more simply.
@@ -1416,7 +1412,7 @@ lemma set_in_lattice_infi (α:Type*) (S:set (set α)):
 (⨅ (s∈ S), (filter.principal s)) = Inf  (set.image (filter.principal) S) :=
 begin
   unfold infi,
-  rw (set.range_eq_image_compl (set α) _ S),
+  rw ← (@set.image_union_image_compl_eq_range (set α) _ S),
   have A1:(λ (s : set α), Inf (set.range (λ (H : s ∈ S), filter.principal s))) '' (S)ᶜ =
     (λ (s : set α), ⊤) '' Sᶜ,
   {

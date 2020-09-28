@@ -53,10 +53,12 @@ import formal_ml.int
 
   This is the familiar connection that we use to integrate functions of real random variables on
   a regular basis.
-
  -/
 
 
+
+
+---Revisit these finite measure proofs: make sure that they are not replicated in mathlib.
 def measure_theory.finite_measure_of_lt_top {Ω:Type*} [M:measurable_space Ω] 
   {μ:measure_theory.measure Ω} (H:μ set.univ < ⊤):
   measure_theory.finite_measure μ := {
@@ -90,42 +92,8 @@ end
 
 ------------------------Core theorems---------------------------------------
 
-lemma lt_of_not_le {α:Type*} [linear_order α] {a b:α}:
-   ¬(a ≤ b) → (b < a) :=
-begin
-  intros A1,
-  have A2 := lt_trichotomy a b,
-  cases A2,
-  {
-    exfalso, 
-    apply A1,
-    apply le_of_lt A2,
-  },
-  cases A2,
-  {
-    exfalso,
-    apply A1,
-    subst a,
-  },
-  {
-    apply A2,
-  },
-end
 
-lemma not_le_iff_lt {α : Type*} [linear_order α] {a b : α}:
-   ¬a ≤ b ↔ b < a :=
-begin
-  split;intro A1,
-  {
-    apply lt_of_not_le A1,
-  },
-  {
-    apply not_le_of_lt A1,
-  },
-end
-
-
-
+--This seems to be legitimately new.
 lemma  lt_iff_le_not_eq {α:Type*} [linear_order α] {a b:α}:
     (a < b) ↔ ((a ≤ b) ∧  (a ≠ b)) :=
 begin
@@ -482,8 +450,8 @@ end
 lemma rat.num_pos_of_pos {q:ℚ}:0 < q → 0 < q.num :=
 begin
   intro A1,
-  apply lt_of_not_le,
-  rw ← not_le_iff_lt at A1,
+  apply lt_of_not_ge,
+  rw lt_iff_not_ge at A1,
   intro A2,
   apply A1,
   apply rat.nonpos_of_num_nonpos A2,
@@ -493,15 +461,15 @@ lemma rat.pos_iff_num_pos {q:ℚ}:0 < q ↔ 0 < q.num :=
 begin
   split;intro A1,
   {
-    apply lt_of_not_le,
-    rw ← not_le_iff_lt at A1,
+    apply lt_of_not_ge,
+    rw lt_iff_not_ge at A1,
     intro A2,
     apply A1,
     apply rat.nonpos_of_num_nonpos A2,
   },
   {
-    apply lt_of_not_le,
-    rw ← not_le_iff_lt at A1,
+    apply lt_of_not_ge,
+    rw lt_iff_not_ge at A1,
     intro A2,
     apply A1,
     apply rat.num_nonneg_of_nonneg A2,
@@ -702,28 +670,12 @@ begin
   },
 end
 
-
-lemma rat.coe_int_div {p q:ℤ}:rat.mk p q = (p:ℚ) / (q:ℚ) :=
-begin
-  --rw rat.coe_int_eq_mk,
-  --rw rat.coe_int_eq_mk,
-  rw rat.div_num_denom,
-  repeat {rw rat.coe_int_num},
-  repeat {rw rat.coe_int_denom},
-  have A1:((1:ℕ):ℤ)=1 := rfl,
-  rw A1,
-  simp,
-end
-
 ------------------------Theorems of real ---------------------------------------------
 
 lemma real.add_sub_add_eq_sub_add_sub {a b c d:real}:
     a + b - (c + d) = (a - c) + (b - d) :=
 begin
-  rw add_sub_assoc,
-  rw sub_add_eq_sub_sub_swap,
-  rw sub_add_eq_add_sub,
-  rw add_sub_assoc,
+  linarith,
 end
 
 lemma real.unit_frac_pos (n:ℕ):0 < (1/((n:real) + 1)) :=
@@ -741,12 +693,12 @@ begin
 end
 
 
+--TODO:Unlikely to be novel.
+--Solvable by linarith.
 lemma real.sub_lt_sub_of_lt {a b c:real}:a < b →
   a - c < b - c :=
 begin
-  intros A1,
   simp,
-  apply A1,
 end
 
 lemma real.rat_le_rat_iff {q r:ℚ}:q ≤ r ↔ (q:ℝ) ≤  (r:ℝ) := 
@@ -782,21 +734,11 @@ lemma real.eq_add_of_sub_eq {a b c:real}:
   a - b = c → a = b + c :=
 begin
   intros A1,
-  have A2:((a:ℝ)-(b:ℝ))+(b:ℝ)=(c:ℝ)+(b:ℝ),
-  {
-    rw A1,
-  },
-  simp at A2,
-  rw add_comm at A2,
-  apply A2,
+  linarith [A1],
 end
 
 
-lemma real.sub_add_sub {a b c:real}:(a - b) + (b - c) = a - c :=
-begin
-  rw ← add_sub_assoc,
-  simp,
-end
+lemma real.sub_add_sub {a b c:real}:(a - b) + (b - c) = a - c := by linarith
 
 
 ------------------------Theorems of nnreal --------------------------------------------
@@ -1262,7 +1204,7 @@ lemma ennreal.lt_add_of_pos_of_lt_top {a b:ennreal}:
    (0 < b) → (a < ⊤) → a < a + b :=
 begin
   intros A1 A2,
-  apply lt_of_not_le,
+  apply lt_of_not_ge,
   apply ennreal.not_add_le_of_lt_of_lt_top A1 A2,
 end
 
@@ -1687,6 +1629,14 @@ begin
   apply nnreal.sub_add_sub A1 A2,
 end
 
+lemma ennreal.coe_mul_coe_lt_top {a b:nnreal}:(a:ennreal) * (b:ennreal) < (⊤:ennreal) :=
+begin
+  rw lt_top_iff_ne_top,
+  intros A1,
+  rw with_top.mul_eq_top_iff at A1,
+  simp at A1,
+  apply A1,
+end
 
 
 lemma ennreal.lt_div_iff_mul_lt {a b c : ennreal}:
@@ -1713,20 +1663,7 @@ begin
   cases c,
   {
     simp,
-    rw ennreal.div_def,
-    rw mul_comm,
-    rw with_top.mul_top,
-    split;intros A3,
-    {
-      rw ← ennreal.coe_mul,
-      apply with_top.coe_lt_top,
-    },
-    {
-      simp,
-    },
-    {
-      simp,
-    },
+    apply ennreal.coe_mul_coe_lt_top,
   },
   simp,
   split;intros A3,
@@ -1751,7 +1688,7 @@ begin
       simp at A5,
       apply A5,
       apply A1,
-      have A6 := @with_top.none_lt_some nnreal _ b,
+      have A6 := @with_top.some_lt_none nnreal _ b,
       apply ne_of_lt A6,
     },
   },
@@ -1776,7 +1713,7 @@ begin
       simp at A5,
       apply A5,
       apply A1,
-      have A6 := @with_top.none_lt_some nnreal _ b,
+      have A6 := @with_top.some_lt_none nnreal _ b,
       apply ne_of_lt A6,
     },
   },
@@ -2372,30 +2309,14 @@ lemma filter.has_mem_def {α : Type*} (S:set α) (F:filter α):
   S ∈ F = (S∈ F.sets) := rfl
 
 
-def finset.Union {α:Type*} [decidable_eq α] (S:finset (finset α)):finset α :=
-  @finset.fold (finset α) (finset α)  (@has_union.union (finset α) _) _
-  _ ∅ id S
-
-
-lemma finset.Union_insert {α:Type*} [decidable_eq α] (S:finset (finset α)) {T:finset α}:(T∉ S) → finset.Union (insert T S) = T ∪ (finset.Union S) :=
-begin
-  intro A1,
-  unfold finset.Union,
-  rw finset.fold_insert A1,
-  simp,
-end
-
-
 lemma finset.subset_Union {α:Type*} [decidable_eq α] {S:finset (finset α)} {T:finset α}:T ∈ S → T ⊆ (finset.Union S) := 
 begin
   apply finset.induction_on S,
   {
-    intros A1,
-    exfalso,
-    simp at A1,
-    apply A1,
+    simp,
   },
   {
+    
     intros T2 S2 A1 A2 A3,
     simp at A3,
     rw finset.Union_insert,
@@ -2408,11 +2329,11 @@ begin
       apply finset.subset.trans (A2 A3),
       apply finset.subset_union_right,
     },
-    apply A1,
   },
 end
 
 
+--This is proving that the functions sum to a function if they sum to a function elementwise.
 lemma has_sum_product {α β:Type*} [Dα:decidable_eq α] [Dβ:decidable_eq β] {γ:β → Type*} [Π b:β,add_comm_monoid (γ b)] 
   [T:Π b:β,topological_space (γ b)] {f:α → (Π b:β, γ b)} {g:Π b:β, γ b}:
   (∀ b:β, has_sum  (λ n, f n b) (g b)) →  
@@ -2723,6 +2644,7 @@ end
 
 
 
+--TODO: Can this be replaced with measure_theory.lintegral_supr?
 lemma  measure_theory.lintegral_supr2 {α : Type*} 
     [M : measure_theory.measure_space α] {f : ℕ → α → ennreal}:
     (∀ (n : ℕ), measurable (f n)) → 
@@ -2743,6 +2665,10 @@ begin
   apply A2,
 end
 
+#check measure_theory.lintegral
+-- `∫⁻` binders ` in ` s `, ` r:(scoped:60 f, f) ` ∂` μ:70 :=
+#check measure_theory.lintegral_supr
+--TODO: Replace with measure_theory.lintegral_supr
 lemma measure_theory.integral_supr {Ω : Type*} {M:measurable_space Ω}
   {μ:measure_theory.measure Ω} {f : ℕ → Ω → ennreal}:
   (∀ (n : ℕ), measurable (f n)) → monotone f → 
@@ -2835,7 +2761,6 @@ begin
   intro A1,
   intros n1 n2 A2,
   simp,
-  rw has_le_fun_def,
   intro ω,
   have A3:ω ∈ S ∨ ω ∉ S := classical.em (ω ∈ S),
   cases A3,
@@ -3502,7 +3427,7 @@ begin
   apply A1,
 end
 
-
+--TODO: shift to lintegral.
 lemma integral_measure.apply3 {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (H:measurable f) (S:set Ω):(is_measurable S) →
     (μ.with_density f).to_outer_measure.measure_of S = supr (λ n, (μ.integral (set.indicator S (measure_theory.simple_func.eapprox f n)))) :=
 begin
@@ -3608,6 +3533,7 @@ begin
 end
 
 
+--TODO: Add to mathlib if novel.
 lemma finset.sum_measurable {β:Type*} {Ω:Type*} {M:measurable_space Ω}
     (f:β → Ω → ennreal) (S:finset β):(∀ b∈ S, measurable (f b)) →
      measurable (S.sum f) :=
@@ -3703,7 +3629,7 @@ begin
   apply measure_theory.simple_func.measurable,
 end
 
-
+--TODO:If novel, add to finset.sum?
 lemma finset.sum_distrib {α:Type*} {β:Type*} [comm_semiring β] {f:β} {g:α → β} 
     {S:finset α}:S.sum (λ a:α, f * (g a))=f * (S.sum g) :=
 begin
@@ -3720,8 +3646,15 @@ begin
   symmetry,
   apply @add_monoid_hom.map_sum α β β _ _ (add_monoid_hom.mul_left f) g S,
 end
-   
 
+--TODO:This is the simplest lemma that is clearly required.
+--Need to figure out how to represent integral first.
+/-
+lemma simple_func.compose_eq_multiply {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) 
+  (f:Ω → ennreal) (H:measurable f) {g:measure_theory.simple_func Ω ennreal}:
+--    ∫⁻ a, g a ∂ (μ.with_density f) = ∫⁻ a, (f * ⇑g) a ∂ μ := sorry
+    g.lintegral (μ.with_density f) = ∫⁻ a, (f * ⇑g) a ∂ μ := sorry
+-/
 lemma simple_func.compose_eq_multiply {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (H:measurable f) {g:measure_theory.simple_func Ω ennreal}:
     (μ.with_density f).integral g = μ.integral (f * ⇑g) :=
 begin
@@ -3799,8 +3732,7 @@ begin
   cases A2 with g A2,
   subst b,
   simp,
-  intros b A3 A4,
-  subst b,
+  intro A3,
   rw ← integral_simple_func_def,
   apply A1 g A3,
 end
@@ -4415,4 +4347,6 @@ begin
   apply monotone_fn_const_mul,
   apply measure_theory.simple_func.monotone_eapprox,
 end
+
+#check measure_theory.integral_supr
 

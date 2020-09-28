@@ -388,3 +388,47 @@ begin
   simp at B1,
   apply B1,
 end
+
+
+-------------------------------------- Move these to some pow.lean file, or into mathlib ---------------
+
+lemma linear_ordered_semiring.one_le_pow {α:Type*} [linear_ordered_semiring α]
+   {a:α} {b:ℕ}:1 ≤ a → 1≤ a^b :=
+begin
+  induction b,
+  {
+    simp,
+    intro A1,
+    apply le_refl _,
+  },
+  {
+    rw pow_succ,
+    intro A1,
+    have A2 := b_ih A1,
+    have A3:1 * a^b_n ≤ a * (a^b_n),
+    {
+      apply mul_le_mul_of_nonneg_right,
+      apply A1,
+      apply le_of_lt,
+      apply lt_of_lt_of_le zero_lt_one A2,
+    },
+    apply le_trans _ A3,
+    simp [A2],
+  },
+end 
+
+lemma linear_ordered_semiring.pow_monotone 
+    {α:Type*} [linear_ordered_semiring α] {a:α} {b c:ℕ}:1 ≤ a → b ≤ c →  a^b ≤ a^c :=
+begin
+  intros A1 A2,
+  rw le_iff_exists_add at A2,
+  cases A2 with d A2,
+  rw A2,
+  rw pow_add,
+  rw le_mul_iff_one_le_right,
+  apply linear_ordered_semiring.one_le_pow A1,
+  apply lt_of_lt_of_le zero_lt_one,
+  apply linear_ordered_semiring.one_le_pow A1,
+end
+
+
