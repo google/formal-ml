@@ -1,6 +1,6 @@
 [package]
 name = "formal_ml"
-version = "0.0.1"
+version = "0.0.2"
 lean_version = "leanprover-community/lean:3.20.0"
 path = "src"
 [dependencies]

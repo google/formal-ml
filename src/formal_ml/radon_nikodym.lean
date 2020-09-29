@@ -31,7 +31,6 @@ import formal_ml.real_measurable_space
 import formal_ml.set
 import formal_ml.filter_util
 import topology.instances.ennreal
-import formal_ml.integral
 import formal_ml.int
 import formal_ml.with_density_compose_eq_multiply
 import formal_ml.hahn
@@ -453,13 +452,11 @@ lemma with_density_const_apply {Ω:Type*} {M:measurable_space Ω} (μ:measure_th
    μ.with_density (λ ω:Ω, k) S = k * μ S :=
 begin
   intros B1,
-  rw measure_theory.with_density_apply2,
+  rw measure_theory.with_density_apply2',
   rw ← simple_restrict_eq_indicator_const,
-  rw integral_const_restrict_def,
-  refl,
-  apply B1,
-  apply B1,
-  apply B1,
+  rw measure_theory.simple_func.lintegral_eq_lintegral,
+  rw measure_theory.simple_func.restrict_const_lintegral,
+  repeat {apply B1},
 end
 
 
@@ -2169,26 +2166,14 @@ begin
   },
 end
 
-
-lemma measure_theory.measure.restrict_integral_eq_integral_indicator {Ω:Type*} [M:measurable_space Ω] 
+lemma measure_theory.measure.restrict_integral_eq_integral_indicator' {Ω:Type*} [M:measurable_space Ω] 
     (μ:measure_theory.measure Ω) {S:set Ω} {f:Ω → ennreal}:
     (is_measurable S) →
-    (μ.restrict S).integral f = μ.integral (S.indicator f) :=
+    ∫⁻ (a : Ω), f a ∂ (μ.restrict S)  = ∫⁻ (a : Ω), (S.indicator f) a ∂ μ :=
 begin
   intros A1,
-  
-  unfold measure_theory.measure.integral,
   rw measure_theory.lintegral_indicator,
   apply A1,
-end
-
-
-lemma integral_eq {Ω:Type*} [M:measurable_space Ω] 
-    (μ:measure_theory.measure Ω) {f g:Ω → ennreal}:(f = g) →
-    μ.integral f = μ.integral g :=
-begin
-  intros A1,
-  rw A1,
 end
 
 lemma with_density_indicator_eq_restrict {Ω:Type*} [M:measurable_space Ω] 
@@ -2196,26 +2181,16 @@ lemma with_density_indicator_eq_restrict {Ω:Type*} [M:measurable_space Ω]
     (is_measurable S) → 
     μ.with_density (set.indicator S f) = (μ.restrict S).with_density f :=
 begin
-  intros A1,
+  intros A1, 
   apply measure_theory.measure.ext,
   intros T B1,
-  rw measure_theory.with_density_apply2,
-  rw measure_theory.with_density_apply2,
-  rw measure_theory.measure.restrict_integral_eq_integral_indicator,
-  {
-    rw set.indicator_indicator,
-    rw set.indicator_indicator,
-    rw set.inter_comm,
-  },
-  {
-    apply A1,
-  },
-  {
-    apply B1,
-  },
-  {
-    apply B1,
-  },
+  rw measure_theory.with_density_apply2',
+  rw measure_theory.with_density_apply2',
+  rw ← measure_theory.lintegral_indicator,
+  rw set.indicator_indicator,
+  rw set.indicator_indicator,
+  rw set.inter_comm,
+  repeat {assumption},
 end
 
 lemma scalar_as_with_density {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω)
@@ -2291,9 +2266,9 @@ begin
     apply exists.intro f,
     split,
     {
-      apply measurable_set_indicator,
-      apply B3.left,
+      apply measurable.indicator,
       apply measurable_const,
+      apply B3.left,
     },
     split,
     {
@@ -2381,11 +2356,11 @@ lemma with_density_le_sup_apply {Ω:Type*} {M:measurable_space Ω} (μ:measure_t
     μ.with_density y S :=
 begin
   intros A3 A4,
-  rw measure_theory.with_density_apply2 _ _ _ A3,
-  rw measure_theory.with_density_apply2 _ _ _ A3,
+  rw measure_theory.with_density_apply2',
+  rw measure_theory.with_density_apply2',
   rw set.indicator_sup A4,
+  repeat {apply A3},
 end
-
 
 lemma le_on_subsets_with_density_of_le {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω)
   {x y:Ω → ennreal} {S:set Ω}:
@@ -2513,21 +2488,49 @@ begin
   },
 end
 
-
 lemma measure_theory.measure.with_density_restrict_comm {Ω:Type*} [M:measurable_space Ω] (μ:measure_theory.measure Ω)
-  {x:Ω → ennreal} {S:set Ω}:is_measurable S → (μ.with_density x).restrict S = (μ.restrict S).with_density x := 
+  {x:Ω → ennreal} {S:set Ω}:is_measurable S → (μ.with_density x).restrict S = (μ.restrict S).with_density x :=
 begin
   intros A1,
   apply measure_theory.measure.ext,
   intros T B1,
-  rw measure_theory.with_density_apply2,
-  rw measure_theory.measure.restrict_integral_eq_integral_indicator,
+  rw measure_theory.with_density_apply2',
+  rw measure_theory.lintegral_indicator,
+  rw measure_theory.measure.restrict_apply,
+  rw measure_theory.measure.restrict_restrict,
+  --rw measure_theory.measure.restrict_apply,
+
+  --rw measure_theory.measure.restrict_apply,
+  rw ← measure_theory.lintegral_indicator,
+  
+  --rw measure_theory.measure.restrict_integral_eq_integral_indicator',
+  --rw measure_theory.measure.restrict_apply,
+ -- rw set.indicator_indicator,
+  rw set.inter_comm,
+  rw measure_theory.with_density_apply2',
+  repeat {assumption <|> apply is_measurable.inter},
+end
+
+lemma measure_theory.measure.with_density_restrict_comm' {Ω:Type*} [M:measurable_space Ω] (μ:measure_theory.measure Ω)
+  {x:Ω → ennreal} {S:set Ω}:is_measurable S → (μ.with_density x).restrict S = (μ.restrict S).with_density x :=
+begin
+  intros A1,
+  apply measure_theory.measure.ext,
+  intros T B1,
+  rw measure_theory.with_density_apply2',
+  
+  /-rw measure_theory.lintegral_indicator,
+  rw measure_theory.measure.restrict_apply,
+  rw measure_theory.measure.restrict_apply,-/
+
+  rw measure_theory.measure.restrict_integral_eq_integral_indicator',
   rw measure_theory.measure.restrict_apply,
   rw set.indicator_indicator,
   rw set.inter_comm,
-  rw measure_theory.with_density_apply2,
+  rw measure_theory.with_density_apply2',
   repeat {assumption <|> apply is_measurable.inter},
 end
+
 
 lemma measure_theory.measure.with_density_add {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω)
   {x y:Ω → ennreal}:measurable x → measurable y → μ.with_density (x + y) = μ.with_density x + μ.with_density y :=
@@ -2536,14 +2539,14 @@ begin
   apply measure_theory.measure.ext,
   intros S B1,
   rw measure_theory.measure.add_apply,
-  rw measure_theory.with_density_apply2 ,
-  rw measure_theory.with_density_apply2 ,
-  rw measure_theory.with_density_apply2 ,
+  rw measure_theory.with_density_apply2' ,
+  rw measure_theory.with_density_apply2' ,
+  rw measure_theory.with_density_apply2' ,
   rw set.indicator_add_comm,
-  rw measure_theory.measure.integral_add,
-  repeat{assumption <|> apply measurable_set_indicator},
+  simp,
+  rw @measure_theory.lintegral_add Ω M μ (S.indicator x) (S.indicator y),
+  repeat{assumption <|> apply measurable.indicator},
 end
-
 
 lemma with_density_sup' {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω)
   {x y:Ω → ennreal}:measurable x → measurable y → 
@@ -2559,11 +2562,9 @@ begin
   rw with_density_indicator_eq_restrict,
   rw measure_theory.measure.with_density_restrict_comm,
   rw measure_theory.measure.with_density_restrict_comm,
-  repeat {assumption <|> apply is_measurable_le <|> apply is_measurable_lt <|> apply measurable_set_indicator},
+  repeat {assumption <|> apply is_measurable_le <|> apply is_measurable_lt <|> apply measurable.indicator},
 end
 
-
---Oh dear. This may not be true: instead it might be an inequality.
 lemma with_density_sup {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω)
   {x y:Ω → ennreal}:measurable x → measurable y → 
     μ.with_density (x ⊔ y) =
@@ -2586,7 +2587,6 @@ begin
     apply le_of_lt B3,
   },
 end
-
 
 def measure_theory.finite_measure_sub {Ω:Type*} [M:measurable_space Ω] 
   (μ ν:measure_theory.measure Ω) [measure_theory.finite_measure ν]:
@@ -2800,19 +2800,20 @@ def is_radon_nikodym_deriv  {Ω:Type*} {M:measurable_space Ω} (ν μ:measure_th
    (measurable f) ∧ μ.with_density f = ν
 
 
-lemma is_radon_nikodym_deriv_elim {Ω:Type*} {M:measurable_space Ω} (ν μ:measure_theory.measure Ω) (f:Ω → ennreal) (S:set Ω):
+--TODO:working here
+--∫⁻ (a : Ω), 
+lemma is_radon_nikodym_deriv_elim' {Ω:Type*} {M:measurable_space Ω} (ν μ:measure_theory.measure Ω) (f:Ω → ennreal) (S:set Ω):
   (is_radon_nikodym_deriv ν μ f) →
   (is_measurable S) →
-  (μ.integral (set.indicator S f) = ν S) :=
+  (∫⁻ (a : Ω), (set.indicator S f) a ∂ μ = ν S) :=
 begin
   intros A1 A2,
   unfold is_radon_nikodym_deriv at A1,
   cases A1 with A3 A1,
   subst ν,
-  rw measure_theory.with_density_apply2,
+  rw measure_theory.with_density_apply2',
   apply A2,
 end
-
 
 lemma measurable_of_is_radon_nikodym_deriv {Ω:Type*} {M:measurable_space Ω} (ν μ:measure_theory.measure Ω) (f:Ω → ennreal) (S:set Ω):
   (is_radon_nikodym_deriv ν μ f) →
@@ -2823,11 +2824,10 @@ begin
   apply A1,
 end
 
-
 lemma is_radon_nikodym_deriv_intro {Ω:Type*} {M:measurable_space Ω} (ν μ:measure_theory.measure Ω) (f:Ω → ennreal):
   (measurable f) →
   (∀ S:set Ω, (is_measurable S) →
-  (μ.integral (set.indicator S f) = ν S)) →
+  (∫⁻ (a : Ω), (set.indicator S f) a ∂ μ = ν S)) →
   (is_radon_nikodym_deriv ν μ f)  :=
 begin
   intros A1 A2,
@@ -2836,7 +2836,7 @@ begin
   apply A1,
   apply measure_theory.measure.ext,
   intros S A3,
-  rw measure_theory.with_density_apply2,
+  rw measure_theory.with_density_apply2',
   apply A2,
   repeat {apply A3},
 end
@@ -3011,4 +3011,3 @@ begin
   simp at A3,
   apply A3,
 end
-

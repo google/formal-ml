@@ -31,7 +31,6 @@ import formal_ml.real_measurable_space
 import formal_ml.set
 import formal_ml.filter_util
 import topology.instances.ennreal
-import formal_ml.integral
 import formal_ml.int
 
 /-
@@ -2291,20 +2290,6 @@ begin
     rw A1,
 end
 
-lemma measurable_set_indicator {Ω:Type*} {M:measurable_space Ω} (s:set Ω) (f:Ω → ennreal):
-  (is_measurable s) → 
-  (measurable f) →
-  measurable (set.indicator s f) :=
-begin
-  intros A1 A2,
-  unfold set.indicator,
-  apply measurable.if,
-  apply A1,
-  apply A2,
-  apply measurable_const,
-end
-
-
 lemma filter.has_mem_def {α : Type*} (S:set α) (F:filter α):
   S ∈ F = (S∈ F.sets) := rfl
 
@@ -2522,52 +2507,6 @@ begin
 end
 
 
-lemma lintegral_tsum2 {α β:Type*} [M:measure_theory.measure_space α] 
-  [E:encodable β] [Dα:decidable_eq α] {f : β → α → ennreal} (hf : ∀i, measurable (f i)) :
-  (measure_theory.lintegral M.volume ∑' i, f i ) = (∑' i, measure_theory.lintegral M.volume (f i)) :=
-begin
-  begin
-    have A0:(∑' i, f i) = λ a:α, ∑' (i:β), f i a,
-    {
-      have A0A:decidable_eq β,
-      {
-        apply encodable.decidable_eq_of_encodable,
-      },
-      apply @tsum_fn β α A0A,
-    },
-    have A1:(∫⁻ (a : α), ∑' (i : β), f i a) = (measure_theory.lintegral M.volume  ∑' i, f i ),
-    {
-      rw A0,    
-    },
-    rw ← A1,
-    apply @measure_theory.lintegral_tsum α β (M.to_measurable_space) (M.volume) E f,
-    apply hf,
-  end
-end
-
-
-lemma integral_tsum {α β:Type*} [measurable_space α] {μ:measure_theory.measure α} 
-  [E:encodable β] {f : β → α → ennreal} (hf : ∀i, measurable (f i)) :
-  (μ.integral  ∑' i, f i ) = (∑' i, μ.integral (f i)) :=
-begin
-  let M:measure_theory.measure_space α := {volume := μ},
-  begin
-    unfold measure_theory.measure.integral,
-    have A1:decidable_eq α := classical.decidable_eq α,
-    apply @lintegral_tsum2 α β M E A1 f,
-    apply hf,
-  end
-end
-
-
-lemma monotone_convergence_for_series {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:ℕ → Ω → ennreal):(∀ n, measurable (f n)) →
-  μ.integral (∑' n:ℕ, f n) = ∑' n:ℕ, μ.integral (f n) :=
-begin
-  intro A1,
-  apply integral_tsum,
-  apply A1,
-end
-
 
 lemma set.indicator_tsum {Ω:Type*}  
      (f:Ω → ennreal) (g:ℕ → set Ω):
@@ -2645,12 +2584,16 @@ end
 
 
 --TODO: Can this be replaced with measure_theory.lintegral_supr?
+--Look more closely: this is using supr_apply, which means it is more 
+--than just measure_theory.lintegral_supr.
 lemma  measure_theory.lintegral_supr2 {α : Type*} 
-    [M : measure_theory.measure_space α] {f : ℕ → α → ennreal}:
+    [N:measurable_space α]
+    {μ:measure_theory.measure α}
+     {f : ℕ → α → ennreal}:
     (∀ (n : ℕ), measurable (f n)) → 
     monotone f → 
-    ((measure_theory.lintegral (M.volume) (⨆ (n : ℕ), f n)) = 
-    ⨆ (n : ℕ), measure_theory.lintegral (M.volume) (f n)) :=
+    ((∫⁻ a:α,  (⨆ (n : ℕ), f n) a ∂ μ) = 
+    ⨆ (n : ℕ), (∫⁻ a:α, (f n) a ∂ μ)) :=
 begin
   intros A1 A2,
   have A3:(λ a, (⨆ (n : ℕ), f n a)) = (⨆ (n : ℕ), f n),
@@ -2661,22 +2604,6 @@ begin
   },
   rw ← A3,
   apply measure_theory.lintegral_supr,
-  apply A1,
-  apply A2,
-end
-
-#check measure_theory.lintegral
--- `∫⁻` binders ` in ` s `, ` r:(scoped:60 f, f) ` ∂` μ:70 :=
-#check measure_theory.lintegral_supr
---TODO: Replace with measure_theory.lintegral_supr
-lemma measure_theory.integral_supr {Ω : Type*} {M:measurable_space Ω}
-  {μ:measure_theory.measure Ω} {f : ℕ → Ω → ennreal}:
-  (∀ (n : ℕ), measurable (f n)) → monotone f → 
-((μ.integral (⨆ (n : ℕ), f n)) = ⨆ (n : ℕ), μ.integral (f n)) :=
-begin
-  intros A1 A2,
-  unfold measure_theory.measure.integral,
-  rw @measure_theory.lintegral_supr2 Ω {volume := μ} f,
   apply A1,
   apply A2,
 end
@@ -2775,20 +2702,6 @@ begin
   },
 end
 
-
-
-lemma integral_simple_func_def {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (g:measure_theory.simple_func Ω ennreal):
-  μ.integral g = @measure_theory.simple_func.lintegral _ M g μ := 
-begin
-  unfold measure_theory.measure.integral,
-  rw measure_theory.simple_func.lintegral_eq_lintegral,
-end
-
-
-lemma measure_of_measure_space {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω):({volume := μ}:measure_theory.measure_space Ω).volume = μ := rfl
-
-
-
 def finset.filter_nonzero {α: Type*} [decidable_eq α] [has_zero α]
     (S:finset α):finset α :=
     S.filter (λ a:α, a ≠ 0)
@@ -2802,72 +2715,6 @@ begin
   rw finset.mem_filter,
 end
   
-
-
-lemma finset.sum_eq_sum_of_filter_nonzero {α : Type*} {β : Type*}
-    [canonically_ordered_add_monoid β] 
-    {s₁ s₂: finset α} {f : α → β}:
-    (∀ (x : α), (x ∈ s₁ ∧ f x ≠ 0) → x ∈ s₂) → 
-    s₂ ⊆ s₁ → 
-    finset.sum s₁ f = finset.sum s₂ f :=
-begin
- intros A1 A2,
- apply le_antisymm,
- {
-   apply finset.sum_le_sum_of_ne_zero,
-   intros x B1 B2,
-   apply A1,
-   apply and.intro B1 B2,
- },
- {
-   apply finset.sum_le_sum_of_subset,
-   apply A2,
- },
-end
-
-
-lemma integral_simple_func_def2 {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (g:measure_theory.simple_func Ω ennreal):
-  μ.integral g = finset.sum (measure_theory.simple_func.range g)
-       (λ x:ennreal, x * μ.to_outer_measure.measure_of (g.to_fun ⁻¹'  {x})) :=
-begin
-  rw integral_simple_func_def,
-  unfold measure_theory.simple_func.lintegral,
-  have A2:(λ (x : ennreal), x * (μ  (⇑g ⁻¹' {x})))=
-      (λ x:ennreal, x * μ.to_outer_measure.measure_of (g.to_fun ⁻¹'  {x})),
-  {
-    apply funext,
-    intro x,
-    rw measure.apply,
-    rw simple_func_to_fun,
-  },
-  rw A2,
-end
-
-
-lemma integral_simple_func_def3 {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (g:measure_theory.simple_func Ω ennreal):
-  μ.integral g = finset.sum (measure_theory.simple_func.range g).filter_nonzero
-       (λ x:ennreal, x * μ.to_outer_measure.measure_of (g.to_fun ⁻¹'  {x})) :=
-begin
-  rw ← @finset.sum_eq_sum_of_filter_nonzero ennreal ennreal _
-       (measure_theory.simple_func.range g),
-  rw integral_simple_func_def2,
-  {
-    intros x A1,
-    rw finset.mem_filter_nonzero,
-    split,
-    apply A1.left,
-    intro contra,
-    apply A1.right,
-    rw contra,
-    simp,
-  },
-  {
-    unfold finset.filter_nonzero,
-    apply finset.filter_subset,
-  },
-end
-
-
 lemma filter_nonzero_congr {S:finset ennreal} {f g:ennreal → ennreal}:
   (∀ x ≠ 0, f x = g x) → (S.filter_nonzero.sum f = S.filter_nonzero.sum g) :=
 begin
@@ -2925,7 +2772,11 @@ begin
   apply set_indicator_inter,
 end
 
-
+/--
+  A piece of a simple function. Every simple function is a finite sum of its
+  pieces. Thus, operations that work on the pieces can often be extended to
+  simple functions, and to measurable functions as well.
+ -/
 noncomputable def measure_theory.simple_func.piece {Ω:Type*} [measurable_space Ω]
   (g:measure_theory.simple_func Ω ennreal) (x:ennreal):
   measure_theory.simple_func Ω ennreal :=
@@ -2970,6 +2821,9 @@ begin
 end
 
 
+/--
+  measure_theory.simple_func.to_fun is a homomorphism from simple functions to functions.
+ -/
 noncomputable def simple_func_to_fun_add_monoid_hom (Ω:Type*) [measurable_space Ω]:
   add_monoid_hom (measure_theory.simple_func Ω ennreal) (Ω → ennreal) := {
   to_fun := measure_theory.simple_func.to_fun,
@@ -3003,7 +2857,9 @@ begin
   rw add_monoid_hom.map_sum,
 end
 
-
+/--
+  The application of a function is a homomorphism.
+ -/
 def apply_add_monoid_hom {α:Type*} (β:Type*) [add_monoid β] (a:α):
   add_monoid_hom (α → β) β := {
   to_fun := (λ f:α → β, f a),
@@ -3014,13 +2870,13 @@ def apply_add_monoid_hom {α:Type*} (β:Type*) [add_monoid β] (a:α):
   map_zero' := rfl,
 }
 
-
 lemma apply_add_monoid_hom_to_fun_def' {α β:Type*} [add_monoid β]
     {f:α → β} {a:α}:
   (apply_add_monoid_hom β a) f = f a := rfl
 
-
-
+/--
+  The application of a simple function is a homomorphism.
+ -/
 noncomputable def simple_func_apply_add_monoid_hom {Ω:Type*} [measurable_space Ω] (ω:Ω):
   add_monoid_hom (measure_theory.simple_func Ω ennreal) (ennreal) := {
   to_fun := (λ (g:measure_theory.simple_func Ω ennreal), g ω),
@@ -3120,19 +2976,18 @@ begin
   },
 end
 
-
-lemma integral_const_restrict_def {Ω:Type*} {M:measurable_space Ω} 
+-- This lifts measure_theory.simple_func.restrict_const_lintegral
+-- to measure_theory.lintegral.
+lemma integral_const_restrict_def' {Ω:Type*} {M:measurable_space Ω} 
   (μ:measure_theory.measure Ω) (S:set Ω) (x:ennreal):(is_measurable S) →
-  μ.integral ((measure_theory.simple_func.const Ω x).restrict S) = 
-  x * (μ.to_outer_measure.measure_of S) :=
+  ∫⁻ (a : Ω), ((measure_theory.simple_func.const Ω x).restrict S) a ∂μ = 
+  x * (μ S) :=
 begin
   intro A1,
-  rw integral_simple_func_def,
+  rw measure_theory.simple_func.lintegral_eq_lintegral,
   rw measure_theory.simple_func.restrict_const_lintegral,
-  rw measure.apply,
   apply A1,
 end
-
 
 lemma mul_restrict_def {Ω:Type*} {M:measurable_space Ω} (f:Ω → ennreal) (S:set Ω) (x:ennreal):(is_measurable S) →
     ((f * ⇑((measure_theory.simple_func.const Ω x).restrict S))) = 
@@ -3148,16 +3003,6 @@ begin
   rw mul_comm,
   apply A1,
 end
-
-
-lemma measure_theory.integral_mul_const {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (H:measurable f) (x:ennreal):
-  x * μ.integral f = μ.integral (λ ω:Ω, x * (f ω)) :=
-begin
-  unfold measure_theory.measure.integral,
-  rw measure_theory.lintegral_const_mul,
-  simp [H],
-end
-
 
 lemma function_support_le_subset {Ω:Type*} {f g:Ω → ennreal}:
   f ≤ g → (function.support f) ⊆ (function.support g) :=
@@ -3218,14 +3063,12 @@ begin
   },
 end
 
-
 lemma simple_func_restrict_of_is_measurable {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (g:measure_theory.simple_func Ω ennreal) (S:set Ω) (H:is_measurable S):
 (g.restrict S)=measure_theory.simple_func.piecewise S H g 0 :=
 begin
   unfold measure_theory.simple_func.restrict,
   rw dif_pos,
 end
-
 
 lemma simple_func_piecewise_range_subset {Ω:Type*} {M:measurable_space Ω} (f g:measure_theory.simple_func Ω ennreal) (S:set Ω) (H:is_measurable S):
 (measure_theory.simple_func.piecewise S H f g).range ⊆ (f.range ∪ g.range) :=
@@ -3256,7 +3099,10 @@ begin
   },
 end
 
-
+/--
+  If we sum over the superset of a simple function, it is still equal to the 
+  original lintegral.
+ -/
 lemma measure_theory.simple_func.lintegral_eq_of_range_subset {Ω:Type*} {M:measurable_space Ω} {f:measure_theory.simple_func Ω ennreal} {μ:measure_theory.measure Ω} {S:finset ennreal}:
   f.range ⊆ S →
   f.lintegral μ = S.sum (λ x:ennreal, x * μ (f ⁻¹' {x})) := 
@@ -3269,7 +3115,6 @@ begin
   apply @measure_theory.simple_func.mem_range_of_measure_ne_zero Ω ennreal M f _ μ,
   apply B2,
 end
-
 
 lemma simple_func_piecewise_preimage {Ω:Type*} {M:measurable_space Ω}
     (f g:measure_theory.simple_func Ω ennreal) (S:set Ω) (H:is_measurable S) (T:set ennreal):
@@ -3390,148 +3235,65 @@ begin
   apply A1,
 end
 
-
-
---This just lifts measure_theory.lintegral_indicator.
-lemma integral_set_indicator {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (S:set Ω):(is_measurable S) →
-  (μ.integral (set.indicator S f)) = (μ.restrict S).integral f :=
+--Prefer measure_theory.with_density_apply
+lemma measure_theory.with_density_apply2' {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (S:set Ω):(is_measurable S) →
+    (μ.with_density f) S = (∫⁻ a:Ω, (set.indicator S f) a ∂ μ) :=
 begin
   intro A1,
-  unfold measure_theory.measure.integral,
+  rw measure_theory.with_density_apply f A1,
   rw measure_theory.lintegral_indicator,
   apply A1,
 end
 
 
-lemma measure_theory.with_density_apply2 {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (S:set Ω):(is_measurable S) →
-    (μ.with_density f) S = (μ.integral (set.indicator S f)) :=
-begin
-  intro A1,
-  rw measure_theory.with_density_apply f A1,
-  rw integral_set_indicator,
-  unfold measure_theory.measure.integral,
-  --apply H,
-  apply A1,
-end
-
-
-
-
-lemma measure_theory.with_density_apply3 {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (S:set Ω):(is_measurable S) →
-    (μ.with_density f).to_outer_measure.measure_of S = (μ.integral (set.indicator S f)) :=
-begin
-  intro A1,
-  rw ← measure_theory.with_density_apply2,
-  refl,
-  --apply H,
-  apply A1,
-end
-
---TODO: shift to lintegral.
-lemma integral_measure.apply3 {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (H:measurable f) (S:set Ω):(is_measurable S) →
-    (μ.with_density f).to_outer_measure.measure_of S = supr (λ n, (μ.integral (set.indicator S (measure_theory.simple_func.eapprox f n)))) :=
-begin
-  intro A1,
-  rw measure_theory.with_density_apply3,
-  rw ← @measure_theory.integral_supr Ω M μ,
-  rw ← supr_indicator,
-  have C1:(λ (n : ℕ), ⇑(measure_theory.simple_func.eapprox f n))=
-          (λ (n : ℕ), (measure_theory.simple_func.eapprox f n).to_fun),
-  {
-    ext,
-    rw simple_func_to_fun,
-  },
-  rw C1,
-  clear C1,
-  rw supr_eapprox,
-  apply H,
-  {
-    intro n,
-    apply measurable_set_indicator,
-    apply A1,
-    apply measure_theory.simple_func.measurable,
-  },
-  {
-    apply set_indicator_monotone,
-    apply measure_theory.simple_func.monotone_eapprox,
-  },
-  --apply H,
-  apply A1,
-end
-
-
-lemma integral_measure_restrict_def {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (H:measurable f) (S:set Ω) (x:ennreal):
+/--
+  This is compose_eq_multiply on a restricted constant.
+  This is the first step to proving compose_eq_multiply
+  A key question is whether measurability is required (H).
+ -/
+lemma measure_theory.simple_func.restrict.compose_eq_multiply {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (H:measurable f) (S:set Ω) (x:ennreal):
     is_measurable S →
-    (μ.with_density f).integral ((measure_theory.simple_func.const Ω x).restrict S) 
-    = μ.integral (f * ⇑((measure_theory.simple_func.const Ω x).restrict S)) :=
+    ((measure_theory.simple_func.const Ω x).restrict S).lintegral (μ.with_density f)
+    = (∫⁻ a:Ω, (f * ⇑((measure_theory.simple_func.const Ω x).restrict S)) a ∂ μ) :=
 begin
   intro A1,
-  rw integral_const_restrict_def,
-  rw measure_theory.with_density_apply3,
+  rw measure_theory.simple_func.restrict_const_lintegral,
+  rw measure_theory.with_density_apply2',
   rw mul_restrict_def,
-  rw measure_theory.integral_mul_const,
-  apply measurable_set_indicator,
-  apply A1,
+  rw measure_theory.lintegral_const_mul,
+  apply measurable.indicator,
   apply H,
   apply A1,
-  repeat {apply A1},
+  apply A1,
+  repeat {apply A1},  
 end
 
-lemma integral_measure_piece_def {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (H:measurable f) {g:measure_theory.simple_func Ω ennreal} (x:ennreal):
-    (μ.with_density f).integral (g.piece x)
-    = μ.integral (f * ⇑(g.piece x)) :=
+/--
+  This is the closest thing to compose_eq_multiply on a piece.
+ -/
+lemma measure_theory.simple_func.piece.compose_eq_multiply {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (H:measurable f) {g:measure_theory.simple_func Ω ennreal} (x:ennreal):
+    (g.piece x).lintegral (μ.with_density f)
+    = (∫⁻ a:Ω, (f * ⇑(g.piece x)) a ∂ μ) :=
 begin
   rw measure_theory.simple_func.piece_def,
-  rw integral_measure_restrict_def,
+  rw measure_theory.simple_func.restrict.compose_eq_multiply,
   apply H,
   apply g.is_measurable_fiber',
 end
-
-
-lemma integral_zero {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω):
-  μ.integral 0 = 0 :=
-begin
-  have A1:μ.integral (0:Ω → ennreal) = μ.integral (λ ω:Ω, 0),
-  {
-    have A1A:(λ ω:Ω, (0:ennreal)) = 0 := rfl,
-    rw ← A1A,
-  },
-  rw A1,
-  unfold measure_theory.measure.integral,
-  rw measure_theory.lintegral_zero,
-end
-
 
 lemma with_density.zero {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω):
     (μ.with_density 0) = 0 :=
 begin
   apply measure_theory.measure.ext,
   intros S A1,
-  rw measure_theory.with_density_apply2,
+  rw measure_theory.with_density_apply2',
   {
     simp,
-    rw integral_zero,
   },
   {
     apply A1,
   }
 end
-
-lemma measure_theory.measure.integral_def {Ω:Type*} [M:measurable_space Ω] (μ:measure_theory.measure Ω) {x:Ω → ennreal}:
-μ.integral x = ∫⁻ (a : Ω), x a  ∂μ := rfl
-
-
-lemma measure_theory.measure.integral_add {Ω:Type*} [M:measurable_space Ω] (μ:measure_theory.measure Ω) {x y:Ω → ennreal}:measurable x → measurable y →
-   μ.integral (x + y) = μ.integral x + μ.integral y :=
-begin
-  intros A1 A2,
-  repeat {rw measure_theory.measure.integral_def},
-  simp,
-  rw @measure_theory.lintegral_add Ω M μ x y,
-  apply A1,
-  apply A2,
-end
-
 
 --TODO: Add to mathlib if novel.
 lemma finset.sum_measurable {β:Type*} {Ω:Type*} {M:measurable_space Ω}
@@ -3564,35 +3326,50 @@ begin
 end
 
 
+lemma finset.sum_measurable' {β:Type*} {Ω:Type*} {M:measurable_space Ω}
+    (f:β → Ω → ennreal) (S:finset β):(∀ b∈ S, measurable (f b)) →
+     measurable (λ a:Ω, (S.sum (λ b:β, f b a))) :=
+begin
+  intros A1,
+  have B1:(λ a:Ω, (S.sum (λ b:β, f b a))) = (S.sum f),
+  {
+    apply funext,
+    intro a,
+    rw finset.sum_apply,    
+  },
+  rw B1,
+  apply finset.sum_measurable,
+  apply A1,
+end
 
 --  Because we need an additional constraint, this cannot be handled with
 --  add_monoid_hom.
-lemma finset.sum_integral {β:Type*} {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:β → Ω → ennreal) (S:finset β):
-  (∀ b∈S, measurable  (f b)) →
-  S.sum (λ b, (μ.integral (f b))) =
-  (μ.integral (S.sum f)) := 
+
+lemma finset.sum_integral' {β:Type*} {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:β → Ω → ennreal) (S:finset β):
+  (∀ b∈S, measurable  (f b)) →  
+  S.sum (λ b,(∫⁻ a:Ω, (f b a) ∂ μ)) =
+  (∫⁻ a:Ω, (S.sum f) a ∂ μ) := 
 begin
   have A1:decidable_eq β := classical.decidable_eq β,
   apply @finset.induction_on β _ A1 S,
   {
     rw finset.sum_empty,
     rw finset.sum_empty,
-    rw integral_zero,
-    intro A1,
-    refl,
+    simp,
   },
   {
     intros b S2 A2 A3 A4,
     rw finset.sum_insert,
     rw A3,
     rw finset.sum_insert,
-    rw measure_theory.measure.integral_add,
+    simp,
+    rw measure_theory.lintegral_add,
     {
       apply A4,
       simp,
     },
     {
-      apply finset.sum_measurable,
+      apply finset.sum_measurable',
       intros b2 A5,
       apply A4,
       simp [A5],
@@ -3611,23 +3388,56 @@ begin
   },
 end
 
+noncomputable def simple_func_lintegral_add_monoid_hom {Ω:Type*} [measurable_space Ω] (μ:measure_theory.measure Ω):
+  add_monoid_hom (measure_theory.simple_func Ω ennreal) ennreal := {
+  to_fun := λ f:(measure_theory.simple_func Ω ennreal), f.lintegral μ,
+  map_add' := begin
+    intros x y,
+    rw measure_theory.simple_func.add_lintegral,
+  end,
+  map_zero' := begin
+    rw measure_theory.simple_func.zero_lintegral,
+  end
+}
 
-lemma finset.sum_integral_simple_func {β:Type*} {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:β → (measure_theory.simple_func Ω ennreal)) (S:finset β):
-  S.sum (λ b, (μ.integral (f b))) =
-  (μ.integral (⇑(S.sum f))) := 
+/-
+lemma measure_theory.simple_func.finset_sum_to_fun {β:Type*} 
+  {Ω:Type*} [measurable_space Ω]
+  (g:β → (measure_theory.simple_func Ω ennreal)) (S:finset β):
+  ⇑(S.sum g) = (S.sum (λ b:β, (g b).to_fun)) :=
 begin
-  rw measure_theory.simple_func.finset_sum_to_fun,
-  rw finset.sum_integral,
-  have A1:(λ (b : β), ⇑(f b)) = (λ (b : β), (f b).to_fun),
+  have A1:(λ b:β, (g b).to_fun) =
+          ((λ b:β, (simple_func_to_fun_add_monoid_hom Ω) (g b))),
   {
     apply funext,
     intro b,
-    rw simple_func_to_fun,
+    rw simple_func_to_fun_add_monoid_hom_to_fun_def',
   },
   rw A1,
-  intros b A2,
-  apply measure_theory.simple_func.measurable,
+  clear A1,
+  rw simple_func_to_fun,
+  rw ← simple_func_to_fun_add_monoid_hom_to_fun_def',
+  rw add_monoid_hom.map_sum,
 end
+-/
+
+lemma finset.sum_integral_simple_func'' {β:Type*} {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:β → (measure_theory.simple_func Ω ennreal)) (S:finset β):
+  S.sum (λ b, (f b).lintegral μ) =
+  (S.sum f).lintegral μ := 
+begin
+  have A2:(λ b, (f b).lintegral μ) = (λ b, (simple_func_lintegral_add_monoid_hom μ) (f b)),
+  {
+    apply funext,
+    intro b,
+    refl,
+  },
+  rw A2,
+  have A3:(S.sum f).lintegral μ = (simple_func_lintegral_add_monoid_hom μ) (S.sum f) := rfl,
+  rw A3,
+  rw add_monoid_hom.map_sum,
+end
+
+
 
 --TODO:If novel, add to finset.sum?
 lemma finset.sum_distrib {α:Type*} {β:Type*} [comm_semiring β] {f:β} {g:α → β} 
@@ -3647,39 +3457,33 @@ begin
   apply @add_monoid_hom.map_sum α β β _ _ (add_monoid_hom.mul_left f) g S,
 end
 
---TODO:This is the simplest lemma that is clearly required.
---Need to figure out how to represent integral first.
-/-
-lemma simple_func.compose_eq_multiply {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) 
+
+lemma measure_theory.simple_func.compose_eq_multiply {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) 
   (f:Ω → ennreal) (H:measurable f) {g:measure_theory.simple_func Ω ennreal}:
---    ∫⁻ a, g a ∂ (μ.with_density f) = ∫⁻ a, (f * ⇑g) a ∂ μ := sorry
-    g.lintegral (μ.with_density f) = ∫⁻ a, (f * ⇑g) a ∂ μ := sorry
--/
-lemma simple_func.compose_eq_multiply {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f:Ω → ennreal) (H:measurable f) {g:measure_theory.simple_func Ω ennreal}:
-    (μ.with_density f).integral g = μ.integral (f * ⇑g) :=
+    g.lintegral (μ.with_density f) = ∫⁻ a, (f * ⇑g) a ∂ μ :=
 begin
-  have A1:∀ g2 g3:measure_theory.simple_func Ω ennreal,
+  have D1:∀ g2 g3:measure_theory.simple_func Ω ennreal,
            g2 = g3 → 
-           (μ.with_density f).integral g2 =
-           (μ.with_density f).integral g3,
+         g2.lintegral (μ.with_density f) = g3.lintegral (μ.with_density f), 
   {
     intros g2 g3 A1A,
     rw A1A,
   }, 
-  rw A1 g (finset.sum (measure_theory.simple_func.range g) (λ (x : ennreal), measure_theory.simple_func.piece g x)) (measure_theory.simple_func.sum_piece g),
 
-  rw ← finset.sum_integral_simple_func,
-  have A1A:(λ (b : ennreal),
-      measure_theory.measure.integral (μ.with_density f) ⇑(measure_theory.simple_func.piece g b))=λ b, μ.integral (f * ⇑(measure_theory.simple_func.piece g b)),
+  rw D1 g (finset.sum (measure_theory.simple_func.range g) (λ (x : ennreal), measure_theory.simple_func.piece g x)) (measure_theory.simple_func.sum_piece g),
+
+  rw ← finset.sum_integral_simple_func'',
+  have A1A:(λ (b : ennreal), (measure_theory.simple_func.piece g b).lintegral (μ.with_density f)) =
+     (λ b, ∫⁻ a:Ω, (f * ⇑(measure_theory.simple_func.piece g b)) a ∂ μ),
   {
     apply funext,
     intro x,
-    rw integral_measure_piece_def,
+    rw measure_theory.simple_func.piece.compose_eq_multiply,
     apply H,
   },
   rw A1A,
   clear A1A,
-  rw finset.sum_integral,
+  rw finset.sum_integral',
   
   rw @finset.sum_distrib ennreal (Ω → ennreal),
   have A3:
@@ -3704,6 +3508,7 @@ begin
       intros g2 g3 A1,
       rw A1,
     },
+    
     rw A3B,
     apply @measure_theory.simple_func.sum_piece Ω M g,
   },
@@ -3713,509 +3518,6 @@ begin
   apply H,
   apply (g.piece b).measurable,
 end
-
-
-
-
-lemma integral_le {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) 
-    (f:Ω → ennreal) (H:measurable f) (x:ennreal):(∀ g:measure_theory.simple_func Ω ennreal, (⇑g ≤ f) →
-     μ.integral g ≤ x) →
-    (μ.integral f ≤ x) :=
-begin
-  intros A1,
-  unfold measure_theory.measure.integral,
-  unfold measure_theory.lintegral,
-  unfold supr,
-  apply @Sup_le ennreal _,
-  intros b A2,
-  simp at A2,
-  cases A2 with g A2,
-  subst b,
-  simp,
-  intro A3,
-  rw ← integral_simple_func_def,
-  apply A1 g A3,
-end
-
-
-lemma integral.monotone {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) 
-    (f g:Ω → ennreal):
-    (f ≤ g) →
-    (μ.integral f ≤ μ.integral g) :=
-begin
-  intros A3,
-  apply measure_theory.lintegral_mono,
-  apply A3,
-end
-
---This seems like a specific example of integrals being monotone.
-lemma le_integral {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) 
-    (f:Ω → ennreal) (g:measure_theory.simple_func Ω ennreal):
-    (⇑g ≤ f) →
-    (μ.integral g ≤ μ.integral f) :=
-begin
-  intros A1,
-  apply integral.monotone,
-  apply A1,
-end
-
-
-lemma integral_eq_Sup {Ω:Type*} {M:measurable_space Ω}
-    (μ:measure_theory.measure Ω) 
-    (f:Ω → ennreal):
-    (measurable f) →
-    μ.integral f = Sup ((λ g:measure_theory.simple_func Ω ennreal,
-    μ.integral g) '' 
-      {g:measure_theory.simple_func Ω ennreal|(⇑g ≤ f)}) :=
-begin
-  intro A1,
-  apply le_antisymm,
-  {
-    apply integral_le,
-    apply A1,
-    intros g A2,
-    apply @le_Sup_image (measure_theory.simple_func Ω ennreal) ennreal _,
-    simp,
-    apply A2,
-  },
-  {
-    apply @Sup_image_le (measure_theory.simple_func Ω ennreal) ennreal _,
-    intros g A2,
-    apply le_integral,
-    simp at A2,
-    apply A2,
-  },
-end
-
-
-
-
---  In general, given two monotone functions, the supremum of the product
---  equals the product of the supremum. Here, we prove a part of that,
---  when one function has a supremum of infinity.
-lemma supr_mul_top {α:Type*} [linear_order α] {f g:α → ennreal}:
-    monotone f →
-    monotone g →
-    supr f = ⊤  →
-    supr g ≠ 0 → 
-    supr (f * g) = ⊤ :=
-begin
-  intros A1 A2 A3 A4,
-  rw supr_eq_top,
-  intros b A5,
-  have C0F1:(0:ennreal) = ⊥ := rfl,
-
-  rw supr_eq_top at A3,
-  have C0:(∃ a:α, g a = ⊤) ∨  ¬ (∃ a:α, g a = ⊤) := classical.em _,  
-  cases C0,
-  {
-    cases C0 with j C0,
-    have C0B := (@ennreal.coe_lt_top 1),
-    have C0C := A3 1 C0B,
-    cases C0C with i C0C,
-    have C0D :(i ≤ j) ∨ (j ≤ i) := le_total i j,
-    cases C0D,
-    {
-      apply exists.intro j,
-      have C0E:(f * g) j = f j * g j := rfl,
-      rw C0E,
-      have C0F:(f j) * (g j)=⊤,
-      {
-        rw C0,
-        rw with_top.mul_top,
-        rw C0F1,
-        rw ← bot_lt_iff_ne_bot,
-        rw ← C0F1,
-        apply lt_trans,
-        apply ennreal.zero_lt_one,
-        apply lt_of_lt_of_le,
-        apply C0C,
-        apply A1,
-        apply C0D,
-      },
-      rw C0F,
-      apply A5,
-    },
-    {
-      apply exists.intro i,
-      simp,
-      have C0G:g i = ⊤,
-      {
-        apply top_unique,
-        rw ← C0,
-        apply A2,
-        apply C0D,    
-      },
-      have C0H:f i * g i = ⊤,
-      {
-        rw C0G,
-        simp,
-        left,
-        rw C0F1,
-        have C0H1:(¬f i = ⊥) = (f i ≠ ⊥) := rfl,
-        rw C0H1,
-        rw ← @bot_lt_iff_ne_bot ennreal _ (f i),
-        apply lt_of_le_of_lt,
-        apply @bot_le ennreal _ 1,
-        apply C0C,   
-      },
-      rw C0H,
-      apply A5,
-    },
-  }, 
-  have C1:∀ a:α, g a ≠ ⊤,
-  {
-    apply forall_not_of_not_exists,
-    apply C0,
-  },
-  have A6:∃ j, g j ≠ 0,
-  {
-    have A6A: g ≠ 0,
-    {
-      intro A6A1,
-      apply A4,
-      rw ennreal.supr_zero_iff_zero,
-      apply A6A1,
-    },
-    rw ← classical.not_forall_iff_exists_not,
-    intro A6B,
-    apply A6A,
-    apply funext,
-    intro a,
-    apply A6B,
-  },
-  cases A6 with j A6,
-  let c := b / (g j),
-  begin
-    have B1 : c = b / (g j) := rfl,
-    have B2 : c < ⊤,
-    {
-      rw B1,
-      rw lt_top_iff_ne_top,
-      intro B2A,
-      rw ennreal.div_eq_top at B2A,
-      cases B2A,
-      {
-        apply A6,
-        apply B2A.right,
-      },
-      {
-        rw lt_top_iff_ne_top at A5,
-        apply A5,
-        apply B2A.left,
-      },
-    },
-    have B3 := A3 c B2,
-    cases B3 with i B3,
-      have B7 :c * (g j) = b,
-      {
-        have B7A:c * (g j) = (b / (g j)) * (g j),
-        {
-          rw B1,
-        },
-        rw B7A,
-        rw ennreal.mul_div_cancel,
-        apply A6,
-        apply C1,
-      },
-      rw ← B7,
-    have B4: i ≤ j ∨ j ≤ i := le_total i j,
-    cases B4,
-    {
-      apply exists.intro j,
-      have B5:c < f j,
-      {
-        apply lt_of_lt_of_le,
-        apply B3,
-        apply A1,
-        apply B4,
-      },
-      have B6:(f * g) j = f j * g j := rfl,
-      rw B6,
-      apply ennreal.lt_of_mul_lt_mul,
-      apply A6,
-      apply C1,
-      apply B5,
-    },
-    {
-      apply exists.intro i,
-      have B6:(f * g) i = f i * g i := rfl,
-      rw B6,
-      have B8:c * g j < f i * g j,
-      {
-        rw lt_iff_le_and_ne,
-        split,
-        {
-          apply ennreal.mul_le_mul,
-          apply le_of_lt B3,
-          apply le_refl (g j),
-        },
-        {
-          intro B8A,
-          rw ennreal.mul_eq_mul_right at B8A,
-          rw ← B8A at B3,
-          have B8B := ne_of_lt B3,
-          apply B8B,
-          refl,
-          apply A6,
-          apply C1,
-        },
-      },
-      have B9:f i * g j ≤ f i * g i,
-      {
-        apply ennreal.mul_le_mul,
-        apply le_refl (f i),
-        apply A2 B4,
-      },
-      apply lt_of_lt_of_le B8 B9,
-    },
-  end
-end
-
-lemma supr_mul_of_supr_top {α:Type*} [linear_order α] {f g:α → ennreal}:
-    monotone f →
-    monotone g →
-    supr f = ⊤  →
-    supr g ≠ 0 → 
-    supr f * supr g ≤ supr (f * g) :=
-begin
-  intros A1 A2 A3 A4,
-  rw supr_mul_top A1 A2 A3 A4,
-  apply @le_top ennreal _ ((supr f) * (supr g)),
-end
-
-lemma ne_top_of_supr_ne_top {α:Type*} {f:α → ennreal} {a:α}:
-    supr f ≠ ⊤  → f a ≠ ⊤ :=
-begin
-  intro A1,
-  intro A2,
-  apply A1,
-  rw ← top_le_iff,
-  rw ← A2,
-  apply le_supr f a,
-end
-
-
-lemma multiply_supr {α:Type*} [linear_order α] {f g:α → ennreal}:
-    monotone f →
-    monotone g →
-    supr (f * g) = (supr f) * (supr g) :=
-begin
-  intros A1 A2,
-  apply le_antisymm,
-  {
-    apply supr_le _,
-    intro x,
-    simp,
-    apply ennreal.mul_le_mul,
-    apply le_supr f x,
-    apply le_supr g x,
-  },
-  {
-    /- If for all x and all y, (f x) * (f y) ≤ z,
-       then (supr x) * (supr y) ≤ z.
-       Consider a particular x, y. If x < y, then
-       f x ≤ f y. Thus (f x) * (g y) ≤ (f y) * (g y) ≤ supr (f * g)
-       However, I don't know how to prove the first part. -/
-    have A3:supr f = 0 ∨ supr f ≠ 0  := eq_or_ne,
-    cases A3,
-    {
-      apply le_supr_mul_of_supr_zero,
-      apply A3,
-    },
-    have A4:supr g = 0 ∨ supr g ≠ 0  := eq_or_ne,
-    cases A4,
-    {
-      rw mul_comm,
-      rw mul_comm f g,
-      apply le_supr_mul_of_supr_zero,
-      apply A4,
-    },
-    have A3A:supr f = ⊤ ∨ supr f ≠ ⊤ := eq_or_ne,
-    cases A3A,
-    {
-      apply supr_mul_of_supr_top A1 A2 A3A A4,
-    },
-    have A5:supr g = ⊤ ∨ supr g ≠ ⊤ := eq_or_ne,
-    cases A5,
-    {
-      rw mul_comm,
-      rw mul_comm f g,
-      apply supr_mul_of_supr_top A2 A1 A5 A3,
-    },
-    rw ← ennreal.le_div_iff_mul_le (or.inl A4) (or.inl A5),
-    apply @supr_le ennreal α _,
-    intro i,
-    have B4:f i ≠ ⊤,
-    {
-      apply ne_top_of_supr_ne_top A3A,
-    },
-    have A6:f i = 0 ∨ f i ≠ 0 := eq_or_ne,
-    cases A6,
-    {
-       rw A6,
-       simp,
-    },
-    rw ennreal.le_div_iff_mul_le (or.inl A4) (or.inl A5),
-    rw mul_comm,
-    rw ← ennreal.le_div_iff_mul_le (or.inl A6) (or.inl B4),
-    apply @supr_le ennreal α _,
-    {
-    intro j,
-    rw  ennreal.le_div_iff_mul_le (or.inl A6) (or.inl B4),
-    have A7:i ≤ j ∨ j ≤ i := le_total i j, 
-    cases A7,
-    {
-       have B1:f i ≤ f j,
-       {
-         apply A1,
-         apply A7,
-       },
-       rw mul_comm,
-       have B2:f i * g j ≤ f j * g j,
-       {
-         apply ennreal.mul_le_mul B1,
-         apply le_refl (g j),
-       },
-       apply le_trans B2,
-       have B3:f j * g j = (f * g) j := rfl,
-       rw B3,
-       apply @le_supr ennreal α _ (f * g),
-    },
-    {
-       have B1:g j ≤ g i,
-       {
-         apply A2,
-         apply A7,
-       },
-       rw mul_comm,
-       have B2:f i * g j ≤ f i * g i,
-       {
-         apply ennreal.mul_le_mul _ B1,
-         apply le_refl (f i),
-       },
-       apply le_trans B2,
-       have B3:f i * g i = (f * g) i := rfl,
-       rw B3,
-       apply @le_supr ennreal α _ (f * g),
-    },
-    },
-  },
-end
-
-lemma pointwise_monotone {α β γ:Type*} [preorder α] [preorder γ] 
-   {f:α → β → γ}:monotone f 
-   ↔ (∀ b:β, monotone (λ a:α, f a b)) := 
-begin
-  split;intros A1,
-  {
-    intro b,
-    let g:β → α → γ := (λ (b:β) (a:α), f a b),
-    begin
-      have A2:g = (λ (b:β) (a:α), f a b) := rfl,
-      have A3:(λ (a:α), f a b)=g b,
-      {
-        rw A2,
-      },
-      rw A3,
-      apply @monotone_app α β γ _ _,
-      have A4:(λ (a : α) (b : β), g b a) = f,
-      {
-        ext a b2,
-        rw A2,
-      },
-      rw A4,
-      apply A1,
-    end
-  },
-  {
-    apply @monotone_lam α β γ _ _,
-    apply A1,
-  },
-end
-
-
-lemma pointwise_supr {α β:Type*} [preorder α] {f:α → β → ennreal} 
-  {g:β → ennreal}:supr f = g ↔ (∀ b:β, supr (λ a:α, f a b)=g b) := 
-begin
-  split;intros A1,
-  {
-    intro b,
-    rw ← A1,
-    rw supr_apply,
-  },
-  {
-    apply funext,
-    intro b,
-    rw ← (A1 b),
-    rw supr_apply,
-  },
-end
-
-lemma multiply_supr2 {α β:Type*} [linear_order α] {f g:α → β → ennreal}:
-    monotone f → monotone g →
-    supr (f * g) = (supr f) * (supr g) :=
-begin
-  intro A1,
-  intro A2,
-  rw pointwise_supr,
-  intro b,
-  have A3:(⨆ (a : α), (f * g) a b) = 
-         (supr ((λ (a : α), f a b) * (λ a:α, g a b))),
-  {
-    have A3A:(λ (a:α), f a b) * (λ (a:α), g a b)=(λ a:α, (f * g) a b),
-    {
-      apply funext,
-      intro a,
-      simp,
-    },
-    rw A3A,
-  },
-  rw A3,
-  rw multiply_supr,
-  {
-    simp,
-    rw supr_apply,
-    rw supr_apply,
-  },
-  rw pointwise_monotone at A1,
-  apply A1,
-  rw pointwise_monotone at A2,
-  apply A2,
-end
-
-lemma eapprox.mul_mono {α β:Type*} [preorder α] [encodable α] [measurable_space β] (f g:β → ennreal):
-  monotone ((measure_theory.simple_func.eapprox f) * (measure_theory.simple_func.eapprox g)) :=
-begin
-  apply ennreal.multiply_mono,
-  apply measure_theory.simple_func.monotone_eapprox,
-  apply measure_theory.simple_func.monotone_eapprox,
-end
-
-/-
-  This theorem leaves us in an interesting position. We now have a sequence
-  of functions that is separable, and yet the limit is f * g.
--/
-lemma eapprox.mul_supr {β:Type*}  [measurable_space β] (f g:β → ennreal):
-  (measurable f) → (measurable g) →
-  supr ((λ n:ℕ, (measure_theory.simple_func.eapprox f n).to_fun) * (λ n:ℕ, ⇑(measure_theory.simple_func.eapprox g n))) = (f * g) :=
-begin
-  intros A1 A2,
-  rw multiply_supr2,
-  apply funext,
-  intro a,
-  simp,
-  rw supr_apply,
-  rw supr_apply,
-  rw measure_theory.simple_func.supr_eapprox_apply g A2 a,
-  have A3:(⨆ (a_1 : ℕ), (measure_theory.simple_func.eapprox f a_1).to_fun a) 
-  =   (⨆ n:ℕ, (⇑(measure_theory.simple_func.eapprox f n):β → ennreal) a) := rfl,
-  rw A3,
-  rw measure_theory.simple_func.supr_eapprox_apply f A1 a,
-  apply measure_theory.simple_func.monotone_eapprox,
-  apply measure_theory.simple_func.monotone_eapprox,
-end
-
 
 lemma supr_const_mul {Ω:Type*} {k:ennreal} {g:Ω → ennreal}:
   supr (λ n:Ω, k * (g n)) = k * (supr g) := 
@@ -4293,7 +3595,6 @@ begin
   apply @supr_const_mul α (f ω) (λ i:α, g i ω),
 end
 
-
 lemma monotone_fn_const_mul {α Ω:Type*} [preorder α] {f:Ω → ennreal} {g:α → Ω → ennreal}:
   monotone g → monotone (λ n:α, f * (g n)) := 
 begin
@@ -4307,14 +3608,13 @@ begin
   apply A2,
 end
 
-
-lemma measure_theory.with_density.compose_eq_multiply {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f g:Ω → ennreal) (H:measurable f) (H2:measurable g):
-  (μ.with_density f).integral g = μ.integral (f * g) :=
+lemma measure_theory.with_density.compose_eq_multiply' {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω) (f g:Ω → ennreal) (H:measurable f) (H2:measurable g):
+ ∫⁻ a, g a ∂ (μ.with_density f)  =  ∫⁻ a,(f * g) a ∂ μ :=
 begin
-  have A1:(μ.with_density f).integral g =
-          supr (λ n:ℕ, (μ.with_density f).integral (measure_theory.simple_func.eapprox g n)),
+  have A1:∫⁻ a, g a ∂ (μ.with_density f) =
+          supr (λ n:ℕ, ∫⁻ (a : Ω), (measure_theory.simple_func.eapprox g n) a ∂ (μ.with_density f)),
   {
-    rw ← measure_theory.integral_supr,
+    rw ← measure_theory.lintegral_supr2,
     rw supr_eapprox',
     apply H2,
     intro n,
@@ -4323,16 +3623,18 @@ begin
   },
   rw A1,
   clear A1,
-  have A2:(λ n:ℕ, (μ.with_density f).integral (measure_theory.simple_func.eapprox g n)) = (λ n:ℕ, μ.integral (f * (measure_theory.simple_func.eapprox g n))),
+  have A2:(λ n:ℕ, ∫⁻ (a : Ω), (measure_theory.simple_func.eapprox g n) a ∂ (μ.with_density f))
+        = (λ n:ℕ, ∫⁻ (a : Ω), (f * (measure_theory.simple_func.eapprox g n)) a ∂ μ),
   {
     apply funext,
     intro n,
-    rw simple_func.compose_eq_multiply,
+    rw measure_theory.simple_func.lintegral_eq_lintegral,
+    rw measure_theory.simple_func.compose_eq_multiply,
     apply H,
   },
   rw A2,
   clear A2,
-  rw ← measure_theory.integral_supr,
+  rw ← measure_theory.lintegral_supr2,
   have A3:(⨆ (n : ℕ), f * ⇑(measure_theory.simple_func.eapprox g n)) = (f * g),
   {
     rw supr_fn_const_mul,
@@ -4347,6 +3649,4 @@ begin
   apply monotone_fn_const_mul,
   apply measure_theory.simple_func.monotone_eapprox,
 end
-
-#check measure_theory.integral_supr
 

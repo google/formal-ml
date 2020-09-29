@@ -27,7 +27,6 @@ import formal_ml.real_measurable_space
 import formal_ml.nnreal
 import formal_ml.semiring
 import topology.instances.real
-import formal_ml.integral
 import formal_ml.classical
 
 /-
@@ -494,9 +493,7 @@ end
 
 
 noncomputable def expected_value_ennreal {α:Type*} {p:probability_space α}
-  (X:p →ᵣ borel ennreal):ennreal :=
-  measure_theory.measure.integral p.volume X.val
-
+  (X:p →ᵣ borel ennreal):ennreal := ∫⁻ (a : α), X.val a  ∂ (p.volume)
 
 lemma nnreal_to_ennreal_measurable:measurable (λ x:nnreal, (x:ennreal)) :=
 begin
@@ -744,7 +741,7 @@ def to_measure_space {Ω:Type*} (p:probability_space Ω):
 
 
 lemma expected_value_ennreal_def {Ω:Type*} {P:probability_space Ω}
-  (X:P →ᵣ borel ennreal):E[X] = measure_theory.measure.integral (P.volume) (X.val) := rfl
+  (X:P →ᵣ borel ennreal):E[X] = ∫⁻ (a : Ω), (X.val) a ∂ (P.volume)  := rfl
 
 
 lemma expected_value_ennreal_def2 {Ω:Type*} {P:probability_space Ω}
@@ -1275,9 +1272,7 @@ begin
     apply @ennreal_measurable_fun_zero_val_def Ω (probability_space.to_measurable_space Ω),
   },
   rw A1,
-  unfold measure_theory.measure.integral,
-  rw measure_theory.lintegral_const,
-  rw zero_mul,
+  rw measure_theory.lintegral_zero,
 end
 
 lemma nnreal_zero_eq_ennreal_zero {Ω:Type*} {P:probability_space Ω}:
@@ -2341,11 +2336,9 @@ lemma ennreal_scalar_expected_value {Ω:Type*} (p:probability_space Ω)
    E[scalar_mul_rv k X] = k * E[X] :=
 begin
   rw expected_value_ennreal_def,
-  unfold measure_theory.measure.integral,
   rw scalar_mul_rv_val_def,
   rw measure_theory.lintegral_const_mul,
   rw expected_value_ennreal_def,
-  unfold measure_theory.measure.integral,
   apply X.property
 end
 

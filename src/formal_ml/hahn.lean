@@ -32,7 +32,6 @@ import formal_ml.real_measurable_space
 import formal_ml.set
 import formal_ml.filter_util
 import topology.instances.ennreal
-import formal_ml.integral
 import formal_ml.int
 import formal_ml.with_density_compose_eq_multiply
 import formal_ml.classical
@@ -739,6 +738,17 @@ begin
   },
 end
 
+lemma ne_top_of_supr_ne_top {α:Type*} {f:α → ennreal} {a:α}:
+    supr f ≠ ⊤  → f a ≠ ⊤ :=
+begin
+  intro A1,
+  intro A2,
+  apply A1,
+  rw ← top_le_iff,
+  rw ← A2,
+  apply le_supr f a,
+end
+
 
 lemma measures_equal {Ω:Type*} {M:measurable_space Ω}
     (μ ν:measure_theory.measure Ω) [measure_theory.finite_measure ν]:
@@ -873,6 +883,7 @@ begin
 end
 
 
+
 lemma supr_with_density_apply_eq_with_density_supr_apply {Ω:Type*} [measurable_space Ω] {μ:measure_theory.measure Ω}
     {h:ℕ → Ω → ennreal} {S:set Ω}:
     is_measurable S →
@@ -881,24 +892,23 @@ lemma supr_with_density_apply_eq_with_density_supr_apply {Ω:Type*} [measurable_
     supr (λ n:ℕ, μ.with_density (h n) S) = μ.with_density (supr h) S :=
 begin
   intros A1 A2 A3,
-  have A4:(λ n, μ.with_density (h n) S) = (λ n, μ.integral (set.indicator S (h n))),
+  have A4:(λ n, μ.with_density (h n) S) = (λ n,  ∫⁻ (ω:Ω), (set.indicator S (h n)) ω ∂ μ),
   {
     apply funext,
     intro n,
-    rw measure_theory.with_density_apply2,
-    --apply A2 n,
+    rw measure_theory.with_density_apply2',
     apply A1,
   },
   rw A4,
   clear A4,
-  rw measure_theory.with_density_apply2,
+  rw measure_theory.with_density_apply2',
   rw supr_indicator,
-  rw measure_theory.integral_supr,
+  rw measure_theory.lintegral_supr2,
   {
     intro n,
-    apply measurable_set_indicator,
-    apply A1,
+    apply measurable.indicator,
     apply A2 n,
+    apply A1,
   },
   {
     have B1:(λ (n:ℕ), set.indicator S (h n)) = (set.indicator S) ∘ h := rfl,
@@ -3557,23 +3567,6 @@ begin
   apply @galois_insertion_measure_of_of_function' Ω,
 end
 
-
-lemma monotone_integral {Ω:Type*} [M:measurable_space Ω]
-    {μ:measure_theory.measure Ω} {f g:Ω → ennreal}:f ≤ g → 
-    (μ.integral f)≤μ.integral g :=
-begin
-  intro A1,
-  apply measure_theory.lintegral_mono,
-  apply A1,
-end
-
-lemma monotone_integral' {Ω:Type*} [M:measurable_space Ω]
-    {μ:measure_theory.measure Ω} {f g:Ω → ennreal}:monotone (μ.integral) :=
-begin
-  apply monotone_integral,
-end
-
-
 -- TODO(martinz): remove measurability requirement?
 lemma monotone_with_density {Ω:Type*} [M:measurable_space Ω]
     {μ:measure_theory.measure Ω}
@@ -3584,18 +3577,15 @@ lemma monotone_with_density {Ω:Type*} [M:measurable_space Ω]
 begin
   intros B1 B2 a b A1,
   intros S A2,
-  rw measure_theory.with_density_apply2,
-  rw measure_theory.with_density_apply2,
-  apply monotone_integral,
+  rw measure_theory.with_density_apply2',
+  rw measure_theory.with_density_apply2',
+  apply measure_theory.lintegral_mono,
   apply @monotone_set_indicator Ω ennreal _ _,
   apply B1,
   apply A1,
-  --apply B2,
   apply A2,
-  --apply B2,
   apply A2,
 end
-
 
 -- Update: I am using this now in R-N theorem.
 -- It's not clear to me anymore that this is necessary.
@@ -3720,9 +3710,10 @@ lemma with_density_le_with_density {Ω:Type*} {M:measurable_space Ω}
   μ.with_density x S ≤ μ.with_density y S :=
 begin
   intros A3 A4,
-  rw measure_theory.with_density_apply2 μ x S A3,
-  rw measure_theory.with_density_apply2 μ y S A3,
-  apply integral.monotone,
+  rw measure_theory.with_density_apply2' μ x S A3,
+  rw measure_theory.with_density_apply2' μ y S A3,
+  apply measure_theory.lintegral_mono,
+
   rw le_func_def2,
   intros ω,
   cases (classical.em (ω ∈ S)) with A5 A5,
@@ -3748,8 +3739,8 @@ lemma with_density_sup_of_le {Ω:Type*} {M:measurable_space Ω}
   μ.with_density (x⊔y) S = μ.with_density y S :=
 begin
   intros A1 A2 A3 A4,
-  rw measure_theory.with_density_apply2 μ (x ⊔ y) S A3,
-  rw measure_theory.with_density_apply2 μ y S A3,
+  rw measure_theory.with_density_apply2' μ (x ⊔ y) S A3,
+  rw measure_theory.with_density_apply2' μ y S A3,
   have A5:set.indicator S (x ⊔ y) = set.indicator S y,
   {
     apply funext,
