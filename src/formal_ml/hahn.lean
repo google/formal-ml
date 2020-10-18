@@ -1,4 +1,3 @@
-
 /-
 Copyright 2020 Google LLC
 
@@ -35,6 +34,7 @@ import topology.instances.ennreal
 import formal_ml.int
 import formal_ml.with_density_compose_eq_multiply
 import formal_ml.classical
+import formal_ml.restrict
 
 /-
   This does not prove the classic Hahn decomposition theorem for signed measures.
@@ -53,8 +53,10 @@ import formal_ml.classical
   By partitioning the space like so, we can separately consider supremum, infimum,
   and difference in each half, and combine them back together. This in turn
   helps to prove the Lebesgue-Radon-Nikodym theorem.
- -/
 
+  Note that {S|is_measurable S ∧ μ.restrict S ≤ ν.restrict S} is a ring of sets.
+
+ -/
 
 lemma nonnegative_fn {α β:Type*} [canonically_ordered_add_monoid β] {f:α → β}:0 ≤ f :=
 begin
@@ -62,109 +64,14 @@ begin
   simp,
 end
 
-lemma real.add_lt_of_lt_sub {a b c:real}:a < b - c → a + c < b :=
-begin
-  intro A1,
-  have B1:a + c < (b - c) + c,
-  {
-    apply add_lt_add_right,
-    apply A1,
-  },
-  simp at B1,
-  apply B1,
-end
-
-
-lemma real.lt_sub_of_add_lt {a b c:real}:a + c < b → a < b - c :=
-begin
-  intro A1,
-  have B1:a + c + (-c) < b + (-c),
-  {
-    apply add_lt_add_right,
-    apply A1,
-  },
-  simp at B1,
-  apply B1,
-end
-
-
-lemma real.le_sub_add {a b c:real}:b ≤ c → 
-a ≤ a - b + c := 
-begin
-  intros A1,
-  have B1:a - b + b ≤ a - b + c,
-  {
-    apply add_le_add_left,
-    apply A1,
-  },
-  simp at B1,
-  apply B1,
-end
-
-lemma real.lt_of_le_of_add_le_of_le_of_sub_lt {a b c d e:real}:
-    a + b ≤ c → d ≤ b → c - e < a → d < e := 
-begin
-  intros A1 A2 A3,
-  have B1:c < a + e,
-  {
-    have B1A:(c - e) + e < a + e,
-    {
-      apply add_lt_add_right,
-      apply A3,
-    },
-    simp at B1A,
-    apply B1A,
-  },
-  have B2:a + b < a + e,
-  {
-    apply lt_of_le_of_lt A1 B1,
-  },
-  simp at B2,
-  apply lt_of_le_of_lt A2 B2,
-end
-
-
-lemma real.lt_of_lt_of_le_of_add_le_of_le_of_sub_lt {a b c d e:real}:
-    c < e → a + b ≤ c → d ≤ b → 0 < a → d < e := 
-begin
-  intros A1 A2 A3 A4,
-  apply lt_of_le_of_lt _ A1,
-  apply le_trans A3,
-  clear A1 A3,
-  have B1:0 + c < a + c,
-  {
-    simp,
-    apply A4,
-  },
-  rw zero_add at B1,
-  have B2 := lt_of_le_of_lt A2 B1,
-  simp at B2,
-  apply le_of_lt B2, 
-end
-
-lemma real.lt_of_add_lt_of_pos {a b c:real}:
-      b + c ≤ a →
-      0 < b →
-      c < a :=
-begin
-  intros A1 A2,
-  have A3:0 + c < b + c,
-  {
-    apply add_lt_add_right A2,
-  }, 
-  rw zero_add at A3,
-  apply lt_of_lt_of_le A3,
-  apply A1,
-end
-
-
 lemma nnreal.add_lt_of_lt_sub {a b c:nnreal}:a < b - c → a + c < b :=
 begin
-  cases (classical.em (c ≤ b)) with B1 B1,
+  cases (decidable.em (c ≤ b)) with B1 B1,
   {
     repeat {rw ← nnreal.coe_lt_coe <|> rw nnreal.coe_add},
     rw nnreal.coe_sub B1,
-    apply real.add_lt_of_lt_sub,    
+    intro B2,
+    linarith,
   },
   {
     intros A1,
@@ -175,8 +82,6 @@ begin
     apply le_of_not_le B1,
   },
 end
-
-
 
 lemma nnreal.lt_sub_of_add_lt {a b c:nnreal}:a + c < b → a < b - c :=
 begin
@@ -199,9 +104,9 @@ begin
   revert A1,
   repeat {rw ← nnreal.coe_lt_coe <|> rw nnreal.coe_add},
   rw nnreal.coe_sub B1,
-  apply real.lt_sub_of_add_lt,
+  intros,
+  linarith,
 end
-
 
 lemma nnreal.le_sub_add {a b c:nnreal}:b ≤ c → c ≤ a → 
 a ≤ a - b + c := 
@@ -210,7 +115,7 @@ begin
   repeat {rw nnreal.coe_add},
   intros A1 A2,
   repeat {rw nnreal.coe_sub},
-  apply real.le_sub_add A1,
+  linarith,
   apply le_trans A1 A2,
 end
 
@@ -228,25 +133,15 @@ begin
   {
     rw nnreal.coe_sub B1,
     rw ← nnreal.coe_le_coe at B1,
-    apply real.lt_of_le_of_add_le_of_le_of_sub_lt,
+    intros,linarith,
   },
   {   
     rw nnreal.sub_eq_zero (le_of_lt B1),
     rw ← nnreal.coe_lt_coe at B1,
-    apply real.lt_of_lt_of_le_of_add_le_of_le_of_sub_lt B1,
+    rw nnreal.coe_zero,
+    intros,linarith,
   },
 end
-
-
-lemma nnreal.epsilon_half_lt_epsilon {ε:nnreal}: 0 < ε → (ε / 2) < ε :=
-begin
-  rw ← nnreal.coe_lt_coe,
-  rw ← nnreal.coe_lt_coe,
-  --rw ← nnreal.coe_two,
-  rw nnreal.coe_div,
-  apply epsilon_half_lt_epsilon,
-end
-
 
 lemma nnreal.inv_as_fraction {c:nnreal}:(1)/(c) = (c)⁻¹ := 
 begin
@@ -260,12 +155,13 @@ lemma nnreal.lt_of_add_lt_of_pos {a b c:nnreal}:
       0 < b →
       c < a :=
 begin
-  --intros A1 A2,
   rw ← nnreal.coe_le_coe,
   rw ← nnreal.coe_lt_coe,
   rw ← nnreal.coe_lt_coe,
   rw nnreal.coe_add,
-  apply real.lt_of_add_lt_of_pos,
+  rw nnreal.coe_zero,
+  intros,
+  linarith,
 end
 
 
@@ -301,29 +197,13 @@ begin
   apply B4
 end
 
-lemma not_top_eq_some {x:ennreal}:x≠ ⊤ → (∃ (y:nnreal), (y:ennreal) = x) :=
-begin
-  intro A1,
-  cases x,
-  {
-    exfalso,
-    simp at A1,
-    apply A1,
-  },
-  apply exists.intro x,
-  refl
-end
 
+-- TODO: everything used below here.
 lemma ennreal.inv_as_fraction {c:ennreal}:(1)/(c) = (c)⁻¹ := 
 begin
   rw ennreal.div_def,
   rw one_mul,
 end
-
-
-
-
-
 
 lemma ennreal.add_lt_of_lt_sub {a b c:ennreal}:a < b - c → a + c < b :=
 begin
@@ -376,6 +256,7 @@ begin
   },
 end
 
+--TODO: everything used below here.
 
 lemma ennreal.sub_eq_of_add_of_not_top_of_le {a b c:ennreal}:a = b + c →
   c ≠ ⊤ →
@@ -560,27 +441,6 @@ begin
   apply nnreal.sub_lt_self A1 A2,
 end 
 
-
-lemma ennreal.epsilon_half_lt_epsilon {ε:ennreal}: ε < ⊤ → 0 < ε → (ε / 2) < ε :=
-begin
-  cases ε;simp,
-  --rw ennreal.coe_div,
-  have B1:((2:nnreal):ennreal) = 2 := rfl,
-  rw ← B1,
-  rw ← ennreal.coe_div,
-  rw ennreal.coe_lt_coe,
-  apply nnreal.epsilon_half_lt_epsilon,
-  intro C1,
-  have C2:(0:nnreal) < (2:nnreal),
-  {
-    apply zero_lt_two,
-  },
-  rw C1 at C2,
-  simp at C2,
-  apply C2,
-end
-
-
 lemma ennreal.lt_of_lt_top_of_add_lt_of_pos {a b c:ennreal}:a < ⊤ →
       b + c ≤ a →
       0 < b →
@@ -738,1910 +598,11 @@ begin
   },
 end
 
-lemma ne_top_of_supr_ne_top {α:Type*} {f:α → ennreal} {a:α}:
-    supr f ≠ ⊤  → f a ≠ ⊤ :=
-begin
-  intro A1,
-  intro A2,
-  apply A1,
-  rw ← top_le_iff,
-  rw ← A2,
-  apply le_supr f a,
-end
-
-
-lemma measures_equal {Ω:Type*} {M:measurable_space Ω}
-    (μ ν:measure_theory.measure Ω) [measure_theory.finite_measure ν]:
-  (μ ≤ ν) →
-  (μ set.univ = ν set.univ) →
-  (μ = ν) :=
-begin
-  intros A3 A4,
-  apply measure_theory.measure.ext,
-  intros S A5,
-  have B3:is_measurable (Sᶜ),
-  {
-    apply is_measurable.compl,
-    apply A5,
-  },
-  apply le_antisymm,
-  {
-    apply A3,
-    apply A5,
-  },
-  {
-    apply @le_of_not_lt ennreal _,
-    intro A6,
-    have A7:μ (Sᶜ) ≤ ν (Sᶜ),
-    {
-      apply A3,
-      apply B3,
-    },
-    have B1:S ∪ (Sᶜ) = set.univ ,
-    {
-      simp,
-    },
-    have B2:disjoint S (Sᶜ),
-    {
-      unfold disjoint,
-      simp,
-    },
-    have A8:μ set.univ = μ S + μ (Sᶜ),
-    {
-      rw ← B1,
-      apply measure_theory.measure_union,
-      apply B2,
-      apply A5,
-      apply B3,
-    },
-    have A9:ν set.univ = ν S + ν (Sᶜ),
-    {
-      rw ← B1,
-      apply measure_theory.measure_union,
-      apply B2,
-      apply A5,
-      apply B3,
-    },
-    have A10:μ set.univ < ν set.univ,
-    {
-      rw A8,
-      rw A9,
-      apply ennreal.add_lt_add_of_lt_of_le_of_lt_top,
-      {
-        apply measure_theory.measure_lt_top,
-      },
-      {
-        apply A7,
-      },
-      {
-        apply A6,
-      },
-    },
-    rw A4 at A10,
-    apply lt_irrefl _ A10,
-  },
-end
-
-
-lemma measurable_supr_of_measurable {Ω:Type*} [M:measurable_space Ω]
-    {h:ℕ → Ω → ennreal}:
-    (∀ n:ℕ, measurable (h n)) →
-    (measurable (supr h)) :=
-begin
-  intros A1,
-  apply is_ennreal_measurable_intro_Ioi,
-  intro x,
-  have A3:((supr h) ⁻¹' {y : ennreal | x < y}) =⋃ (n:ℕ), (h n) ⁻¹' {y:ennreal | x < y},
-  {
-    simp,
-    ext ω,
-      have A3B:supr h ω = supr (λ n, h n ω),
-      {
-        apply supr_apply,
-      },
-    split;
-    intros A3A;simp;simp at A3A,
-    {
-      rw A3B at A3A,
-      rw @lt_supr_iff ennreal _ at A3A,
-      apply A3A,
-    },
-    {
-      cases A3A with i A3A,
-      apply lt_of_lt_of_le A3A,
-      rw A3B,
-      apply @le_supr ennreal ℕ _,
-    },
-  },    
-  rw A3,
-  apply is_measurable.Union,
-  intro b,
-  apply A1 b,
-  apply is_ennreal_is_measurable_intro_Ioi,
-end 
-
-
-
-
-lemma monotone_set_indicator {Ω β:Type*} [has_zero β] [preorder β] {S:set Ω}:
-    monotone ((set.indicator S):(Ω → β) → (Ω → β)) :=
-begin
-  unfold monotone,
-  intros f g A1,
-  rw le_func_def2,
-  intro ω,
-  cases (classical.em (ω ∈ S)) with A2 A2,
-  {
-    rw set.indicator_of_mem A2,
-    rw set.indicator_of_mem A2,
-    apply A1,
-  },
-  {
-    rw set.indicator_of_not_mem A2,
-    rw set.indicator_of_not_mem A2,
-  },
-end
-
-
-
-lemma supr_with_density_apply_eq_with_density_supr_apply {Ω:Type*} [measurable_space Ω] {μ:measure_theory.measure Ω}
-    {h:ℕ → Ω → ennreal} {S:set Ω}:
-    is_measurable S →
-    (∀ n:ℕ, measurable (h n)) →
-    (monotone h) →
-    supr (λ n:ℕ, μ.with_density (h n) S) = μ.with_density (supr h) S :=
-begin
-  intros A1 A2 A3,
-  have A4:(λ n, μ.with_density (h n) S) = (λ n,  ∫⁻ (ω:Ω), (set.indicator S (h n)) ω ∂ μ),
-  {
-    apply funext,
-    intro n,
-    rw measure_theory.with_density_apply2',
-    apply A1,
-  },
-  rw A4,
-  clear A4,
-  rw measure_theory.with_density_apply2',
-  rw supr_indicator,
-  rw measure_theory.lintegral_supr2,
-  {
-    intro n,
-    apply measurable.indicator,
-    apply A2 n,
-    apply A1,
-  },
-  {
-    have B1:(λ (n:ℕ), set.indicator S (h n)) = (set.indicator S) ∘ h := rfl,
-    rw B1,
-    apply @monotone.comp ℕ (Ω → ennreal) (Ω → ennreal) _ _ _,
-    apply @monotone_set_indicator Ω ennreal _ _,
-    apply A3,
-  },
-  {
-    apply A1,
-  },
-end 
-
-
-lemma with_density_supr_apply_le {Ω:Type*} [measurable_space Ω] {μ ν:measure_theory.measure Ω}
-    {h:ℕ → Ω → ennreal} {S:set Ω}:
-    is_measurable S →
-    (∀ n:ℕ, measurable (h n)) →
-    (monotone h) →
-    (∀ n:ℕ, μ.with_density (h n) ≤  ν) →
-    μ.with_density (supr h) S ≤ ν S :=
-begin
-  intros A1 A2 A3 A4,
-  rw ← supr_with_density_apply_eq_with_density_supr_apply A1 A2 A3,
-  apply @supr_le ennreal ℕ _,
-  intro n,
-  apply A4,
-  apply A1,
-end
-
-
--- So, although there is a LOT below, this is the easiest third of the
--- Radon-Nikodym derivative: namely, that if we have a monotone sequence
--- of functions, the sequence will be less than or equal to ν.
-lemma with_density_supr_le {Ω:Type*} [measurable_space Ω] {μ ν:measure_theory.measure Ω}
-    {h:ℕ → Ω → ennreal}:
-    (∀ n:ℕ, measurable (h n)) →
-    (monotone h) →
-    (∀ n:ℕ, μ.with_density (h n) ≤  ν) →
-    μ.with_density (supr h) ≤ ν :=
-begin
-  intros A1 A2 A3,
-  intros S A4,
-  apply with_density_supr_apply_le A4 A1 A2 A3,
-end
-
-
-lemma measure_of_monotone' {Ω:Type*} [measurable_space Ω] {S:set Ω}
-    :is_measurable S →
-    monotone (λ μ:measure_theory.measure Ω, μ S) :=
-begin
-  intros A0 μ ν A1,
-  simp,
-  rw measure.apply,
-  rw measure.apply,
-  apply A1,
-  apply A0,
-end
-
-
-
--- Compare with ennreal.has_sub.
--- I think that this is the equivalent of (a - b)⁺, if 
--- a and b were signed measures.
--- Specifically, note that if you have α = {1,2}, and
--- a {1} = 2, a {2} = 0, and 
--- b {2} = 2, b {1} = 0, then 
--- (a - b) {1, 2} = 2. However, if a ≤ b, and
---  a set.univ ≠ ⊤, then (a - b) + b = a.
--- Also, a - b ≤ a.
-noncomputable instance measure_theory.measure.has_sub {α:Type*}
-  [measurable_space α]:has_sub (measure_theory.measure α) := ⟨λa b, Inf {d | a ≤ d + b}⟩
-
-
-lemma measure_theory.measure.sub_def {α:Type*}
-  [measurable_space α] {a b:measure_theory.measure α}:
-  (a - b) = Inf {d | a ≤ d + b} := rfl
-
-
-def sub_pred {α:Type*} (f:ℕ → set α):ℕ → set α
-  | (nat.succ n) := f n.succ \ f n
-  | 0 := f 0 
-
-
-lemma sub_pred_subset {α:Type*} (f:ℕ → set α) {n:ℕ}:
-  sub_pred f n ⊆ f n :=
-begin
-  cases n,
-  {
-    unfold sub_pred,
-  },
-  {
-    unfold sub_pred,
-    apply set.diff_subset,
-  },
-end
-
-lemma sub_pred_subset' {α:Type*} (f:ℕ → set α) {n:ℕ} {x:α}:
-  x∈ sub_pred f n → x ∈ f n :=
-begin
-  intro A1,
-  have A2:sub_pred f n ⊆ f n := @sub_pred_subset α f n, 
-  rw set.subset_def at A2,
-  apply A2 _ A1,
-end
-
-
-def prefix_union {α:Type*} (f:ℕ → set α) (n:ℕ):=
-  (⋃ (m∈ finset.range n.succ), f m )
-
-
-lemma prefix_union_def {α:Type*} (f:ℕ → set α) (n:ℕ):
-  (⋃ (m∈ finset.range n.succ), f m )= prefix_union f n := rfl
-
-
-lemma prefix_union_zero {α:Type*} (f:ℕ → set α):
-  (prefix_union f 0) = f 0 :=
-begin
-  rw ← prefix_union_def,
-  apply set.ext,
-  intros a,
-  split;intros A1,
-  {
-    simp at A1,
-    apply A1,
-  },
-  {
-    simp,
-    apply A1,
-  },
-end
-
-lemma prefix_union_succ {α:Type*} (f:ℕ → set α) (n:ℕ):
-  (prefix_union f n.succ) = (prefix_union f n) ∪ f n.succ :=
-begin
-  rw ← prefix_union_def,
-  rw ← prefix_union_def,
-  ext,
-  split;intros A1;simp;simp at A1,
-  {
-    cases A1 with m A1,
-    cases (classical.em (m = nat.succ n)) with A2 A2,
-    {
-      subst m,
-      right,
-      apply A1.right,
-    },
-    {
-      left,
-      apply exists.intro m,
-      split,
-      apply lt_of_le_of_ne,
-      apply lt_succ_imp_le m (nat.succ n) A1.left,  
-      apply A2,
-      apply A1.right,
-    },
-  },
-  {
-    cases A1 with A1 A1,
-    {
-      cases A1 with m A1,
-      apply exists.intro m,
-      split,
-      apply lt_trans A1.left,
-      apply nat.lt.base,
-      apply A1.right,
-    },
-    {
-      apply exists.intro (nat.succ n),
-      split,
-      apply nat.lt.base,
-      apply A1,
-    },
-  },
-end
-
-
-lemma prefix_union_def2 {α:Type*} (f:ℕ → set α) (n:ℕ):
-  (⨆  (m:ℕ) (H:m ≤ n), f m)=prefix_union f n :=
-begin
-  unfold prefix_union,
-  ext,split;intros A1;simp at A1;simp,
-  {
-    cases A1 with m A1,
-    apply exists.intro m,
-    split,
-    apply nat.lt_succ_of_le A1.left,
-    apply A1.right,
-  },
-  {
-    cases A1 with m A1,
-    apply exists.intro m,
-    split,
-    apply lt_succ_imp_le m n A1.left,
-    apply A1.right, 
-  },
-end
-
-
-lemma prefix_union_contains {α:Type*} (f:ℕ → set α) {m n:ℕ}:
-    m ≤ n → 
-    f m ⊆ prefix_union f n :=
-begin
-  intro A1,
-  rw ← prefix_union_def2,
-  rw set.subset_def,
-  intros ω A2,
-  simp,
-  apply exists.intro m,
-  apply and.intro A1 A2,
-end
-
-
-lemma prefix_union_contains' {α:Type*} (f:ℕ → set α) {m n:ℕ} {x:α}:
-    m ≤ n → 
-    x∈ f m → x ∈ prefix_union f n :=
-begin
-  intros A1 A2,
-  have A3 := prefix_union_contains f A1,
-  rw set.subset_def at A3,
-  apply A3 x A2,
-end
-
-
-lemma prefix_union_sub_pred {α:Type*} (f:ℕ → set α):
-    prefix_union (sub_pred f) = prefix_union f :=
-begin
-  apply funext,
-  intro n,
-  induction n,
-  {
-    repeat {rw prefix_union_zero},
-    unfold sub_pred,
-  },
-  {
-    rw prefix_union_succ,
-    rw prefix_union_succ f,
-    rw n_ih,
-    ext;split;intros A1;simp;simp at A1;cases A1 with A1 A1;
-    try {
-      apply or.inl A1,
-    },
-    {
-      right,
-      apply sub_pred_subset',
-      apply A1,
-    },
-    {
-      cases (classical.em (x ∈ f n_n)) with A2 A2,
-      {
-        left,
-        apply prefix_union_contains' f _ A2,
-        apply le_refl,
-      },
-      {
-        right,
-        unfold sub_pred,
-        simp,
-        apply and.intro A1 A2,
-      },
-    },
-  },
-end
-
-
-lemma Union_sub_pred {α:Type*} {f:ℕ → set α}:
-  set.Union (sub_pred f) = set.Union f :=
-begin
-  apply set.ext,
-  intro a,
-  split;intros A1;simp at A1;simp;cases A1 with n A1,
-  {
-    apply exists.intro n,
-    apply sub_pred_subset',
-    apply A1,
-  },
-  {
-    have A2:a ∈ prefix_union f n,
-    {
-      apply prefix_union_contains' f (le_refl n) A1,
-    },
-    rw ← prefix_union_sub_pred at A2,
-    rw ← prefix_union_def at A2,
-    simp at A2,
-    cases A2 with n A2,
-    apply exists.intro n,
-    apply A2.right,
-  },
-end
-
-
-lemma mem_sub_pred_succ {α:Type*} {n:ℕ} {x:α} {f:ℕ → set α}:
-    x ∉ f n → (x ∈ f (nat.succ n)) →
-    x ∈ sub_pred f (nat.succ n) :=
-begin
-  intros A1 A2,
-  unfold sub_pred,
-  apply and.intro A2 A1,
-end
-
-lemma not_mem_of_sub_pred_succ {α:Type*} {n:ℕ} {x:α} {f:ℕ → set α}:
-    x ∈ sub_pred f (nat.succ n) → x ∉ f n  :=
-begin
-  intros A1,
-  unfold sub_pred at A1,
-  simp at A1,
-  apply A1.right,
-end
-
-
-lemma sub_pred_pairwise_disjoint_helper {α:Type*} {f:ℕ → set α} {m n:ℕ}:
-  (monotone f) →
-  m < n →
-  disjoint (sub_pred f m) (sub_pred f n) :=
-begin
-  intros A1 A2,
-  rw set.disjoint_right,
-  intros x A4 A3,
-  cases n,
-  {
-    apply nat.not_lt_zero m A2,
-  },
-  have A5 := lt_succ_imp_le m n A2,
-  have A6:f m ⊆ f n,
-  {
-    apply A1 A5,
-  },
-  have A7:sub_pred f m ⊆ f m,
-  {
-    apply sub_pred_subset,
-  },
-  have A8:x ∈ f n,
-  {
-     have A8:=set.subset.trans A7 A6,
-     rw set.subset_def at A8,
-     apply A8 x A3,
-  },
-  apply not_mem_of_sub_pred_succ A4 A8,
-end
-
-
-lemma sub_pred_pairwise_disjoint {α:Type*} {f:ℕ → set α}:
-  (monotone f) →
-  pairwise (disjoint on (sub_pred f)) :=
-begin
-  intro A1,
-  intros m n A2,
-  have A3:disjoint (sub_pred f m) (sub_pred f n),
-  {
-    have A3A:=lt_trichotomy m n,
-    cases A3A with A3A A3A,
-    {
-      apply sub_pred_pairwise_disjoint_helper A1 A3A,
-    },
-    cases A3A with A3A A3A,
-    {
-      exfalso,
-      apply A2,
-      apply A3A,
-    },
-    {
-      apply set.disjoint.symm,
-      apply sub_pred_pairwise_disjoint_helper A1 A3A,      
-    },
-  },
-  apply A3,
-end
-
-
-lemma measure_finset_sum {α:Type*}
-    [measurable_space α] {μ:measure_theory.measure α}
-    {f:ℕ → set α} {n:ℕ}:(∀ n, is_measurable (f n)) →
-    (pairwise (disjoint on f)) →
-    (finset.range n).sum (λ m, μ (f m)) = 
-    μ (⋃  (m∈ finset.range n), f m) :=
-begin
-  intros A1 A2,
-  rw measure_theory.measure_bUnion_finset,
-  {
-    intros m B1 n B2 B3,
-    apply A2,
-    apply B3,
-  },
-  {
-    intros m C1,
-    apply A1,
-  },
-end
-
-
-lemma union_range_sub_pred {α:Type*} {f:ℕ → set α} {n:ℕ}:
- (⋃ (m : ℕ) (H : m ∈ finset.range n), sub_pred f m) =
-     (⋃ (m : ℕ) (H : m ∈ finset.range n), f m) :=
-begin
-  cases n,
-  {
-    simp,
-  },
-  {
-    rw prefix_union_def,
-    rw prefix_union_def,
-    rw prefix_union_sub_pred,
-  },
-end
-
-
-lemma is_measurable_sub_pred {α:Type*} [measurable_space α] 
-  {f:ℕ → set α} {n:ℕ}:
-  (∀ m, is_measurable (f m)) → is_measurable (sub_pred f n) :=
-begin
-  intro A1,
-  cases n,
-  {
-    unfold sub_pred,
-    apply A1,
-  },
-  {
-    unfold sub_pred,
-    apply is_measurable.diff,
-    repeat {apply A1},
-  },
-end
-
-
-
-lemma union_finset_range_monotone {α:Type*} {f:ℕ → set α} {n:ℕ}:
-    monotone f →
-    (⋃ m ∈ finset.range (n.succ), f m) = f n :=
-begin
-  intro A1,
-  ext,split;intros A2,
-  {
-    simp at A2,
-    cases A2 with m A2,
-    have A3 := lt_succ_imp_le m n A2.left,
-    have A4 := A1 A3,
-    have A5:(f m ⊆ f n)= (f m ≤ f n ):= rfl,
-    rw ← A5 at A4,
-    rw set.subset_def at A4,
-    apply A4,
-    apply A2.right,
-  },
-  {
-    simp,
-    apply exists.intro n,
-    split,
-    apply nat.lt.base,
-    apply A2,
-  },
-end
-
-
-def le_on_subsets {α:Type*} [measurable_space α]
-    (μ ν:measure_theory.measure α) (X:set α):Prop :=
-    is_measurable X ∧ 
-    (∀ X':set α, X'⊆ X → is_measurable X' → μ X' ≤ ν X') 
-
-
-lemma le_on_subsets_def {α:Type*} [measurable_space α]
-    (μ ν:measure_theory.measure α) (X:set α):
-    le_on_subsets μ ν X =
-    (is_measurable X ∧ 
-    (∀ X':set α, X'⊆ X → is_measurable X' → μ X' ≤ ν X')) := rfl
-
-
-lemma le_on_subsets_is_measurable {α:Type*} [measurable_space α]
-    {μ ν:measure_theory.measure α} {X:set α}:
-    le_on_subsets μ ν X →
-    (is_measurable X) :=
-begin
-  intros A1,
-  rw le_on_subsets_def at A1,
-  apply A1.left,
-end
-
-
-lemma le_on_subsets_self {α:Type*} [measurable_space α]
-    {μ ν:measure_theory.measure α} {X:set α}:
-    le_on_subsets μ ν X →
-    μ X ≤ ν X :=
-begin
-  intro A1,
-  rw le_on_subsets_def at A1,
-  apply A1.right X (le_refl X) A1.left,
-end
-
-
-lemma le_on_subsets_empty {α:Type*} [measurable_space α]
-    (μ ν:measure_theory.measure α):
-    le_on_subsets μ ν ∅ := 
-begin
-  rw le_on_subsets_def,
-  split,
-  {
-    apply is_measurable.empty,
-  },
-  {
-    intros X' A1 A2,
-    have A3 := empty_of_subset_empty X' A1,
-    subst X',
-    simp,
-  },
-end
-
-lemma le_on_subsets_union {α:Type*} [measurable_space α]
-    {μ ν:measure_theory.measure α} {X Y:set α}:
-    le_on_subsets μ ν X →
-    le_on_subsets μ ν Y →
-    le_on_subsets μ ν (X ∪ Y) :=
-begin
-  repeat {rw le_on_subsets_def},
-  intros A1 A2,
-  split,
-  {
-     apply is_measurable.union A1.left A2.left,
-  },
-  {
-     intros X' A3 A4,
-     rw @measure_theory.measure_eq_inter_diff _ _ μ _ X A4 A1.left,
-     rw @measure_theory.measure_eq_inter_diff _ _ ν _ X A4 A1.left,
-     have A5:X' ∩ X ⊆ X := set.inter_subset_right X' X,
-     have A6:X' \ X ⊆ Y,
-     {
-       rw set.subset_def,
-       intros a A6A,
-       rw set.subset_def at A3,
-       simp at A6A,
-       have A6B := A3 a A6A.left,
-       simp at A6B,
-       cases A6B,
-       {
-         exfalso,
-         apply A6A.right,
-         apply A6B,
-       },
-       {
-         apply A6B,
-       },
-     },
-     
-     have A7:is_measurable (X' ∩ X) := is_measurable.inter A4 A1.left,
-     have A8:is_measurable (X' \ X) := is_measurable.diff A4 A1.left,
-     have A9:=A1.right (X' ∩ X) A5 A7,
-     have A10:=A2.right (X' \ X) A6 A8,
-     apply @add_le_add ennreal _ _ _ _ _ A9 A10,
-  },
-end
-
-
-lemma le_on_subsets_subset {α:Type*} [measurable_space α]
-    (μ ν:measure_theory.measure α) (X Y:set α):
-    le_on_subsets μ ν X →
-    Y ⊆ X →
-    is_measurable Y →
-    le_on_subsets μ ν Y :=
-begin
-  repeat {rw le_on_subsets_def},
-  intros A1 A2 A3,
-  split,
-  apply A3,
-  intros X' A4 A5,
-  apply A1.right X' (set.subset.trans A4 A2) A5,
-end
-
-
-lemma le_on_subsets_diff {α:Type*} [measurable_space α]
-    {μ ν:measure_theory.measure α} {X Y:set α}:
-    le_on_subsets μ ν X →
-    le_on_subsets μ ν Y →
-    le_on_subsets μ ν (X \ Y) :=
-begin
-  intros A1 A2,
-  apply le_on_subsets_subset μ ν X (X \ Y) A1,
-  {
-    apply set.diff_subset,
-  },
-  {
-    apply is_measurable.diff 
-       (le_on_subsets_is_measurable A1)
-       (le_on_subsets_is_measurable A2),
-  },
-end
-
-
-lemma le_on_subsets_m_Union {α:Type*} [measurable_space α]
-    (μ ν:measure_theory.measure α) {f:ℕ → set α}:
-    monotone f →
-    (∀ n:ℕ, le_on_subsets μ ν (f n)) → 
-    (le_on_subsets μ ν (set.Union f)) :=
-begin
-  intros A1 A2,
-  have A3:∀ n, le_on_subsets μ ν ((sub_pred f) n),
-  {
-    intros n,
-    cases n,
-    {
-      unfold sub_pred,
-      apply A2,
-    },
-    {
-      unfold sub_pred,
-      apply le_on_subsets_diff,
-      apply A2,
-      apply A2,
-    },
-  },
-  rw ← Union_sub_pred,
-  
-  rw le_on_subsets_def,
-  split,
-  {
-    apply is_measurable.Union,
-    intro n,
-    apply le_on_subsets_is_measurable (A3 n),
-  },
-  {
-    intros X' A4 A5,
-    have D1:pairwise (disjoint on λ (i : ℕ), X' ∩ sub_pred f i),
-    {
-      intros m n C1,
-      have C2:disjoint (X' ∩ sub_pred f m) (X' ∩ sub_pred f n),
-      {
-        rw set.inter_comm,
-        apply set.disjoint_inter_left,
-        apply set.disjoint_inter_right,
-        apply sub_pred_pairwise_disjoint A1,
-        apply C1,
-      },
-   
-      apply C2,
-    },
-    have D2:∀ n, is_measurable (X' ∩ (sub_pred f n)),
-    {
-      intro n,
-      apply is_measurable.inter A5 (le_on_subsets_is_measurable (A3 n)),
-    },
-    
-    have A6:X' = ⋃ n, X' ∩ (sub_pred f n),
-    {
-      ext,split;intros A4A,
-      {
-        simp,
-        apply and.intro A4A,
-        rw set.subset_def at A4,
-        have A4B := A4 x A4A,
-        simp at A4B,
-        apply A4B,
-      },
-      {
-        simp at A4A,
-        apply A4A.left,
-      },
-    },
-    rw A6,
-    repeat {rw measure_theory.measure_Union},
-    apply @tsum_le_tsum ennreal ℕ _ _ _,
-    {
-      intro b,
-      have B1 := A3 b,
-      rw le_on_subsets_def at B1,
-      apply B1.right,
-      apply set.inter_subset_right,
-      apply is_measurable.inter A5 B1.left,
-    },
-    repeat {
-      apply ennreal.summable,
-    },
-    apply D1,
-    apply D2,
-    apply D1,
-    apply D2,
-  },
-end
-
-
-lemma le_measurable_add {α:Type*} [M:measurable_space α]
-    (μ ν:measure_theory.measure α) {X Y:set α}:
-    μ X < ⊤ →
-    μ Y < ⊤ →
-    is_measurable X →
-    is_measurable Y →
-    μ X ≤ ν X →
-    μ Y ≤ ν Y →
-    disjoint X Y →
-    ν (X ∪ Y) - μ (X ∪ Y) = (ν X - μ X) +  (ν Y - μ Y) :=
-begin
-  intros A1 A2 A3 A4 A5 A6 A7,
-  rw measure_theory.measure_union A7 A3 A4,
-  rw measure_theory.measure_union A7 A3 A4,
-  rw ennreal.add_sub_add_eq_sub_add_sub A1 A2 A5 A6,
-end
-
-
-lemma le_on_subsets_add {α:Type*} [M:measurable_space α]
-    (μ ν:measure_theory.measure α) {X Y:set α}:
-    μ X < ⊤ →
-    μ Y < ⊤ →
-    le_on_subsets μ ν X → le_on_subsets μ ν Y →
-    disjoint X Y →
-    ν (X ∪ Y) - μ (X ∪ Y) = (ν X - μ X) +  (ν Y - μ Y) :=
-begin
-  intros A1 A2 A5 A6 A7,
-  have A3 := le_on_subsets_is_measurable A5,
-  have A4 := le_on_subsets_is_measurable A6,
-  apply le_measurable_add μ ν A1 A2 A3 A4 
-      (le_on_subsets_self A5) (le_on_subsets_self A6) A7,
-end
-
-
---This is a function that is equivalent to the above if
---ν ≤ μ and ν is finite (ν set.univ ≠ ⊤).
---This definition is "wrong", in the sense that the
---definition below is closer to subtraction.
---This definition falls apart unless ν ≤ μ.
-noncomputable def measure_sub_fn {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α):Π (s:set α),is_measurable s → ennreal := 
-  λ (S:set α) (H:is_measurable S), (μ S - ν S)
-
-
---A better variant of measure_sub_fn.
---This definition is valid even if ¬(ν ≤ μ).
-noncomputable def measure_sub_fn' {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α):Π (s:set α),is_measurable s → ennreal := 
-  λ (S:set α) (H:is_measurable S), 
-  ⨆ (S' ⊆ S) (H2:le_on_subsets ν μ S'), (μ S' - ν S')
-
-
-lemma measure_sub_fn_def {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α):
-  measure_sub_fn μ ν = λ (S:set α) (H:is_measurable S), (μ S - ν S) := rfl
-
-
-lemma measure_sub_fn_def' {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α):measure_sub_fn' μ ν = 
-  λ (S:set α) (H:is_measurable S), 
-  ⨆ (S' ⊆ S) (H2:le_on_subsets ν μ S'), (μ S' - ν S') := rfl
-
-
-lemma measure_sub_fn_apply {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α) (s:set α) (H:is_measurable s):
-  measure_sub_fn μ ν s H = (μ s - ν s) := rfl
-
-lemma measure_sub_fn_apply' {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α) (s:set α) (H:is_measurable s):
-  measure_sub_fn' μ ν s H = 
-  ⨆ (S' ⊆ s) (H2:le_on_subsets ν μ S'), (μ S' - ν S')  := rfl
-
-
-lemma measure_sub_fn_apply_empty {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α): 
-  (measure_sub_fn μ ν) ∅ is_measurable.empty = 0 :=
-begin
-  rw measure_sub_fn_apply,
-  rw measure_theory.measure_empty,
-  rw measure_theory.measure_empty,
-  rw ennreal.sub_zero,
-end
-
-
-lemma measure_sub_fn_apply_empty' {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α): 
-  (measure_sub_fn' μ ν) ∅ is_measurable.empty = 0 :=
-begin
-  rw measure_sub_fn_apply',
-  apply le_antisymm,
-  {
-    apply @supr_le ennreal _ _,
-    intro S',
-    apply @supr_le ennreal _ _,
-    intro A1,
-    apply @supr_le ennreal _ _,
-    intros A2,
-    have A3:= empty_of_subset_empty S' A1,
-    subst S',
-    simp,
-  },
-  {
-    simp,
-  },
-end
-
-
-lemma sub_eq_supr_le {x y:ennreal}:
-  x - y = (⨆ (H:y ≤ x), x) - (⨆ (H:y ≤ x), y) :=
-begin
-  cases classical.em (y ≤ x) with A1 A1,
-  {
-    repeat {rw supr_prop_def A1},
-  },
-  {
-    repeat {rw supr_prop_false A1},
-    simp,
-    apply le_of_not_le A1,
-  },
-end 
-
-
-
-/-
-  This only works if the sum of g is finite.
-  The consequence of this is that f minus g
-  is only well-defined if either f or g.
- -/
-lemma ennreal.tsum_sub {f:ℕ → ennreal} {g:ℕ → ennreal}:
-(∑' i, g i) ≠ ⊤ → (g ≤ f) → (∑' i, (f i - g i)) = (∑' i, f i) - (∑' i, g i) :=
-begin
-  intros A1 B2,
-  let h:ℕ → ennreal := (λ i, f i - g i),
-  begin
-    have B1:h = (λ i, f i - g i) := rfl,
-    have A2:(∑' i, (h i) + (g i))=(∑' i, h i) + (∑' i, g i),
-    {
-      apply tsum_add,
-      apply ennreal.summable,
-      apply ennreal.summable,
-    },
-    have A3:g ≤ (h + g),
-    {
-      rw B1,
-      rw le_func_def2,
-      intro n,
-      simp,
-      rw ennreal.sub_add_cancel_of_le,
-      apply B2,
-      apply B2,
-    },
-    have A4:(∑' i, g i) ≤ (∑' i, (h i) + (g i)),
-    {
-      apply @tsum_le_tsum ennreal ℕ _ _ _,
-      {
-        intro n,
-        apply A3,
-      },
-      apply ennreal.summable,
-      apply ennreal.summable,
-    },
-    have A5:(∑' i, (h i) + (g i))-(∑' i, g i)=(∑' i, h i),
-    {
-      apply ennreal.sub_eq_of_add_of_not_top_of_le A2 A1 A4,
-    },
-    have A6:(λ i, (h i) + (g i)) = f,
-    {
-      apply funext,
-      intro n,
-      rw B1,
-      simp,
-      rw ennreal.sub_add_cancel_of_le,
-      apply B2,
-    }, 
-    rw A6 at A5,
-    rw B1 at A5,
-    symmetry,
-    apply A5,
-  end
-end
-
-
-lemma measure_sub_fn_m_Union {α:Type*} [M:measurable_space α] 
-    (μ ν:measure_theory.measure α) (H:ν ≤ μ) 
-    [H2:measure_theory.finite_measure ν]:
-(∀ (g : ℕ → set α) (h : ∀ (i : ℕ), is_measurable (g i)), 
-  pairwise (disjoint on g) → 
- ((measure_sub_fn μ ν) (⋃ (i : ℕ), g i) (M.is_measurable_Union g h)) = 
-  ∑' (i : ℕ), (measure_sub_fn μ ν) (g i) (h i)) :=
-begin
-  intros g A1 A2,
-  have A5:(λ i, ν (g i)) = (λ i, ν.to_outer_measure.measure_of (g i)) := rfl,
-  have A6:(λ i, μ (g i)) = (λ i, μ.to_outer_measure.measure_of (g i)) := rfl,
-
-  rw measure_sub_fn_apply,
-  have A3:(λ n:ℕ, (measure_sub_fn μ ν (g n) (A1 n)))
-      =(λ n:ℕ, (μ (g n)) - (ν (g n))),
-  {
-    apply funext,
-    intro n,
-    rw measure_sub_fn_apply,
-  },
-  rw A3,
-  clear A3,
-  have A4:(∑' (n:ℕ), (μ (g n))-(ν (g n))) = 
-(∑' (n:ℕ), (μ (g n)))-
-(∑' (n:ℕ), (ν (g n))),
-  {
-    apply ennreal.tsum_sub,
-    {
-      rw A5,
-      rw ← ν.m_Union A1 A2,
-      apply measure_theory.measure_ne_top,
-    },
-    {
-      rw le_func_def2,
-      intro i,
-      apply H,
-      apply A1,
-    },
-  },
-  rw A4,
-  repeat {rw measure.apply},
-  rw ν.m_Union A1 A2,
-  rw μ.m_Union A1 A2,
-  rw ← A5,
-  rw ← A6,
-end
-
-
---TODO:Remove if possible. The theorems from the Hahn decomposition cover this.
-noncomputable def measure_sub {α:Type*} [M:measurable_space α] 
-    {μ ν:measure_theory.measure α} (H:ν ≤ μ) 
-    [H2:measure_theory.finite_measure ν]:measure_theory.measure α := @measure_theory.measure.of_measurable α M (measure_sub_fn μ ν)  (measure_sub_fn_apply_empty μ ν) (measure_sub_fn_m_Union μ ν H)
-
-
-
-lemma measure_sub_def {α:Type*} [M:measurable_space α] 
-    {μ ν:measure_theory.measure α} (H:ν ≤ μ) [H2:measure_theory.finite_measure ν]
-  :measure_sub H = @measure_theory.measure.of_measurable α M (measure_sub_fn μ ν)  (measure_sub_fn_apply_empty μ ν) (measure_sub_fn_m_Union μ ν H) := rfl
-
-lemma measure_sub_apply {α:Type*} [M:measurable_space α] 
-    {μ ν:measure_theory.measure α} (H:ν ≤ μ) 
-    [H2:measure_theory.finite_measure ν] {S:set α} (H3:is_measurable S):
-    measure_sub H S = μ S - ν S :=
-begin
-  rw measure_sub_def,
-  rw measure_theory.measure.of_measurable_apply,
-  rw measure_sub_fn_apply,
-  apply H3,
-end
-
-
-
-
-
-lemma measure_theory.measure.le_of_add_le_add_left {α:Type*} 
-  [M:measurable_space α]
-  {μ ν₁ ν₂:measure_theory.measure α} [measure_theory.finite_measure μ]: 
-  μ + ν₁ ≤ μ + ν₂ → ν₁ ≤ ν₂ :=
-begin
-  intros A2,
-  rw measure_theory.measure.le_iff,
-  intros S B1,
-  rw measure_theory.measure.le_iff at A2,
-  have A3 := A2 S B1,
-  simp at A3,
-  apply ennreal.le_of_add_le_add_left _ A3,
-  apply measure_theory.measure_lt_top,
-end
-
-
-lemma measure_theory.measure.le_of_add_le_add_right 
-    {α:Type*} [M:measurable_space α] 
-    {μ₁ ν μ₂:measure_theory.measure α} [measure_theory.finite_measure ν]:
-   (μ₁ + ν ≤ μ₂ + ν) → (μ₁ ≤ μ₂) :=
-begin
-  intros A2,
-  rw add_comm μ₁ ν at A2,
-  rw add_comm μ₂ ν at A2,
-  apply measure_theory.measure.le_of_add_le_add_left A2,
-end
-
-
-
-def measure_theory.measure.is_support {α:Type*} [measurable_space α]
-    (μ:measure_theory.measure α) (S:set α):Prop := is_measurable S ∧ μ (Sᶜ) = 0
-
-
-noncomputable def scale_measure_fn {α:Type*}
-    [measurable_space α] (x:ennreal) 
-    (μ:measure_theory.measure α) 
-    (S:set α) (H:is_measurable S):ennreal := x * μ S
-
-
-noncomputable def scale_measure {α:Type*}
-    [M:measurable_space α] (x:ennreal) 
-    (μ:measure_theory.measure α):(measure_theory.measure α) :=
-    measure_theory.measure.of_measurable
-    (λ (s:set α) (H:is_measurable s), x * (μ s))
-begin
-  simp,
-end
-begin
-  intros f A1 A2,
-  simp,
-  rw measure.apply,  
-  rw μ.m_Union A1 A2,
-  have A3:(λ i, μ.to_outer_measure.measure_of (f i)) =
-          λ i, μ (f i) := rfl,
-  rw  A3,
-  rw ennreal.tsum_mul_left,
-end
-
-
-lemma scale_measure_apply {α:Type*}
-    [M:measurable_space α] (x:ennreal) 
-    (μ:measure_theory.measure α)
-    (s:set α) (H:is_measurable s):
-    scale_measure x μ s =
-    (λ (s:set α) (H:is_measurable s), x * (μ s)) s H :=
-begin
-  apply measure_theory.measure.of_measurable_apply,
-  apply H,
-end
-
-lemma scale_measure_apply2 {α:Type*}
-    [M:measurable_space α] (x:ennreal) 
-    (μ:measure_theory.measure α)
-    (s:set α) (H:is_measurable s):
-    scale_measure x μ s = x * (μ s) :=
-begin
-  rw scale_measure_apply,
-  apply H,
-end
-
-
-noncomputable instance has_scalar_ennreal_measure {α:Type*}
-    [measurable_space α]:
-    has_scalar (ennreal) (measure_theory.measure α) := {
-  smul := λ x y, scale_measure x y, 
-}
-
-
-lemma ennreal_smul_measure_def {α:Type*}
-    [measurable_space α] (x:ennreal) 
-    (μ:measure_theory.measure α):
-    (x  • μ) = (scale_measure x μ)  := rfl
-
-
-lemma ennreal_smul_measure_apply {α:Type*}
-    [measurable_space α] (x:ennreal) 
-    (μ:measure_theory.measure α)
-    (s:set α) (H:is_measurable s):
-    (x  • μ) s = x * (μ s) :=
-begin
-  rw ennreal_smul_measure_def,
-  rw scale_measure_apply2,
-  apply H,
-end
-    
-
-lemma ennreal_measure_zero_smul {α:Type*}
-    [measurable_space α] (μ:measure_theory.measure α):
-    (0:ennreal) • μ = 0 :=
-begin
-  apply measure_theory.measure.ext,
-  intros s A1,
-  rw ennreal_smul_measure_apply,
-  simp,
-  apply A1,  
-end
-
-
-noncomputable instance mul_action_ennreal_measure
-    {α:Type*}
-    [M:measurable_space α]:
-    mul_action (ennreal) (measure_theory.measure α)
-     := {
-  mul_smul := 
-  begin
-    intros x y μ,
-    apply measure_theory.measure.ext,
-    intros s A1,
-    rw ennreal_smul_measure_apply,
-    rw ennreal_smul_measure_apply,
-    rw ennreal_smul_measure_apply,   
-    rw mul_assoc,
-    repeat {apply A1},
-  end,
-  one_smul :=
-  begin
-    intro μ,
-    apply measure_theory.measure.ext,
-    intros s A1,
-    rw ennreal_smul_measure_apply,
-    rw one_mul,
-    apply A1,
-  end,
-}
-
-
-noncomputable instance distrib_mul_action_ennreal_measure
-    {α:Type*}
-    [M:measurable_space α]:
-    distrib_mul_action (ennreal) (measure_theory.measure α)
-     := {
-  smul_zero :=
-  begin
-    intro r,
-    apply measure_theory.measure.ext,
-    intros s A1,
-    rw ennreal_smul_measure_apply,
-    apply mul_zero,
-    apply A1,
-  end,
-  smul_add :=
-  begin
-    intros r μ ν,
-    apply measure_theory.measure.ext,
-    intros s A1,
-    rw ennreal_smul_measure_apply _ _ _ A1,
-    have A2:(μ + ν) s = (μ s) + (ν s)
-        := rfl,
-    rw A2,
-    have A3:((r • μ) + (r • ν)) s = ((r • μ) s) + ((r • ν) s)
-        := rfl,
-    rw A3,
-    repeat {rw scale_measure_apply2 _ _ _ A1},
-    rw left_distrib,
-    rw ennreal_smul_measure_apply _ _ _ A1,
-    rw ennreal_smul_measure_apply _ _ _ A1,
-  end,
-}
-
-
-noncomputable instance ennreal_measure_semimodule {α:Type*}
-    [M:measurable_space α]:
-    semimodule (ennreal) (measure_theory.measure α) := {
-  zero_smul :=
-  begin
-    intro μ,
-    apply measure_theory.measure.ext,
-    intros s A1,
-    rw ennreal_smul_measure_apply _ _ _ A1,
-    apply zero_mul,
-  end,
-  add_smul := 
-  begin
-    intros r t μ,
-    apply measure_theory.measure.ext,
-    intros s A1,
-    rw ennreal_smul_measure_apply _ _ _ A1,
-    rw measure_theory.measure.add_apply,    
-repeat {rw scale_measure_apply2 _ _ _ A1},
-    rw right_distrib,
-    rw ennreal_smul_measure_apply _ _ _ A1,
-    rw ennreal_smul_measure_apply _ _ _ A1,
-  end,
-}
-
-
-lemma ennreal.zero_if_lt_pos {x:ennreal}:
-  (∀ y >0, x ≤ y) → x = 0 := 
-begin
-  intro A1,
-  have A2:(0:ennreal)=⊥ := rfl,
-  rw A2,
-  rw ← le_bot_iff,
-  rw ← A2,
-  apply ennreal.le_of_forall_epsilon_le,
-  intros ε A3 A4,
-  rw zero_add,
-  apply A1,
-  have A5:(0:ennreal)=(0:nnreal) := rfl,
-  rw A5,
-  simp,
-  apply A3,  
-end
-
-
-lemma outer_measure_measure_of_le {Ω:Type*} {μ ν:measure_theory.outer_measure Ω}:
-    μ ≤ ν ↔
-    (μ.measure_of) ≤
-    (ν.measure_of) :=
-begin
-  refl,
-end
-
-
-lemma to_outer_measure_measure_of_le {Ω:Type*} [measurable_space Ω] {μ ν:measure_theory.measure Ω}:
-    μ ≤ ν ↔
-    (μ.to_outer_measure.measure_of) ≤
-    (ν.to_outer_measure.measure_of) :=
-begin
-  split;intro A1,
-  {
-    rw ← measure_theory.measure.to_outer_measure_le at A1,
-    rw le_func_def2,
-    intro ω,
-    apply A1,
-  },
-  {
-    intros S A2,
-    apply A1,
-  },
-end
-
-
-
-lemma monotone_to_outer_measure {Ω:Type*} [measurable_space Ω]:
-    monotone (λ μ:measure_theory.measure Ω, μ.to_outer_measure) :=
-begin
-  intros μ ν A1,
-  simp,
-  rw ← measure_theory.measure.to_outer_measure_le at A1,
-  apply A1,
-end
-
-
-lemma monotone_to_outer_measure_measure_of {Ω:Type*} [measurable_space Ω]:
-    monotone (λ μ:measure_theory.measure Ω, μ.to_outer_measure.measure_of) :=
-begin
-  intros μ ν A1,
-  simp,
-  rw ← measure_theory.measure.to_outer_measure_le at A1,
-  apply A1,
-end
-
-
-lemma measure_apply_le_measure_apply {Ω:Type*} [measurable_space Ω] {μ ν:measure_theory.measure Ω} {S:set Ω}:
-    μ ≤ ν →
-    (μ S) ≤ (ν S) :=
-begin
-  intro A1,
-  rw to_outer_measure_measure_of_le at A1,
-  apply A1,
-end
-
-
-noncomputable def measure_theory.outer_measure.of_function' {Ω:Type*} 
-    (f:set Ω → ennreal):
-    measure_theory.outer_measure Ω := measure_theory.outer_measure.of_function 
-    (set.indicator ({(∅:set Ω)}ᶜ) f)
-begin
-  rw set.indicator_of_not_mem,
-  simp,
-end
-
-
-lemma outer_measure_measure_of_def {Ω:Type*} {μ:measure_theory.outer_measure Ω}
-  {S:set Ω}:μ S  = μ.measure_of S := rfl
-
-
-lemma measure_theory.outer_measure.of_function_def 
-  {α : Type*} (m : set α → ennreal) (m_empty : m ∅ = 0) :
-  (measure_theory.outer_measure.of_function m m_empty).measure_of
-    = λs, ⨅{f : ℕ → set α} (h : s ⊆ ⋃i, f i), ∑'i, m (f i)  := rfl
-
-
-lemma measure_theory.outer_measure.of_function_le_of_function_of_le {Ω:Type*} 
-    {f g:set Ω → ennreal} {Hf:f ∅ = 0} {Hg:g ∅ = 0}:
-    f ≤ g → 
-    (measure_theory.outer_measure.of_function f Hf ≤
-     measure_theory.outer_measure.of_function g Hg) :=
-begin
-  intro A1,
-  rw measure_theory.outer_measure.le_of_function,
-  intro S,
-  have A2 := @measure_theory.outer_measure.of_function_le _ f Hf S,
-  apply le_trans A2,
-  apply A1,
-end
-
-
-lemma measure_theory.outer_measure.monotone_of_function' {Ω:Type*}:
-    monotone (@measure_theory.outer_measure.of_function' Ω) :=
-begin
-  unfold monotone measure_theory.outer_measure.of_function',
-  intros f g A1,
-  apply measure_theory.outer_measure.of_function_le_of_function_of_le,
-  have A2 := @monotone_set_indicator (set Ω) ennreal _ _ ({∅}ᶜ),
-  apply A2,
-  apply A1,
-end
-
-
-lemma measure_theory.outer_measure.of_function'_le {Ω:Type*} 
-    {f:set Ω → ennreal} {S:set Ω}: 
-    (measure_theory.outer_measure.of_function' f S ≤ f S) :=
-begin
-  have A2 := @measure_theory.outer_measure.of_function_le _ 
-            (@set.indicator (set Ω) ennreal _  ({(∅:set Ω)}ᶜ) f) _ S,
-  apply le_trans A2,
-  clear A2,
-  cases classical.em (S = ∅)  with A3 A3,
-  {
-    subst S,
-    rw set.indicator_of_not_mem,
-    {
-      simp,
-    },
-    {
-      simp,
-    },
-  },
-  {
-    rw set.indicator_of_mem,
-    apply le_refl (f S),
-    simp [A3],
-  },
-end
-
-
-lemma galois_connection_measure_of_of_function' {Ω:Type*}:
-  galois_connection 
-      (λ μ:measure_theory.outer_measure Ω, μ.measure_of) 
-      (λ f:set Ω → ennreal, measure_theory.outer_measure.of_function' f)  :=
-begin
-  unfold galois_connection,
-  intros μ f,
-  unfold measure_theory.outer_measure.of_function',
-  rw measure_theory.outer_measure.le_of_function,
-
-  split;intros A1,
-  {
-    intro S,
-    cases (classical.em (S = ∅)) with B1 B1,
-    {
-      subst S,
-      rw outer_measure_measure_of_def,
-      rw measure_theory.outer_measure.empty,
-      simp,
-    },
-    {
-      rw set.indicator_of_mem,
-      apply A1,
-      simp [B1],
-    },
-  },
-  {
-    rw le_func_def2,
-    intro S,
-    cases (classical.em (S = ∅)) with C1 C1,
-    {
-      subst S,  
-      rw measure_theory.outer_measure.empty,
-      simp,
-    },
-    {
-      have C2:= A1 S,
-      rw set.indicator_of_mem at C2,
-      apply C2,
-      simp [C1],
-    },
-  },
-end
-
-
-lemma of_function_replace {Ω:Type*} {f g:set Ω → ennreal} {Hf:f ∅ = 0} {Hg:g ∅ = 0}:
-    (f = g) →
-    measure_theory.outer_measure.of_function f Hf =
-    measure_theory.outer_measure.of_function g Hg :=
-begin
-  intro A1,
-  apply measure_theory.outer_measure.ext,
-  intro S,
-  repeat {rw outer_measure_measure_of_def},
-  repeat {rw measure_theory.outer_measure.of_function_def},
-  rw A1,
-end
-
-lemma of_function_invariant {Ω:Type*} {μ:measure_theory.outer_measure Ω}:
-    measure_theory.outer_measure.of_function (μ.measure_of) (μ.empty) = μ :=
-begin
-  apply le_antisymm,
-  {
-    rw outer_measure_measure_of_le,
-    rw le_func_def2,
-    intro S,
-    apply measure_theory.outer_measure.of_function_le,
-    apply μ.empty,
-  },
-  {
-    rw measure_theory.outer_measure.le_of_function,
-    intro S,
-    apply le_refl (μ.measure_of S),
-  },
-end 
-
-
-noncomputable def galois_insertion_measure_of_of_function' {Ω:Type*}:
-  @galois_insertion (order_dual (set Ω → ennreal)) (order_dual (measure_theory.outer_measure Ω)) _ _
-      (λ f:set Ω → ennreal, measure_theory.outer_measure.of_function' f)
-      (λ μ:measure_theory.outer_measure Ω, μ.measure_of) 
-  := 
-begin
-  apply galois_insertion.monotone_intro,
-  {
-    intros μ ν B1,
-    simp,
-    apply B1,
-  },
-  {
-    intros f g C1,
-    apply measure_theory.outer_measure.monotone_of_function',
-    apply C1,
-  },
-  {
-    intro f,
-    apply measure_theory.outer_measure.of_function'_le,
-  },
-  {
-    intro μ,
-    unfold measure_theory.outer_measure.of_function',
-    have D1:(set.indicator ({∅}ᶜ) μ.measure_of)=μ.measure_of,
-    {
-      apply funext,
-      intro S,
-      cases (classical.em (S = ∅)) with D1A D1A,
-      {
-        subst S,
-        rw set.indicator_of_not_mem,
-        rw measure_theory.outer_measure.empty,
-        simp,  
-      },
-      {
-        rw set.indicator_of_mem,
-        simp [D1A],  
-      },
-    },
-    rw of_function_replace D1,
-    clear D1,
-    apply of_function_invariant,  
-  },
-end
-
-
-def strictly_monotone {α β:Type*} [preorder α] [preorder β] (f:α → β):Prop :=
-  ∀ a b:α, a < b → f a < f b
-
-
-lemma monotone_of_strictly_monotone {α β:Type*} [partial_order α] [partial_order β] {f:α → β}:strictly_monotone f → monotone f :=
-begin
-  intros A1,
-  intros b1 b2 A3,
-  cases (classical.em (b1 = b2)) with A4 A4,
-  {
-    subst b2,
-  },
-  {
-    apply le_of_lt,
-    apply A1,   
-    apply lt_of_le_of_ne A3 A4,
-  },
-end 
-
-
-/-
-  This represents that for all a, a', the converse of a the monotone property holds.
- -/
-def monotone_converse {α β:Type*} [partial_order α] [partial_order β] (f:α → β):Prop :=
-    ∀ a a':α, f a ≤ f a' → a ≤ a'
-
-
-lemma Sup_eq_Sup_of_monotone_converse {α β:Type*} [complete_lattice α] [complete_lattice β] {f:α → β} {s:set α} (a:α):monotone f →
-    monotone_converse f →
-    (Sup (f '' s) = f a) →
-    (Sup (f '' s) = f (Sup s)) :=
-begin
-  intros A1 A2 A3,
-  apply le_antisymm,
-  {
-    apply Sup_le_Sup_of_monotone A1,
-  },
-  {
-    rw A3,
-    apply A1,
-    apply Sup_le,
-    intros b A4,
-    apply A2,
-    rw ← A3,
-    apply le_Sup,
-    apply exists.intro b,
-    apply and.intro A4 rfl,
-  },
-end
-
-
-lemma supr_eq_supr_of_monotone_converse {α β γ:Type*} [complete_lattice α] [complete_lattice β] {f:α → β} {g:γ → α} (a:α):monotone f →
-    monotone_converse f →
-    (supr (f ∘ g) = f a) →
-    (supr (f ∘ g) = f (supr g)) :=
-begin
-  intros A1 A2 A3,
-  apply le_antisymm,
-  {
-    apply supr_le_supr_of_monotone A1,
-  },
-  {
-    rw A3,
-    apply A1,
-    apply Sup_le,
-    intros b A4,
-    apply A2,
-    rw ← A3,
-    cases A4 with y A4,
-    subst b,
-    apply le_supr (f ∘ g),
-  },
-end
-
-lemma infi_eq_infi_of_monotone_converse {α β γ:Type*} [complete_lattice α] [complete_lattice β] {f:α → β} {g:γ → α} (a:α):monotone f →
-    monotone_converse f →
-    (infi (f ∘ g) = f a) →
-    (infi (f ∘ g) = f (infi g)) :=
-begin
-  intros A1 A2 A3,
-  apply le_antisymm,
-  {
-    rw A3,
-    apply A1,
-    apply le_infi,
-    intros b,
-    apply A2,
-    rw ← A3,
-    apply infi_le,
-  },
-  {
-    apply infi_le_infi_of_monotone A1,
-  },
-end
-
-lemma Inf_eq_Inf_of_monotone_converse {α β:Type*} [complete_lattice α] [complete_lattice β] {f:α → β} {s:set α} (a:α):monotone f →
-    monotone_converse f →
-    (Inf (f '' s) = f a) →
-    (Inf (f '' s) = f (Inf s)) :=
-begin
-  intros A1 A2 A3,
-  apply le_antisymm,
-  {
-    rw A3,
-    apply A1,
-    apply le_Inf,
-    intros b A4,
-    apply A2,
-    rw ← A3,
-    apply Inf_le,
-    simp,
-    apply exists.intro b,
-    split,
-    apply A4,
-    refl,
-  },
-  {
-    apply Inf_le_Inf_of_monotone A1,
-  },
-end
-
-
-lemma monotone_converse_to_outer_measure_measure_of {Ω:Type*} [measurable_space Ω]:
-    monotone_converse (λ μ:measure_theory.measure Ω, μ.to_outer_measure.measure_of) :=
-begin
-  intros μ ν A1,
-  intros s A2,
-  apply A1,
-end
-
-
---TODO: write infi_eq_infi_to_outer_measure_measure_of,
--- or better, Inf_eq_Inf_to_outer_measure_measure_of...
-lemma supr_eq_supr_to_outer_measure_measure_of {α γ:Type*}
-   [measurable_space α]  {g:γ → measure_theory.measure α} 
-   (μ:measure_theory.measure α):
-    (supr ((λ ν:measure_theory.measure α, ν.to_outer_measure.measure_of) ∘ g) =
-     (λ ν:measure_theory.measure α, ν.to_outer_measure.measure_of) μ) →
-    (supr ((λ ν:measure_theory.measure α, ν.to_outer_measure.measure_of) ∘ g) =
-    (λ ν:measure_theory.measure α, ν.to_outer_measure.measure_of) (supr g)) :=
-begin
-  intros A1,
-  apply supr_eq_supr_of_monotone_converse μ,
-  apply monotone_to_outer_measure_measure_of,
-  apply monotone_converse_to_outer_measure_measure_of,
-  apply A1,
-end
-
-
--- This would be better if it required only for all measurable sets.
-lemma supr_eq_supr_of_apply {α γ:Type*}
-   [measurable_space α]  {g:γ → measure_theory.measure α} 
-   {μ:measure_theory.measure α}:
-    (∀ (s:set α), 
-    (supr ((λ ν:measure_theory.measure α, ν s) ∘ g) = μ s)) →
-    (supr ((λ ν:measure_theory.measure α, ν.to_outer_measure.measure_of) ∘ g) =
-    (λ ν:measure_theory.measure α, ν.to_outer_measure.measure_of) (supr g)) :=
-begin
-  intros A1,
-  apply supr_eq_supr_to_outer_measure_measure_of μ,
-  apply funext,
-  intro s,
-  rw supr_apply,
-  simp,
-  apply A1,
-end
-
-
-lemma dual_galois_insertion.l_infi_u' {α : Type*} {β : Type*} {l : α → β} {u : β → α}
-   [_inst_1 : complete_lattice α] [_inst_2 : complete_lattice β]: 
-   @galois_insertion (order_dual α) (order_dual β) _ _ l u → ∀ {ι : Type*} (f : ι → β), l (⨅ (i : ι), u (f i)) = ⨅ (i : ι), f i :=
-begin
-  intros A1 γ f,
-  have A2 := @galois_insertion.l_supr_u (order_dual α) (order_dual β) l u _ _ A1 γ f,
-  apply A2,
-end
-
-lemma dual_galois_insertion.l_supr_u' {α : Type*} {β : Type*} {l : α → β} {u : β → α}
-   [_inst_1 : complete_lattice α] [_inst_2 : complete_lattice β]: 
-   @galois_insertion (order_dual α) (order_dual β) _ _ l u → ∀ {ι : Type*} (f : ι → β), l (⨆  (i : ι), u (f i)) = ⨆  (i : ι), f i :=
-begin
-  intros A1 γ f,
-  have A2 := @galois_insertion.l_infi_u (order_dual α) (order_dual β) l u _ _ A1 γ f,
-  apply A2,
-end
-
-
-lemma galois_insertion.le_iff_u_le_u {α : Type*} {β : Type*} {l : α → β} {u : β → α}
-   [_inst_1 : complete_lattice α] [_inst_2 : complete_lattice β] {b b':β}: 
-   @galois_insertion α β _ _ l u → 
-   ((b ≤ b') ↔ (u b ≤ u b')) :=
-begin
-  intro A1,
-  split;intros A2,
-  {
-    apply A1.gc.monotone_u A2,
-  },
-  {
-    rw ← A1.gc at A2,
-    rw A1.l_u_eq at A2,
-    apply A2,
-  },
-end
-
-lemma galois_insertion.Sup_u_eq_u_Sup {α : Type*} {β : Type*} {l : α → β} {u : β → α}
-   [_inst_1 : complete_lattice α] [_inst_2 : complete_lattice β]: 
-   @galois_insertion α β _ _ l u → 
-   ∀ (S:set β), (∃ b:β, u b = Sup (u '' S)) →  u (Sup S)  = Sup (u '' S) :=
-begin
-  intros A1 S A2,
-  cases A2 with b A2,
-  apply le_antisymm,
-  {
-    rw ← A2,
-    have A3 := A1.gc.monotone_u,
-    apply A3,
-    apply Sup_le,
-    intros b' A4,
-    rw A1.le_iff_u_le_u,
-    rw A2,
-    apply le_Sup,
-    simp,
-    apply exists.intro b',
-    apply and.intro A4 _,
-    refl,
-  },
-  {
-    apply Sup_le,
-    intros a A3,
-    rw ← A1.gc,
-    apply le_Sup,
-    simp at A3,
-    cases A3 with  b' A3,
-    cases A3 with A3 A4,
-    subst a,
-    rw A1.l_u_eq,
-    apply A3,
-  },
-end
-
-lemma dual_galois_connection.u_Sup {α β : Type*}
-   [_inst_1 : complete_lattice α] [_inst_2 : complete_lattice β] 
-   {l : α → β} {u : β → α}:
-   @galois_connection (order_dual α) (order_dual β) _ _ l u →
-   ∀ (s : set β), u (Sup s) = (⨆a∈s, u a) :=
-begin
-  intros A1 s,
-  apply A1.u_Inf,
-end
-
-lemma dual_galois_connection.u_supr {α β : Type*} {ι: Sort*} 
-   [_inst_1 : complete_lattice α] [_inst_2 : complete_lattice β] 
-   {l : α → β} {u : β → α}:
-   @galois_connection (order_dual α) (order_dual β) _ _ l u →
-   ∀  (γ:Type*) (f : γ → β), u (supr f) = (⨆a, u (f a)) :=
-begin
-  intros A1 γ f,
-  apply A1.u_infi,
-end
-
--- A local function for mapping the supremum as a function back to a measure.
--- It is sufficient that such a measure exists.
-noncomputable def supr_as_fun {α:Type*} [measurable_space α] 
-    (f:ℕ → (measure_theory.measure α)):Π (s:set α), (is_measurable s) → ennreal :=
-  (λ s H,(⨆ n:ℕ, f n s)) 
-
-
-lemma supr_as_fun_apply {α:Type*} [measurable_space α] 
-    (f:ℕ → (measure_theory.measure α)) (s:set α) (H:is_measurable s):
-   supr_as_fun f s H = (⨆ n:ℕ, f n s) := rfl
-
-
-lemma supr_as_fun_empty {α:Type*} [measurable_space α] 
-    {f:ℕ → (measure_theory.measure α)}:
-  (supr_as_fun f) ∅ is_measurable.empty = 0 := 
-begin
-  unfold supr_as_fun,
-  have A1:(λ n:ℕ, f n ∅ ) = 0,
-  {
-    apply funext,
-    intro n,
-    apply measure_theory.measure_empty,
-  },
-  rw A1,
-  apply @supr_const ennreal ℕ _ _ 0,
-end
-
-
-lemma supr_sum_le_sum_supr {g:ℕ → ℕ → ennreal}:
-  (⨆ m:ℕ, ∑' n, g m n) ≤
-  (∑' m, ⨆ n:ℕ,  g n m) := 
-begin
-    apply @supr_le ennreal ℕ _,
-    intro i,
-    apply @tsum_le_tsum ennreal ℕ _ _,
-    intro b,
-    apply @le_supr ennreal ℕ _,
-    repeat {apply ennreal.summable},
-end
-
-
-
-
-
-
-lemma tsum_single  {α : Type*} {β : Type*} [_inst_1 : add_comm_monoid α] [_inst_2 : topological_space α] [t2_space α] {f : β → α} (b : β): (∀ (b' : β), b' ≠ b → f b' = 0) → tsum f = (f b) :=
-begin
-  intro A1,
-  have A2:=has_sum_single b A1,
-  have A3:summable f := has_sum.summable A2, 
-  rw ← summable.has_sum_iff A3,
-  apply A2,
-end
-
 lemma ennreal.tsum {α:Type*} {f:α → ennreal}:tsum f = supr (λ s:finset α,s.sum f) :=
 begin
   rw ← summable.has_sum_iff ennreal.summable,
   apply @ennreal.has_sum α f,
 end
-
 
 lemma ennreal.tsum_le {f:ℕ → ennreal} {x:ennreal}:(∀ n:ℕ,
 (finset.range n).sum f ≤ x) ↔
@@ -2686,379 +647,6 @@ begin
   intro n,
   apply @le_supr ennreal _ _,
 end
-
-
-lemma supr_sum_eq_sum_supr {g:ℕ → ℕ → ennreal}:
-  monotone g →
-  (⨆ m:ℕ, ∑' n, g m n) = 
-  (∑' m, ⨆ n:ℕ,  g n m) := 
-begin
-  intro A1,
-  apply le_antisymm,
-  {
-    apply supr_sum_le_sum_supr,
-  },
-  {
-    rw ← @ennreal.tsum_le (λ m, ⨆ n:ℕ,  g n m) (⨆ m:ℕ, ∑' n, g m n),
-    intros n2,
-    have A2:(λ m, (finset.range n2).sum (g m)) ≤ (λ m, ∑' n, g m n),
-    {
-      rw le_func_def2,
-      intro m,
-      simp,
-      apply ennreal.finset_sum_le_tsum,
-    },
-    have A3:(⨆  m, (finset.range n2).sum (g m)) ≤ (⨆ m, ∑' n, g m n),
-    {
-      apply supr_le_supr A2,
-    },
-    apply le_trans _ A3,
-    rw @ennreal.finset_sum_supr_nat ℕ ℕ _ (finset.range n2) (λ m n, g n m), 
-    simp,
-    intro i,
-    apply @le_supr ennreal ℕ _,
-    intros a,
-    simp,
-    intros x y A4,
-    simp,
-    apply A1,
-    apply A4,
-  },
-end
-
-lemma supr_as_fun_m_Union {α:Type*} [M:measurable_space α] 
-    (f:ℕ → (measure_theory.measure α)) (H:monotone f):
-(∀ {g : ℕ → set α} (h : ∀ (i : ℕ), is_measurable (g i)), 
-  pairwise (disjoint on g) → 
- ((supr_as_fun f) (⋃ (i : ℕ), g i) (M.is_measurable_Union g h)) = 
-  ∑' (i : ℕ), (supr_as_fun f) (g i) (h i)) :=
-begin
-  intros g h A1,
-  rw supr_as_fun_apply,
-  have A2:(λ i, supr_as_fun f (g i) (h i)) = (λ i, (⨆ n:ℕ, f n (g i) )),
-  {
-    apply funext,
-    intro i,
-    rw supr_as_fun_apply,
-  },
-  rw A2,
-  clear A2,
-  have A3:(λ (n : ℕ), (f n) (⋃ (i : ℕ), g i))= (λ (n : ℕ),∑' i,  (f n) (g i)),
-  {
-    apply funext,
-    intro n,
-    apply (f n).m_Union h A1,
-  },
-  rw A3,
-  clear A3,
-  apply supr_sum_eq_sum_supr,
-  intros x y A4,
-  simp,
-  intro n,
-  apply H,
-  apply A4,
-  apply h,
-end
-
-noncomputable def supr_as_measure {α:Type*} [M:measurable_space α] 
-    (f:ℕ → (measure_theory.measure α)) (H:monotone f):measure_theory.measure α :=
-  measure_theory.measure.of_measurable (supr_as_fun f) (@supr_as_fun_empty α M f)
-  (@supr_as_fun_m_Union α M f H)
-
-
-lemma supr_as_measure_def {α:Type*} [M:measurable_space α] 
-    (f:ℕ → (measure_theory.measure α)) (H:monotone f):(supr_as_measure f H) =
-  measure_theory.measure.of_measurable (supr_as_fun f) (@supr_as_fun_empty α M f)
-  (@supr_as_fun_m_Union α M f H) := rfl
-
-
-lemma supr_as_measure_apply {α:Type*} [M:measurable_space α] 
-    (f:ℕ → (measure_theory.measure α)) (H2:monotone f) (s:set α) (H:is_measurable s):
-  (supr_as_measure f H2) s = (λ s,(⨆ n:ℕ, f n s))  s := 
-begin
-  rw supr_as_measure_def,
-  rw measure_theory.measure.of_measurable_apply s H,
-  rw supr_as_fun_apply f s,
-end
-
-
-lemma measure_theory.measure.Union_nat {α : Type*} [M : measurable_space α] 
-    {μ:measure_theory.measure α} {f:ℕ → set α}:μ (⋃ i, f i) ≤ ∑' i, μ (f i) :=
-begin
-  rw measure.apply,
-  have A1:(λ i, μ (f i))=(λ i, μ.to_outer_measure.measure_of (f i)) := rfl,
-  rw A1,
-  apply measure_theory.outer_measure.Union_nat,
-end
-
-
-lemma infi_eq_infi {α β:Type*} [has_Inf β] {f:α → β} {g:α → β}:
-    (∀ a:α, f a =  g a) →
-    (⨅ a:α, f a) = ⨅ a:α, g a :=
-begin
-  intro A1,
-  have A2:f = g,
-  {
-    ext,
-    apply A1,
-  },
-  rw A2,
-end  
-
-lemma supr_eq_supr {α β:Type*} [has_Sup β] {f:α → β} {g:α → β}:
-    (∀ a:α, f a =  g a) →
-    (⨆ a:α, f a) = ⨆ a:α, g a :=
-begin
-  intro A1,
-  have A2:f = g,
-  {
-    ext,
-    apply A1,
-  },
-  rw A2,
-end 
-
-
-lemma infi_commute_helper {α β:Sort} {γ:Type*} [complete_lattice γ] {f:α → β → γ}:
-    (⨅ a:α,⨅ b:β, f a b) ≤ ⨅ b:β, ⨅ a:α, f a b :=  
-begin
-    apply le_infi,
-    intro b,
-    apply le_infi,
-    intro a,
-    have A1:(⨅ (a : α) (b : β), f a b)≤(⨅ (b : β), f a b),
-    {
-      apply infi_le,
-    },
-    apply le_trans A1,
-    apply infi_le,
-end  
-
-
-lemma infi_commute {α β:Sort} {γ:Type*} [complete_lattice γ] {f:α → β → γ}:
-    (⨅ a:α,⨅ b:β, f a b) = ⨅ b:β, ⨅ a:α, f a b :=  
-begin
-  apply le_antisymm,
-  {
-    apply infi_commute_helper,
-  },
-  {
-    apply infi_commute_helper,
-  },
-end  
-
-
-lemma measure_theory.measure.to_outer_measure_def {α : Type*} [M : measurable_space α] 
-    {μ:measure_theory.measure α} {s:set α}:
-   μ s = ⨅ (s':set α) (H:is_measurable s') (H2:s⊆ s'), μ s' :=
-begin
-  rw measure_theory.measure_eq_infi,
-  apply infi_eq_infi,
-  intro s',
-  rw infi_commute,
-end
-
-
-lemma measure_theory.measure.of_measurable_apply3 {α : Type*} [M : measurable_space α] 
-    {m : Π (s : set α), is_measurable s → ennreal} {m0 : m ∅ is_measurable.empty = 0} 
-    {mU : ∀ (f : ℕ → set α) (h : ∀ (i : ℕ), is_measurable (f i)), pairwise (disjoint on f) → (m
-    (⋃ (i : ℕ), f i) (M.is_measurable_Union f h)) = ∑' (i : ℕ), m (f i) (h i)} 
-  (s : set α): 
-   (measure_theory.measure.of_measurable m m0 mU) s = 
-    ⨅ (s':set α) (H:is_measurable s') (H2:s⊆ s'), m s' H :=
-begin
-  rw measure_theory.measure.to_outer_measure_def,
-  have A1:(λ s':set α, ⨅  (H : is_measurable s') (H2 : s ⊆ s'), (measure_theory.measure.of_measurable m m0 mU) s') =
-    (λ s':set α,  ⨅ (H : is_measurable s') (H2 : s ⊆ s'), m s' H),
-  {
-    apply funext,
-    intro s',
-    have A1A:(λ (H : is_measurable s'), ⨅ (H2 : s ⊆ s'), 
-             (measure_theory.measure.of_measurable m m0 mU) s') =
-             λ (H : is_measurable s'), ⨅  (H2 : s ⊆ s'), m s' H,
-    {
-      apply funext,
-      intro A1A1,
-      have A1A2:(λ (H2 : s ⊆ s'), (measure_theory.measure.of_measurable m m0 mU) s') =
-                 λ  (H2 : s ⊆ s'), m s' A1A1,
-      {
-        apply funext,
-        intro A1A2A,
-        apply @measure_theory.measure.of_measurable_apply α M m m0 mU,
-      },
-      rw A1A2,
-    },
-    rw A1A,
-  },
-  rw A1,
-end
-
-
-lemma supr_as_measure_apply2 {α:Type*} [M:measurable_space α] 
-    (f:ℕ → (measure_theory.measure α)) (H2:monotone f) (s:set α):
-  (supr_as_measure f H2) s = ⨅ (s':set α) (H:is_measurable s') (H2:s⊆ s'),  (⨆ n:ℕ, f n s') := 
-begin
-  rw supr_as_measure_def,
-  rw measure_theory.measure.of_measurable_apply3,
-  have A1:(λ (s' : set α), ⨅ (H : is_measurable s') (H2 : s ⊆ s'), supr_as_fun f s' H) =
-    λ (s' : set α), ⨅ (H : is_measurable s') (H2 : s ⊆ s'), ⨆ (n : ℕ), (f n) s',
-  {
-    apply funext,
-    intro s',
-    have A1A:(λ (H : is_measurable s'), ⨅ (H2 : s ⊆ s'), supr_as_fun f s' H) =
-              λ (H : is_measurable s'), ⨅ (H2 : s ⊆ s'), ⨆ (n : ℕ), (f n) s',
-    {
-      apply funext,
-      intro H,
-      have A1A1:(λ (H2 : s ⊆ s'), supr_as_fun f s' H) =
-              λ  (H2 : s ⊆ s'), ⨆ (n : ℕ), (f n) s',
-      {
-        apply funext,
-        intro H2,
-        rw supr_as_fun_apply,
-      },
-      rw A1A1,
-    },
-    rw A1A,
-  },
-  rw A1,
-end
-
-
-lemma supr_eq_supr_to_outer_measure_measure_of_of_monotone {α:Type*}
-   [M:measurable_space α]  {g:ℕ → measure_theory.measure α}
-   :monotone g → 
-    (supr ((λ ν:measure_theory.measure α, ν.to_outer_measure.measure_of) ∘ g) =
-    (λ ν:measure_theory.measure α, ν.to_outer_measure.measure_of) (supr g)) :=
-begin
-  intro A1,
-  apply @supr_eq_supr_to_outer_measure_measure_of α ℕ M g (@supr_as_measure α M g A1),
-  simp,
-  apply funext,
-  intro s,
-  rw supr_as_measure_apply2,
-  apply le_antisymm,
-  {
-    apply @le_infi ennreal (set α) _,
-    intro s',
-    apply @le_infi ennreal _ _,
-    intro H,
-    apply @le_infi ennreal _ _,
-    intro H2,
-    rw supr_apply,
-    apply @supr_le_supr ennreal ℕ _,
-    intro n,
-    apply measure_theory.measure_mono,
-    apply H2,
-  },
-  {
-    rw supr_apply,    
-    have C1:(λ (i : ℕ), (g i) s)
-            = λ i, ⨅ (s':set α) (H:is_measurable s') (H2:s⊆ s'), (g i) s' ,
-    {
-      apply funext,
-      intro i,
-      apply measure_theory.measure.to_outer_measure_def,
-    },
-    rw C1,
-    clear C1,
-    apply ennreal.infi_le,
-    intros ε C2 C3,
-
-    have C4:∃ (f:ℕ → (set α)), (∀ i:ℕ, 
-        (is_measurable (f i)) ∧
-        (s ⊆ (f i)) ∧
-         ((g i (f i)) ≤ 
-      ( ⨅ (s' : set α) (H : is_measurable s') (H2 : s ⊆ s'), (g i) s') + (ε:ennreal))), 
-    {
-      have C4A:(∀ i:ℕ, ∃  s'':set α,
-        (is_measurable (s'')) ∧
-        (s ⊆ (s'')) ∧
-         ((g i (s'')) ≤ 
-      ( ⨅ (s' : set α) (H : is_measurable s') (H2 : s ⊆ s'), (g i) s') + (ε:ennreal))), 
-      {
-        intro i,
-        rw @lt_top_iff_ne_top ennreal _ _ at C3,
-        have C4B:=@ne_top_of_supr_ne_top ℕ _ i C3,
-        have C4C:(⨅ (s' : set α) (H : is_measurable s') (H2 : s ⊆ s'), (g i) s')≠ ⊤ ,
-        {
-          apply C4B,
-        },
-        
-        have C4E := lt_top_iff_ne_top.mpr C4C,
-        have C4D := ennreal.infi_elim C2 C4E,
-        cases C4D with s'' C4D,
-        apply exists.intro s'',
-        simp at C4D,
-        have C4F: (⨅ (s' : set α) (H : is_measurable s') (H2 : s ⊆ s'), (g i) s') + ↑ε < ⊤,
-        {
-          rw with_top.add_lt_top,
-          split,
-          apply C4E,
-          simp,
-        },
-        have C4G := lt_of_le_of_lt C4D C4F,
-        have C4H := of_infi_lt_top C4G,
-        rw infi_prop_def at C4G,
-        have C4I := of_infi_lt_top C4G,
-        rw infi_prop_def at C4G,        
-        split,
-        {
-          apply C4H,
-        },
-        split,
-        {
-          apply C4I,
-        },
-        rw infi_prop_def at C4D,
-        rw infi_prop_def at C4D,
-        apply C4D,
-        apply C4I,
-        apply C4H,
-        apply C4I,
-        apply C4H,
-      },
-      apply @classical.some_func ℕ (set α) _ C4A,
-    },
-    cases C4 with f C4,
-    apply exists.intro (set.Inter f),
-    rw infi_prop_def,
-    rw infi_prop_def,
-    rw ennreal.supr_add,
-    apply @supr_le_supr ennreal ℕ _ (λ n, (g n) (set.Inter f)),
-    {
-      intro i,   
-      have D1:(λ (n : ℕ), (g n) (set.Inter f)) i ≤ (g i) (f i),
-      {
-        simp,
-        apply measure_theory.measure_mono,
-        apply @set.Inter_subset α ℕ f,
-      },
-      apply le_trans D1 (C4 i).right.right,  
-    },
-    {
-      apply set.subset_Inter,
-      intro i,
-      apply (C4 i).right.left,      
-    },
-    {
-      apply is_measurable.Inter,
-      intro i,
-      apply (C4 i).left,      
-    },
-  },
-end
-
-
-lemma supr_eq_supr_to_outer_measure_measure_of_of_monotone' {α:Type*}
-   [M:measurable_space α]  {g:ℕ → measure_theory.measure α}
-   :monotone g → 
-    (supr ((λ ν:measure_theory.measure α, ν.to_outer_measure.measure_of) ∘ g) =
-    (supr g).to_outer_measure.measure_of) :=
-begin
-  apply supr_eq_supr_to_outer_measure_measure_of_of_monotone,
-end
-
 
 lemma ennreal.Sup_eq_supr {S:set ennreal}:S.nonempty →
    (∃ f:ℕ → ennreal, 
@@ -3200,45 +788,6 @@ begin
   simp,
 end
 
-
-
-lemma finset.sup_closed {α β:Type*} [decidable_eq α] 
-   [semilattice_sup_bot β]
-   (S:finset α) 
-   (f:α → β) (T:set β):
-   (⊥ ∈ T) →
-   (∀ a∈ S, f a ∈ T) →
-   (∀ a∈ T, ∀ b∈ T, a⊔b ∈ T) →
-   (S.sup f ∈ T) :=
-begin
-  intros A1 A2 A3,
-  revert A2,
-  apply finset.induction_on S,
-  {
-    intros B1,
-    simp,
-    apply A1,
-  },
-  {
-    intros a S C1 C2 C3,
-    simp,
-    apply A3,
-    {
-      apply C3,
-      simp,  
-    },
-    {
-      apply C2,
-      intro a2,
-      intro C4,
-      apply C3,
-      simp,
-      apply or.inr C4,  
-    },
-  },
-end
-
-
 lemma finset.sup_closed_nonempty {α β:Type*} [decidable_eq α] 
    [semilattice_sup_bot β]
    (S:finset α) 
@@ -3283,7 +832,6 @@ begin
   },
 end
 
-
 lemma Sup_so_far_of_closed {α:Type*} [semilattice_sup_bot α] (f:ℕ → α) (S:set α):
    (∀ n:ℕ, f n ∈ S) →
    (∀ a∈ S, ∀ b∈ S, a⊔b ∈ S) →
@@ -3321,463 +869,6 @@ begin
 end
 
 
-/- For supr_measure_eq_measure_supr, this is a more
-   useful rewrite, as (finset.range (nat.succ n)).sum f = f n -/ 
-lemma ennreal.lim_finset_sum_succ_eq_tsum {f:ℕ → ennreal}:
-(⨆  n, (finset.range (nat.succ n)).sum f)  = tsum f :=
-begin
-  apply le_antisymm,
-  {
-    apply @supr_le ennreal _ _,
-    intro n,
-    apply ennreal.finset_sum_le_tsum,
-  },
-  {
-    rw ← ennreal.tsum_le,
-    intro n,
-    cases n,
-    {
-      simp,
-    },
-    {
-      apply @le_supr ennreal _ _,
-    },
-  }
-end
-
-
-/-
-  This is useful to prove Hahn decomposition.
-  No wait, it's not.
- -/
-lemma supr_measure_eq_measure_supr {α:Type*}
-    [M:measurable_space α] {μ:measure_theory.measure α}
-    {f:ℕ → set α}:(∀ n, is_measurable (f n)) →
-    monotone f →
-    supr (λ n, μ (f n)) = μ (supr f) :=
-begin
-  intros A1 A2,
-  rw supr_eq_Union,
-  rw ← Union_sub_pred,
-  rw measure.apply,
-  rw measure_theory.measure.m_Union,
-  rw ← ennreal.lim_finset_sum_succ_eq_tsum,
-  have A3:(λ (i : ℕ), μ.to_outer_measure.measure_of (sub_pred f i))
-          = (λ (i : ℕ), μ (sub_pred f i)),
-  {
-    apply funext,
-    intro i,
-    rw measure.apply,
-  },
-  rw A3,
-  have A5:(λ (n : ℕ), finset.sum (finset.range n.succ)
-          (λ (i : ℕ), μ (sub_pred f i)))=
-          (λ n, μ (f n) ),
-  {
-    apply funext,
-    intro n,
-    rw @measure_finset_sum α M μ (sub_pred f) _,
-    rw union_range_sub_pred,
-    rw union_finset_range_monotone,
-    apply A2,
-    intro m,
-    apply is_measurable_sub_pred A1,
-    apply sub_pred_pairwise_disjoint,
-    apply A2,
-  },
-  rw A5,
-  intro m,
-  apply is_measurable_sub_pred A1,
-  apply sub_pred_pairwise_disjoint,
-  apply A2,
-end
-
-
-/-
-  This theorem is immediately useful to prove the
-  existence of the Radon-Nikodym derivative, if 
-  α = measure_theory.measure Ω, and g = (λ μ, μ T)
-  (see Sup_apply_eq_supr_apply_of_closed). 
-  However, if α = set Ω, and g = μ, then this
-  can be used to prove the Hahn decomposition variant.
-  The critical proof is that supr (μ T) =
-  μ (supr T).
- -/
-lemma Sup_apply_eq_supr_apply_of_closed' {α:Type*}
-  [complete_lattice α] {S:set α} (g:α → ennreal):
-  (∀ (a∈ S) (b∈ S), a ≤ b → g a ≤ g b) →
-  (∀ f:ℕ → α, (set.range f ⊆ S) → 
-               monotone f → supr (g ∘ f) = g (supr f)) →
-  (S.nonempty) →
-  (∀ a ∈ S, ∀ b ∈ S, a ⊔ b ∈ S)→
-  (∃ f:ℕ → α,
-            (∀ n, f n ∈ S) ∧ 
-            (monotone f) ∧
-            g (supr f) = Sup (g '' S)) :=
-begin
-  intros A1 AX A2 A3,
-  have B1:(g '' S).nonempty,
-  {
-    apply set.nonempty_image_iff.mpr A2,
-  },
-  have B1X := ennreal.Sup_eq_supr B1,
-  cases B1X with f' B1X,
-  have B2:∃ f'':ℕ → α, ∀ n:ℕ, 
-          (f'' n)∈ S ∧ g (f'' n) = f' n, 
-  {
-    apply @classical.some_func ℕ α (λ (n:ℕ) (a:α), 
-        a∈ S ∧ g a = f' n),
-    intro n,
-    have B2A:=(B1X.left) n,
-    simp at B2A,
-    cases B2A with a B2A,
-    apply exists.intro a,
-    simp,
-    apply B2A,
-  },
-  cases B2 with f'' B2,
-  have C1:∀ (n : ℕ), Sup_so_far f'' n ∈ S,
-  {
-    apply Sup_so_far_of_closed,
-    intro n,
-    apply (B2 n).left,
-    apply A3,  
-  },
-  apply exists.intro (Sup_so_far f''),
-  split,
-  {
-    apply C1,
-  },
-  split,
-  {
-    apply monotone_Sup_so_far,
-  },
-  {
-    rw ← AX,
-    apply le_antisymm,
-    {
-      apply @supr_le ennreal _ _,
-      intro n,
-      apply @le_Sup ennreal _ _,
-      simp,
-      apply exists.intro (Sup_so_far f'' n),
-      apply and.intro (C1 n),
-      refl,   
-    },
-    {
-      rw ← B1X.right,
-      apply @supr_le_supr ennreal _ _,
-      intros n,
-      rw ← (B2 n).right,
-      simp,
-      apply A1,
-      apply (B2 n).left,
-      apply C1 n,
-      apply le_Sup_so_far,
-    },
-    {
-      rw set.subset_def,
-      intros x C2,
-      simp at C2,
-      cases C2 with n C2,
-      rw ← C2,
-      apply C1,
-    },
-    apply monotone_Sup_so_far,
-  },
-end
-
-
-
-/- This lemma presents a pattern that is repeated
-   many times, both for Hahn decomposition and for
-   the Lebesgue-Radon-Nikodym theorem. -/
-lemma Sup_apply_has_max {α:Type*}
-  [complete_lattice α] {S:set α} (g:α → ennreal):
-  (∀ (a∈ S) (b∈ S), a ≤ b → g a ≤ g b) →
-  (∀ f:ℕ → α, (set.range f ⊆ S) → 
-               monotone f → supr (g ∘ f) = g (supr f)) →
-  (∀ f:ℕ → α, (set.range f ⊆ S) → 
-               monotone f → supr f ∈ S) → 
-  (S).nonempty →
-  (∀ a ∈ S, ∀ b ∈ S, a ⊔ b ∈ S)→
-  (∃ a∈ S, g a = Sup (g '' S)) :=
-begin
-  intros A1 A2 A3 A4 A5,
-  have B1 := Sup_apply_eq_supr_apply_of_closed' g A1 A2 A4 A5,
-  cases B1 with f B1,
-  apply exists.intro (supr f),
-  have C1:set.range f ⊆ S,
-  {
-    rw set.range_subset_iff,
-    apply B1.left,
-  },
-  have C2 := A3 f C1 B1.right.left,
-  apply exists.intro C2,
-  apply B1.right.right,
-end
-
-
-lemma Sup_apply_eq_supr_apply_of_closed {α:Type*}
-   [M:measurable_space α]  {S:set (measure_theory.measure α)}
-   {T:set α}:
-  (S.nonempty) →
-  (is_measurable T) →
-  (∀ μ ∈ S, ∀ ν ∈ S, μ ⊔ ν ∈ S)→
-  (∃ f:ℕ → (measure_theory.measure α),
-            (∀ n, f n ∈ S) ∧ 
-            (monotone f) ∧
-            (supr f T = Sup ((λ μ:measure_theory.measure α, μ T) '' S))) :=
-begin
-  intros A1 A2 A3,
-  apply @Sup_apply_eq_supr_apply_of_closed' (measure_theory.measure α) _ S (λ μ:measure_theory.measure α, μ T),
-  {
-     intros x B1 y B2 B3,
-     apply monotone_to_outer_measure_measure_of,
-     apply B3,
-  },
-  {
-    intros f CX C1,
-    simp,
-    have C2:= supr_eq_supr_to_outer_measure_measure_of_of_monotone' C1,
-    rw measure.apply,
-    rw ← C2,
-    rw supr_apply,
-    refl,
-  },
-  {
-    apply A1,
-  },
-  {
-    apply A3,
-  },
-end
-
-
-/- Note that for outer measures, the supremum commutes with measure_of, in a way. -/
-lemma of_function'_supr_measure_of_eq_supr {Ω γ:Type*}
-    {h:γ → (measure_theory.outer_measure Ω)}:
-      (λ f:set Ω → ennreal, measure_theory.outer_measure.of_function' f)
-      (⨆ (i:γ), 
-      (λ μ:measure_theory.outer_measure Ω, μ.measure_of) (h i))
-      = supr h 
-  := 
-begin
-  apply dual_galois_insertion.l_supr_u',
-  apply @galois_insertion_measure_of_of_function' Ω,
-end
-
--- TODO(martinz): remove measurability requirement?
-lemma monotone_with_density {Ω:Type*} [M:measurable_space Ω]
-    {μ:measure_theory.measure Ω}
-    {f:ℕ → (Ω → ennreal)}:
-    monotone f →
-    (∀ n, measurable (f n)) → 
-    monotone ((μ.with_density) ∘ f) :=
-begin
-  intros B1 B2 a b A1,
-  intros S A2,
-  rw measure_theory.with_density_apply2',
-  rw measure_theory.with_density_apply2',
-  apply measure_theory.lintegral_mono,
-  apply @monotone_set_indicator Ω ennreal _ _,
-  apply B1,
-  apply A1,
-  apply A2,
-  apply A2,
-end
-
--- Update: I am using this now in R-N theorem.
--- It's not clear to me anymore that this is necessary.
--- However, I am fairly certain it is true.
--- What is missing is proving that (λ i, with_density (h i)) itself is a
--- monotone. It is also probably useful.
-lemma supr_with_density_eq_with_density_supr {Ω:Type*} [M:measurable_space Ω]
-    {μ:measure_theory.measure Ω}
-    {h:ℕ → Ω → ennreal}:
-    (∀ n:ℕ, measurable (h n)) →
-    (monotone h) →
-    supr (λ n:ℕ, μ.with_density (h n)) = μ.with_density (supr h) :=
-begin
-  intros A1 A2,
-  apply measure_theory.measure.ext,
-  intros S A3,
-  rw ← @supr_with_density_apply_eq_with_density_supr_apply Ω M μ h S A3 A1 A2,
-  rw measure.apply,
-  rw ← @supr_eq_supr_to_outer_measure_measure_of_of_monotone' Ω M (λ n, μ.with_density (h n)),
-  rw supr_apply,
-  apply @supr_eq_supr ℕ ennreal _,
-  intro n,
-  refl,
-  apply monotone_with_density,
-  apply A2,
-  apply A1,
-end 
-
-
-
-
--- The nature of this proof suggests the lemma already exists.
-lemma measure_theory.measure.sup_le {Ω:Type*} {N:measurable_space Ω} (μ₁ μ₂ ν:measure_theory.measure Ω):μ₁ ≤ ν → μ₂ ≤ ν → μ₁ ⊔ μ₂ ≤ ν :=
-begin
-  intros A1 A2,
-  simp,
-  apply and.intro A1 A2,
-end
-
-
-lemma sup_fun_def {Ω:Type*} {f g:Ω → ennreal}:
-    (f ⊔ g) = λ ω:Ω, f ω ⊔ g ω :=
-begin
-  refl
-end
-
---TODO:remove, trivial?
-lemma ennreal.sup_apply {Ω:Type*} {f g:Ω → ennreal} {x:Ω}:
-    (f ⊔ g) x = f x ⊔ g x :=
-begin
-  apply sup_apply,
-end
-
-
---Extensible to a (complete?) linear order.
-lemma ennreal.lt_sup_iff {a b c:ennreal}:
-  c < a ⊔ b ↔ c < a ∨ c < b :=
-begin
-  split;intros A1,
-  {
-    simp at A1,
-    apply A1,
-  },
-  {
-    simp,
-    apply A1,
-  },
-end
-
-
-lemma measurable_sup {Ω:Type*} {M:measurable_space Ω} 
-  {f g:Ω → ennreal}:measurable f → measurable g → 
-    measurable (f ⊔ g) :=
-begin
-  intros A1 A2,
-  /- Proof sketch:
-     x is measurable iff if ∀ a, x⁻¹ (a,⊤] is measurable.
-     (f ⊔ g)⁻¹ (a,⊤] =f⁻¹ (a,⊤]∪g⁻¹ (a,⊤].
-     Since the union of two measurable functions is measurable,
-     we are done.
-   -/ 
-  apply is_ennreal_measurable_intro_Ioi,
-  intro a,
-  have A3:(f ⊔ g) ⁻¹' {y : ennreal | a < y}=
-      f ⁻¹' {y : ennreal | a < y}∪
-      g ⁻¹' {y : ennreal | a < y},
-  {
-    simp,
-    ext,
-    split;intros A3A;simp at A3A;simp;apply A3A,
-  },
-  rw A3,
-  apply is_measurable.union,
-  {
-    apply A1,
-    apply is_ennreal_is_measurable_intro_Ioi,
-  },
-  {
-    apply A2,
-    apply is_ennreal_is_measurable_intro_Ioi,
-  },
-end
-
-
-
---Could remove, but let's leave it here for now.
-lemma ennreal.is_measurable_le {Ω:Type*} {M:measurable_space Ω}
-  {x y:Ω → ennreal}:measurable x → measurable y →
-  is_measurable {ω:Ω|x ω ≤ y ω} :=
-begin
-  intros A1 A2,
-  apply is_measurable_le A1 A2,
-end
-
-
-
-lemma with_density_le_with_density {Ω:Type*} {M:measurable_space Ω}
-  {μ:measure_theory.measure Ω} {x y:Ω → ennreal} 
-  {S:set Ω}:
-  is_measurable S →
-  (∀ ω ∈ S, x ω ≤ y ω) →  
-  μ.with_density x S ≤ μ.with_density y S :=
-begin
-  intros A3 A4,
-  rw measure_theory.with_density_apply2' μ x S A3,
-  rw measure_theory.with_density_apply2' μ y S A3,
-  apply measure_theory.lintegral_mono,
-
-  rw le_func_def2,
-  intros ω,
-  cases (classical.em (ω ∈ S)) with A5 A5,
-  {
-    rw set.indicator_of_mem A5,
-    rw set.indicator_of_mem A5,
-    apply A4 _ A5,
-  },
-  {
-    rw set.indicator_of_not_mem A5,
-    rw set.indicator_of_not_mem A5,
-    apply le_refl _,
-  },
-end
-
-
---TODO(martinz): Remove measurability?
-lemma with_density_sup_of_le {Ω:Type*} {M:measurable_space Ω}
-  {μ:measure_theory.measure Ω} {x y:Ω → ennreal} 
-  {S:set Ω}:measurable x → measurable y →
-  is_measurable S →
-  (∀ ω ∈ S, x ω ≤ y ω) →  
-  μ.with_density (x⊔y) S = μ.with_density y S :=
-begin
-  intros A1 A2 A3 A4,
-  rw measure_theory.with_density_apply2' μ (x ⊔ y) S A3,
-  rw measure_theory.with_density_apply2' μ y S A3,
-  have A5:set.indicator S (x ⊔ y) = set.indicator S y,
-  {
-    apply funext,
-    intro ω,
-    cases (classical.em (ω∈ S)) with A5A A5A,
-    {
-      rw set.indicator_of_mem A5A,
-      rw set.indicator_of_mem A5A,
-      rw sup_apply,
-      simp,
-      apply max_eq_right (A4 _ A5A),
-      --simp,
-    },
-    {
-      rw set.indicator_of_not_mem A5A,
-      rw set.indicator_of_not_mem A5A,
-    },
-  },
-  rw A5,
-end
-
-
-lemma measure_theory.measure.sup_le_apply {Ω:Type*}
-  {M:measurable_space Ω}
-  {μ ν m:measure_theory.measure Ω}
-  {S:set Ω}:is_measurable S →
-  (μ ≤ m) →
-  (ν ≤ m) → 
-  (μ ⊔ ν) S ≤ m S :=
-begin
-  intros A1 A2 A3,
-  have A4:μ ⊔ ν ≤ m := 
-      @sup_le (measure_theory.measure Ω) _ μ ν m A2 A3,
-  apply A4,
-  apply A1,
-end
-
 
 ------------------------------------------------
 
@@ -3792,30 +883,15 @@ def hahn_crazy_set {α:Type*} [M:measurable_space α]
   (μ ν:measure_theory.measure α) (X:set α):Prop :=
     (μ X < ν X) ∧ 
     is_measurable X ∧ 
-    (∀ X':set α,  (X' ⊆ X) → (μ X' < ν X')  →  
-    ¬ (le_on_subsets μ ν X'))
+    (∀ X':set α,  (X' ⊆ X) → is_measurable X' → 
+    (μ.restrict X' ≤ ν.restrict X')→ (ν X' ≤ μ X') )
 
-
-lemma hahn_crazy_set_def {α:Type*} [M:measurable_space α] 
-  (μ ν:measure_theory.measure α) (X:set α):
-  hahn_crazy_set μ ν X =
+lemma hahn_crazy_set_def' {α:Type*} [M:measurable_space α] 
+  (μ ν:measure_theory.measure α) (X:set α):hahn_crazy_set μ ν X =
     ((μ X < ν X) ∧ 
     is_measurable X ∧ 
-    (∀ X':set α,  (X' ⊆ X) → (μ X' < ν X')  →  
-    ¬ (le_on_subsets μ ν X'))) := rfl
-
-
-
-lemma measure_theory.measure_diff' {α:Type*}
-    [measurable_space α] {μ:measure_theory.measure α}
-    {s₁ s₂:set α}:s₂ ⊆ s₁ →  is_measurable s₁ →
-    is_measurable s₂ → μ s₂ < ⊤ →
-    μ (s₁ \ s₂) = μ s₁ - μ s₂ :=
-begin
-  apply measure_theory.measure_diff,
-end
-
-
+    (∀ X':set α,  (X' ⊆ X) → is_measurable X' → 
+    (μ.restrict X' ≤ ν.restrict X')→ (ν X' ≤ μ X') )) := rfl
 
 
 
@@ -3828,12 +904,11 @@ lemma hahn_crazy_set_subset {α:Type*} [M:measurable_space α]
   hahn_crazy_set μ ν X → 
   X' ⊆ X →
   is_measurable X' →
-  --μ X' < ⊤ →
   ν X' ≤ μ X' →
   hahn_crazy_set μ ν (X\X') :=
 begin
   intros A1 A2 A3 A5,
-  rw hahn_crazy_set_def at A1,
+  rw hahn_crazy_set_def' at A1,
   have A4:μ X' < ⊤,
   {
     have A4A:μ X' ≤ μ X,
@@ -3843,16 +918,12 @@ begin
     apply lt_of_le_of_lt A4A,
     apply lt_of_lt_of_le A1.left,
     apply @le_top ennreal _,
-    --A1.left,
   },
-  have B1:is_measurable (X \ X'),
+  rw hahn_crazy_set_def',
+  split,
   {
-    apply is_measurable.diff A1.right.left A3,
-  },
-  have B2:μ (X \ X') < ν (X \ X'),
-  {
-    rw measure_theory.measure_diff' A2 A1.right.left A3 A4, 
-    rw measure_theory.measure_diff' A2 A1.right.left A3
+    rw measure_theory.measure_diff A2 A1.right.left A3 A4, 
+    rw measure_theory.measure_diff A2 A1.right.left A3
        (lt_of_le_of_lt A5 A4),
     -- ⊢ ⇑μ X - ⇑μ X' < ⇑ν X - ⇑ν X'
     apply ennreal.sub_lt_sub_of_lt_of_le,
@@ -3866,24 +937,12 @@ begin
       apply (measure_theory.measure_mono A2),
     },
   },
-  rw hahn_crazy_set_def,
-  apply and.intro B2,
-  apply and.intro B1,
+  apply and.intro (is_measurable.diff A1.right.left A3),    
   intros X'' C1 C2,
   apply A1.right.right,
   apply @set.subset.trans α X'' (X \ X') X C1,
   apply set.diff_subset,
   apply C2,
-end
-
-lemma hahn_crazy_set_self {α:Type*} [M:measurable_space α]
-  (μ ν:measure_theory.measure α)
-  (X:set α):hahn_crazy_set μ ν X →
-  ¬le_on_subsets μ ν X :=
-begin
-  intros A1,
-  rw hahn_crazy_set_def at A1,
-  apply A1.right.right X (set.subset.refl _) A1.left,
 end
 
 
@@ -3902,28 +961,24 @@ lemma hahn_crazy_diff_set_def {α:Type*} [M:measurable_space α]
 
 
 
-lemma hahn_crazy_diff_set_nonempty {α:Type*} [M:measurable_space α]
-  (μ ν:measure_theory.measure α) (X:set α):is_measurable X → 
-  ¬le_on_subsets ν μ X →
-  (hahn_crazy_diff_set μ ν X).nonempty :=
+lemma not_restrict_le_elim {α:Type*} [M:measurable_space α]
+  {μ ν:measure_theory.measure α} {X:set α}: 
+  is_measurable X →
+  ¬(μ.restrict X ≤ ν.restrict X) →
+  (∃ X':set α, X'⊆ X ∧ is_measurable X' ∧ ν X' < μ X') :=
 begin
   intros A1 A2,
-  rw ← set.ne_empty_iff_nonempty,
+  rw ← @decidable.not_forall_not _ _ (@classical.prop_decidable _),
   intro A3,
   apply A2,
-  rw le_on_subsets_def,
-  apply and.intro A1,
-  intros X' B1 B2,
-  rw hahn_crazy_diff_set_def at A3,
-  apply @le_of_not_lt ennreal _,
-  intro C1,
-  rw set.eq_empty_iff_forall_not_mem at A3,
-  have C2 := A3 X',
-  simp at C2,
-  have C3 := C2 B1 B2,
-  apply not_lt_of_le C3 C1,
+  rw measure_theory.measure.le_iff,
+  intros s A4,
+  repeat {rw measure_theory.measure.restrict_apply},
+  have A5 := A3 (s ∩ X),
+  simp at A5,
+  apply A5,
+  repeat {simp [A4,A1]},
 end
-
 
 lemma hahn_crazy_diff_set_nonempty' {α:Type*} [M:measurable_space α]
   (μ ν:measure_theory.measure α) (X:set α): 
@@ -3931,24 +986,30 @@ lemma hahn_crazy_diff_set_nonempty' {α:Type*} [M:measurable_space α]
   (hahn_crazy_diff_set μ ν X).nonempty :=
 begin
   intros A1,
-  apply hahn_crazy_diff_set_nonempty,
-  have A2 := (hahn_crazy_set_def ν μ X).mp A1,
-  apply A2.right.left,
-  apply hahn_crazy_set_self,
-  apply A1,
+  rw hahn_crazy_set_def' at A1,
+  cases A1 with A1 A2,
+  cases A2 with A2 A3,
+  rw set.nonempty_def,
+  have A4:¬ (ν.restrict X ≤ μ.restrict X),
+  { intro A4A, rw lt_iff_not_ge at A1,
+    apply A1, apply A3 X (set.subset.refl X) A2 A4A},
+  have A5 := not_restrict_le_elim A2 A4,
+  cases A5 with X' A5,
+  apply exists.intro X',
+  rw hahn_crazy_diff_set_def,
+  simp only [set.mem_set_of_eq],
+  apply A5,
 end
 
-
+--Too trivial, used once.
 lemma pred_eq_set {α:Type*} {S:set α} {a:α}:
     (S a) = (a∈ S) := rfl
-
 
 lemma nat.find_spec_set {S : set ℕ} [_inst_1 : decidable_pred S] (H : ∃ (n : ℕ), S n):(nat.find H) ∈ S :=
 begin
   rw ← pred_eq_set,
   apply nat.find_spec,
 end
-
 
 lemma nat.Inf_of_nonempty {S:set ℕ}:S.nonempty → Inf S ∈ S :=
 begin
@@ -3958,7 +1019,6 @@ begin
   have A3:decidable_pred S := classical_set ℕ S,
   apply nat.find_spec_set,
 end
-
 
 lemma nat.exists_le_Inf_map 
   {α:Type*} {f:α → ℕ} {S:set α}:S.nonempty → ∃ s∈ S,
@@ -4012,21 +1072,18 @@ begin
   apply B3,
 end
 
-
-
---Notice that this function chooses the minimum n that is greater than or equal to the inverse.
---Put another way, this chooses the maximum 1/n that is less than or equal to the value.
+/--Notice that this function chooses the minimum n that is greater than or equal to the inverse.
+Put another way, this chooses the maximum 1/n that is less than or equal to the value.-/
 noncomputable def floor_simple_fraction (x:ennreal):ℕ  := Inf {n:ℕ|(n:ennreal) ≥ x⁻¹}
 
-
---This is a way of selecting a "big" input of a function when it is hard to select a maximum
---input. Because we are mapping the extended non-negative reals onto the naturals with a
---monotonically decreasing function, and for any nonempty set of natural numbers there is
---a minimum, we get a set of "big" inputs to the function, and we apply classical.some, we 
---get one of these values.
--- 
---This is good for showing progress: if we whittle away something, and get smaller and
---smaller results, we eventually grab every nonzero result remaining.
+/--This is a way of selecting a "big" input of a function when it is hard to select a maximum
+input. Because we are mapping the extended non-negative reals onto the naturals with a
+monotonically decreasing function, and for any nonempty set of natural numbers there is
+a minimum, we get a set of "big" inputs to the function, and we apply classical.some, we 
+get one of these values.
+ 
+This is good for showing progress: if we whittle away something, and get smaller and
+smaller results, we eventually grab every nonzero result remaining.-/
 lemma hahn_infi_ennreal {α:Type*} {f:α→ ennreal} (S:set α):S.nonempty → 
   ∃ a∈ S, 
   (floor_simple_fraction ∘ f) a = Inf ((floor_simple_fraction ∘ f) '' S) :=
@@ -4036,18 +1093,15 @@ begin
   apply A1,
 end 
 
-
-/-
-  When we start with some hahn_crazy_set μ ν X, we know μ X < ν X. We want to
-  grab a big chunk X' where ν X' < μ X'. This can only go on for so long.
-
-  NOTE: there WAS a sign mistake here, where I flipped μ and ν in the difference.
+/-- When we start with some hahn_crazy_set μ ν X, we know μ X < ν X. We want to
+grab a big chunk X' where ν X' < μ X'. This can only go on for so long.
 -/
 def hahn_crazy_diff_big {α:Type*} [measurable_space α]
   (μ ν:measure_theory.measure α) (X:set α) (H:hahn_crazy_set μ ν X):set α :=
   classical.some
   (@hahn_infi_ennreal (set α) (λ X':set α, μ X' - ν X')
   (hahn_crazy_diff_set ν μ X) (hahn_crazy_diff_set_nonempty' ν μ X H))
+
 
 
 lemma hahn_crazy_diff_big_def {α:Type*} [measurable_space α]
@@ -4092,15 +1146,8 @@ begin
     {
       rw A3,
       apply hahn_infi_ennreal,
-      apply hahn_crazy_diff_set_nonempty,
-      {
-        rw hahn_crazy_set_def at H,
-        apply H.right.left,
-      },
-      {
-        apply hahn_crazy_set_self,
-        apply H,
-      },
+      apply hahn_crazy_diff_set_nonempty',
+      apply H,
     },
     apply @classical.some_spec (set α) P B1A,
   },
@@ -4166,22 +1213,16 @@ begin
   },
 end
 
---open subtype
-
-
 def next_hahn_crazy_set {α:Type*} [measurable_space α]
   (μ ν:measure_theory.measure α) (X:subtype (hahn_crazy_set μ ν)):
   subtype (hahn_crazy_set μ ν) := subtype.mk 
       (X.1 \ (hahn_crazy_diff_big μ ν X.1 X.2))
       (hahn_crazy_set_of_hahn_crazy_diff_big μ ν X.1 X.2)
 
-
-
 lemma next_hahn_crazy_set_val {α:Type*} [measurable_space α]
   (μ ν:measure_theory.measure α) (S:set α) (H:hahn_crazy_set μ ν S):
   ((next_hahn_crazy_set μ ν (subtype.mk S H)):set α) =
       (S \ (hahn_crazy_diff_big μ ν S H)) := rfl
-
 
 lemma set.diff_diff_eq_of_subset {α:Type*} (S T:set α):S ⊆ T →
   T \ (T \ S) = S :=
@@ -4204,7 +1245,6 @@ begin
   },
 end
 
-
 lemma next_hahn_crazy_set_diff {α:Type*} [measurable_space α]
   (μ ν:measure_theory.measure α) (S:set α) (H:hahn_crazy_set μ ν S):
   S \ (next_hahn_crazy_set μ ν (subtype.mk S H)) =
@@ -4218,20 +1258,13 @@ begin
   apply B1,
 end
 
-
-/-
-begin
-  refl
-end-/
-   
-
-
+/-- Given a crazy set, we can repeatedly cut away big elements of
+hahn_crazy_diff_sets.-/
 def nth_hahn_crazy_set {α:Type*} [measurable_space α]
   (μ ν:measure_theory.measure α) (X:subtype (hahn_crazy_set μ ν)):
   ℕ → subtype (hahn_crazy_set μ ν)
   | 0 := X
   | (nat.succ n) := next_hahn_crazy_set μ ν (nth_hahn_crazy_set n)
-
 
 lemma neg_monotone_of_succ_le {α:Type*} [partial_order α] {f:ℕ → α}:
   (∀ n:ℕ, f (n.succ) ≤ f n) →
@@ -4561,7 +1594,6 @@ begin
 end
 
 
-
 lemma lt_Sup {α:Type*} [complete_linear_order α]
    {S:set α} {z:α}:S.nonempty →
   z < Sup S  → ∃ s∈ S,  z < s :=
@@ -4607,7 +1639,7 @@ begin
   apply B4,
 end 
 
-     
+
 --This is true WITHOUT the non-negative part. So long as the sum is 
 --well-defined, this should be true.
 --Revisit later (and search mathlib).
@@ -4705,7 +1737,6 @@ begin
         rw ← C5,
         apply @le_supr ennreal ℕ _,
       },
-      --have E3:
       simp at C1,
       apply lt_of_le_of_lt _ C1,
       apply le_trans _ E2,  
@@ -4729,7 +1760,6 @@ begin
         simp,
         apply F1,
       },
-      --have F3 := lt_supr F2,
       have F3 := lt_supr F2,
       cases F3 with a F3,
       apply exists.intro a,
@@ -4757,7 +1787,6 @@ begin
       rw ← finset.Ico.union_consecutive F6 F7 at F5,
       rw finset.sum_union F8 at F5,
       rw finset.Ico.zero_bot at F5,
-      --apply ennreal.lt_of_add_le_of_le_of_sub_lt D9 D4 D8 D2,      
       have F9:f b ≤ (finset.Ico a b.succ).sum f,
       {
         apply @finset.element_le_sum ℕ ennreal _ _,
@@ -4773,39 +1802,22 @@ begin
       {
         apply le_trans _ F5,
         apply add_le_add_left F9,
-        --apply add_le_add_of_le,
       },
       apply ennreal.lt_of_lt_top_of_add_lt_of_pos F10 F11 F3,      
     },
   },
 end
 
-
-
-
-
 lemma filter.tendsto_const {α β:Type*} [topological_space β]
     {v:β} {F:filter α}:
     filter.tendsto (λ n:α, v) F (nhds v) :=
 begin
-  unfold filter.tendsto,
-  unfold filter.map,
-  unfold nhds,
-  simp,
-  intros S B1 B2,
-  have C1:(λ n:α, v) ⁻¹' S = set.univ,
-  {
-    ext;split;intro C1A,
-    simp,
-    simp,
-    apply B1,  
-  },
-  rw C1,
-  apply filter.univ_sets,
+  apply filter.tendsto.mono_right (filter.tendsto_const_pure) (pure_le_nhds v),
 end
 
 
-
+/-- If a function is bracketed by two functions that converge to the same value,
+then it too converges to that value. -/
 lemma filter.tendsto_le {α β:Type*} [topological_space β]
     [partial_order β] [order_topology β] {F:filter α} 
     {f g h:α  → β} {v:β}:
@@ -4877,7 +1889,6 @@ begin
   end
 end
 
-
 lemma set.preimage_subset_preimage_of_subset {α β:Type*} {S T:set α} {f:β  → α}:
   (S⊆ T)→ set.preimage f S ⊆  set.preimage f T :=
 begin
@@ -4890,7 +1901,6 @@ begin
   apply set.preimage_mono,
   apply A1,
 end
-
 
 --∀ᶠ (b : ℕ) in filter.at_top, f b < x
 lemma tendsto_top {α β:Type*} [NE:nonempty β] [SL:semilattice_sup β] {g:α → β} {F:filter α}:filter.tendsto g F filter.at_top ↔ (∀ b:β,  ∀ᶠ (c:α) in F, b ≤ g c) :=
@@ -4920,21 +1930,6 @@ begin
     apply C3,
   },
 end
- 
-lemma tendsto_top' {α β:Type*} [NE:nonempty β] [SL:semilattice_sup β] {g:α → β} {F:filter α}:filter.tendsto g F filter.at_top ↔ (∀ b:β, g⁻¹' {c|b≤ c} ∈ F) :=
-begin
-  rw tendsto_top,
-  split;intros A1;intros b;have B1 := A1 b,
-  {
-    rw filter.eventually_iff at B1,
-    apply B1,
-  },
-  {
-    rw filter.eventually_iff,
-    apply B1,
-  },
-end 
-
 
 lemma eventually_at_top_iff {α:Type*} [nonempty α] [semilattice_sup α] {P:α → Prop}:
   (∀ᶠ (c:α) in filter.at_top,  P c) ↔ ∃ (a : α), ∀ (b : α), b ≥ a → b ∈ {x : α | P x}:=
@@ -4954,6 +1949,7 @@ end
 
 
 lemma floor_simple_fraction_def (x:ennreal):floor_simple_fraction x = Inf {n:ℕ|(n:ennreal) ≥ x⁻¹} := rfl
+
 
 
 lemma floor_simple_fraction_bound (b:ℕ) (x:ennreal):0 < x →
@@ -5049,7 +2045,7 @@ begin
   },
 end
 
-
+/-- If positive g approaches zero, then (floor_simple_fraction ∘ g )approaches infinity. -/
 lemma floor_simple_fraction_limit_top {g:ℕ  → ennreal}:
     (∀ n, 0 < g n) →
     filter.tendsto g filter.at_top (nhds 0) →
@@ -5104,7 +2100,7 @@ end
   The proof follows the contradiction part in An Epsilon of Room. If such a hahn crazy set
   existed, then we could find a set Y ⊆ X where ν Y < μ Y. And if we subtracted this set
   off, we would be back where we started with X-Y being a set where μ (X - Y) < ν (X - Y) 
-  and no subset X' ⊆ X - Y where μ X' < ν X' and le_on_subsets μ ν X'. 
+  and no subset X' ⊆ X - Y where μ X' < ν X' and μ.restrict X' ≤ ν.restrict X'. 
 
   What if we want to grab a set Y which maximizes μ Y - ν Y?
   Unfortunately, we find this as hard as the entire Hahn decomposition
@@ -5173,7 +2169,7 @@ begin
     {
       intro n,
       have J2A := J0 n,
-      rw hahn_crazy_set_def at J2A,
+      rw hahn_crazy_set_def' at J2A,
       apply J2A.right.left,  
     },
     have C1A:ν  (h 0) < ⊤,
@@ -5184,7 +2180,7 @@ begin
     have J4:μ (h 0) < ν (h 0),
     {
        rw B4,
-       rw hahn_crazy_set_def at A1,
+       rw hahn_crazy_set_def' at A1,
        apply A1.left,
     },
     have C1:ν Z = ν (h 0) - (∑' n, ν (d n)),
@@ -5229,7 +2225,7 @@ begin
       apply ennreal.sub_lt_sub_of_lt_of_le,
       {
         rw B4,
-        rw hahn_crazy_set_def at A1,
+        rw hahn_crazy_set_def' at A1,
         apply A1.left,
       },
       {
@@ -5261,11 +2257,11 @@ begin
     },
     have D2:hahn_crazy_set μ ν Z,
     {
-      rw hahn_crazy_set_def,
+      rw hahn_crazy_set_def',
       apply and.intro C3,
       apply and.intro D1,
       intros X' D2A D2B,
-      rw hahn_crazy_set_def at A1,
+      rw hahn_crazy_set_def' at A1,
       apply A1.right.right,
       apply set.subset.trans D2A D3,
       apply D2B,
@@ -5402,6 +2398,7 @@ begin
 end
 
 
+
 lemma finite_set_not_hahn_crazy_set {α:Type*} [M:measurable_space α]
   (μ ν:measure_theory.measure α) (X:set α)
   [F:measure_theory.finite_measure ν]: 
@@ -5411,28 +2408,32 @@ begin
  apply hahn_crazy_set_not_finite μ ν X A2 F, 
 end
 
-/-
-  This theorem is a weak variant of hahn_unsigned_inequality_decomp.
-  However, it probably has uses in its own right, beyond that of
-  its parent theorem.
+/-- This theorem is a weak variant of hahn_unsigned_inequality_decomp.
+However, it probably has uses in its own right, beyond that of
+its parent theorem.
  -/
-lemma hahn_unsigned_inequality_decomp_junior {α:Type*} [M:measurable_space α]
+lemma hahn_unsigned_inequality_decomp_junior' {α:Type*} [M:measurable_space α]
     (μ ν:measure_theory.measure α) {X:set α} [A1:measure_theory.finite_measure ν]:
     (is_measurable X) →
     (μ X < ν X) → 
     (∃ X':set α, 
       X' ⊆ X ∧
       μ X' < ν X' ∧
-      le_on_subsets μ ν X') :=
+      is_measurable X' ∧
+      μ.restrict X' ≤ ν.restrict X') :=
 begin
   intros A2 A3,
   have B1:= @finite_set_not_hahn_crazy_set _ _ μ ν X A1,
-  rw hahn_crazy_set_def at B1,
+  rw hahn_crazy_set_def' at B1,
   simp at B1,
-  apply B1 A3 A2, 
+  have B2 := B1 A3 A2,
+  cases B2 with X' B2,
+  apply exists.intro X',
+  simp [B2],
 end
 
 
+--TODO: Unify with Sup_apply_eq_supr_apply_of_closed'
 lemma Sup_apply_eq_supr_apply_of_closed'' {α:Type*}
   [complete_lattice α] {S:set α} (g:α → ennreal):
   (∀ (a∈ S) (b∈ S), a ≤ b → g a ≤ g b) →
@@ -5523,10 +2524,10 @@ begin
   },
 end
 
-
-lemma hahn_unsigned_inequality_decomp {α:Type*} [M:measurable_space α]
+--Replacing hahn_unsigned_inequality_decomp' (and hahn_unsigned_inequality_decomp).
+lemma hahn_unsigned_inequality_decomp' {α:Type*} [M:measurable_space α]
     (μ ν:measure_theory.measure α) [A1:measure_theory.finite_measure ν]: 
-    (∃ X:set α,  le_on_subsets μ ν X ∧ le_on_subsets ν μ (Xᶜ)) :=
+    (∃ X:set α, is_measurable X ∧  μ.restrict X ≤ ν.restrict X ∧ ν.restrict (Xᶜ) ≤ μ.restrict (Xᶜ)) :=
 begin
   /-
     What we want is the argmax of f on S: this is our candidate for X.
@@ -5535,18 +2536,18 @@ begin
     First, we construct an  M that is our candidate for X.
     It is the supremum of 
    -/
-  let S:set (set α) := {X:set α|le_on_subsets μ ν X},
+  let S:set (set α) := {X:set α|is_measurable X ∧  μ.restrict X ≤ ν.restrict X},
   let f:set α → ennreal := (λ T:set α, (ν T) - (μ T)),
   -- M is unused.
   let M:ennreal := Sup (f '' S),
   begin
-    
-    have A2:S = {X:set α|le_on_subsets μ ν X} := rfl,
+    -- S is a ring of sets (closed under countable union).
+    have A2:S = {X:set α|is_measurable X ∧  μ.restrict X ≤ ν.restrict X} := rfl,
     have A3:f = (λ T:set α, (ν T) - (μ T)) := rfl,
-    have A5:∀ X, le_on_subsets μ ν X → μ X < ⊤,
+    have A5:∀ X, is_measurable X → μ.restrict X ≤ ν.restrict X → μ X < ⊤,
     {
-      intros X A5A,
-      apply lt_of_le_of_lt (le_on_subsets_self A5A),
+      intros X A5A A5B,
+      apply lt_of_le_of_lt (measure_theory.measure.le_of_restrict_le_restrict_self _ _ A5A A5B),
       apply measure_theory.measure_lt_top,
     },
     have A6:∀ T, f T = ν T - μ T,
@@ -5562,9 +2563,15 @@ begin
       rw A2 at B1B,
       simp at B1B,
       repeat {rw A6},
-      have B1F:le_on_subsets μ ν (T2 \ T1),
+      have B1F:μ.restrict (T2 \ T1) ≤ ν.restrict (T2 \ T1),
       {
-        apply le_on_subsets_diff B1B B1A,
+        apply restrict_le_restrict_of_restrict_le_restrict_of_subset B1B.right,
+        apply set.diff_subset,
+        repeat {simp [B1A.left,B1B.left]},
+      },
+      have E1:is_measurable (T2 \ T1),
+      {
+        simp [B1A.left,B1B.left],
       },
       have B1G:T2 = T1 ∪ (T2 \ T1),
       { 
@@ -5572,78 +2579,106 @@ begin
         apply B1C,
       },
       rw B1G,
-      rw le_on_subsets_add,
+      rw restrict_le_restrict_add,
       apply @le_add_of_nonneg_right ennreal _,
-      simp,
+      simp only [zero_le],
       {
-        apply A5 T1 B1A,
+        apply A5 T1 B1A.left B1A.right,
       },
       {
-        apply A5 _ B1F,
+        apply A5 (T2 \ T1) E1 B1F,
       },
-      apply B1A,
+      apply B1A.left,
+      apply E1,
+      apply B1A.right,
       apply B1F, 
       apply set.disjoint_diff,
     },
+    
     have B2B:(∀ h:ℕ → set α, set.range h ⊆ S → monotone h → (supr h)∈ S),
     {
       intros h B2C B2D,
+      have B2BG:∀ n, is_measurable (h n) ∧  μ.restrict (h n) ≤ ν.restrict (h n),
+      {
+        intro n,
+        apply B2C,
+        simp,
+      }, 
       rw A2,
       rw supr_eq_Union,
-      apply le_on_subsets_m_Union,
+      simp only [set.mem_set_of_eq],
+      split,
+      apply is_measurable.Union,
+      intros b,
+      --simp at B2C,
+      have B2BA:h b ∈ S,
+      {apply B2C, simp},
+      rw A2 at B2BA,
+      simp at B2BA,
+      apply B2BA.left,
+      apply restrict_le_restrict_m_Union,
       apply B2D,
       intro n,
-      have B2E:h n ∈ S,
-      {
-         apply B2C,
-         simp,
-      },
-      rw A2 at B2E,
-      simp at B2E, 
-      apply B2E,
+      have B2E := B2BG n,
+      --simp at B2E, 
+      apply (B2BG n).left,
+      intro n,
+      apply (B2BG n).right,
+    },
+    have B3B:∅ ∈ S,
+    {
+      simp [le_refl _],
     },
     have B3:S.nonempty,
     {
-      apply set.nonempty_of_mem,
-      rw A2,
-      simp,
-      apply le_on_subsets_empty,
+      apply set.nonempty_of_mem B3B,
     },
     have B4:(∀ (a ∈ S) (b ∈ S), a ⊔ b ∈ S),
     {
       rw A2,
       simp,
-      intros a B4A b B4B,
+      intros a B4A B4B b B4D B4E,
       have B4C:a ⊔ b = a ∪ b := rfl,
-      --rw B4C,
-      apply le_on_subsets_union B4A B4B,
+      split,
+      {simp [B4A,B4D]},
+      apply restrict_le_restrict_union B4B B4E,
+      repeat {assumption},
     },
     have C1:=@Sup_apply_eq_supr_apply_of_closed'' (set α) _ S f B1 B2B B3 B4,
     cases C1 with g C1,
     apply exists.intro (supr g),
-    have C2:le_on_subsets μ ν (supr g),
+    have E1:∀ n, is_measurable (g n) ∧ μ.restrict (g n) ≤ ν.restrict (g n),
+    {
+      intro n,
+      apply (C1.left n),
+    },
+    have E2:=λ n, (E1 n).left,
+    have E3 := λ n, (E1 n).right,
+    have E4:is_measurable (supr g),
     {
       rw supr_eq_Union,
-      apply le_on_subsets_m_Union,
+      apply is_measurable.Union,
+      apply E2,
+    },
+    have C2:μ.restrict (supr g) ≤ ν.restrict (supr g),
+    {
+      rw supr_eq_Union,
+      apply restrict_le_restrict_m_Union,
       apply C1.right.left,
-      intro n,
-      have D1:=C1.left n,
-      rw A2 at D1,
-      apply D1,
+      apply E2,
+      apply E3,
     },
+    apply and.intro E4,
     apply and.intro C2,
-    -- ⊢ le_on_subsets ν μ (-supr g)
-    rw le_on_subsets_def,
-    split,
+    -- ⊢ ν.restrict (supr g)ᶜ ≤ μ.restrict (supr g)ᶜ
     {
-      apply is_measurable.compl,
-      apply le_on_subsets_is_measurable C2,
-    },
-    {
-      intros X' D1 D2,
+      --intros X' D1 D2,
+      apply restrict_le_restrict_of_le_subset,
+      apply is_measurable.compl E4,
+      intros X' D1 D2, 
       apply le_of_not_lt _,
       intro D3,
-      have D4:= hahn_unsigned_inequality_decomp_junior μ ν D2 D3,
+      have D4:= hahn_unsigned_inequality_decomp_junior' μ ν D2 D3,
       cases D4 with X'' D4,
       have D5:f (X'' ∪ supr g) ≤  f (supr g),
       {
@@ -5651,16 +2686,13 @@ begin
         apply @le_Sup ennreal _ _,
         simp,
         apply exists.intro (X'' ∪ supr g),
-        split,
-        {
-          apply le_on_subsets_union,
-          apply D4.right.right,
-          apply C2,
-        },
-        refl,
+        simp only [D4, E4, true_and, is_measurable.union, and_true, eq_self_iff_true],
+        --squeeze_simp [D4,D2,E4],
+        apply restrict_le_restrict_union,
+        repeat {simp [D4,C2,E4]},
       },
       repeat {rw A6 at D5},
-      rw le_on_subsets_add at D5,
+      rw restrict_le_restrict_add at D5,
       repeat {rw ← A6 at D5},
       rw add_comm at D5,
       apply @ennreal.not_add_le_of_lt_of_lt_top (f (supr g)) (f X'') _ _ _,
@@ -5681,10 +2713,11 @@ begin
         apply le_refl _,
       },
       apply D5,
-      apply A5 _ D4.right.right,
-      apply A5 _ C2,
-      apply D4.right.right,
-      apply C2,
+      apply A5 X'' D4.right.right.left,
+      apply D4.right.right.right,
+      apply A5 (supr g) E4 C2,
+      apply D4.right.right.left,
+      repeat {simp [D4,E4,C2]},
       {
         apply @set.disjoint_of_subset_left _ _ _ ((supr g)ᶜ),
         apply set.subset.trans D4.left D1,
@@ -5694,3 +2727,4 @@ begin
     },
   end
 end
+

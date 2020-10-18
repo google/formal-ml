@@ -38,14 +38,6 @@ import formal_ml.exp_bound
   and begin to understand the complexity of neural networks. This analysis is also a
   precursor to understanding support vector machines and structural risk.
  -/
-lemma finset.powerset_singleton {α:Type*}[decidable_eq α] {x:α}:@finset.powerset α {x} = {∅,{x}} :=
-begin
-  have B1:{x} = insert x (∅:finset α),
-  refl,
-  rw B1,
-  rw finset.powerset_insert,
-  refl,
-end
 
 lemma finset.subset_of_not_mem_of_subset_insert {α:Type*} [decidable_eq α] {x:α} {S T:finset α}:x∉ S →
   S ⊆ insert x T → S ⊆ T :=
@@ -82,51 +74,6 @@ end
 --Not sure where to put this. Here is fine for now.
 --Note: this is the kind of trivial thing that takes ten minutes to prove.
 -/
-lemma card_ne_zero_of_inhabited {α:Type*} [inhabited α] [F:fintype α]:
-  fintype.card α ≠ 0 :=
-begin
-  rw ← nat.pos_iff_ne_zero,
-  rw fintype.card_pos_iff,
-  apply nonempty_of_inhabited,
-end
-
-noncomputable def average_identifier {α Ω:Type*} {P:probability_space Ω} (f:α → event P) (F:fintype α):P →ᵣ (borel nnreal) :=
-    (count_finset_rv F.elems f) * (to_nnreal_rv ((@fintype.card α F:nnreal)⁻¹))
-
-
-lemma average_identifier_eq_pr_elem {α Ω:Type*} {P:probability_space Ω} (f:α → event P) (F:fintype α) {i:α}:events_IID f →
-  (Pr[f i]:ennreal) = E[average_identifier f F]:=
-begin
-  intro A1,
-  unfold average_identifier,
-  rw scalar_expected_value,
-  rw linear_count_finset_rv,
-  have A2:(λ (k:α), (Pr[f k]:ennreal))=(λ (k:α), (Pr[f i]:ennreal)),
-  {
-    apply funext,
-    intro k,
-    simp,
-    cases A1 with A1 A2,
-    apply A2,
-  },
-  rw A2,clear A2,
-  simp,
-  have A3:(fintype.elems α).card = (fintype.card α) := rfl,
-  rw A3, clear A3,
-  rw mul_comm,
-  rw ← mul_assoc,
-  simp,
-  have A4:(((fintype.card α):nnreal):ennreal) = ((fintype.card α):ennreal),
-  {simp},
-  rw ← A4,
-  rw ← ennreal.coe_mul,
-  rw ← ennreal.coe_mul,
-  rw  ennreal.coe_eq_coe,
-  rw nnreal.inv_mul_cancel,
-  rw one_mul,
-  simp,
-  apply @card_ne_zero_of_inhabited α (inhabited.mk i),
-end
 
 /--
   Normally, we would not assume that the representation type was encodable (i.e. countable).

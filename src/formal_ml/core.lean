@@ -105,29 +105,23 @@ begin
   end
 end
 
-
 lemma classical.forall_of_not_exists_not {α:Type*} {P:α → Prop}:(¬(∃ a:α, ¬ P a))→(∀ a:α, P a) :=
 begin
   intro A1,
-  intro a,
-  apply classical.by_contradiction,
-  intro A2,
+  rw ← @decidable.not_exists_not _ _ (λ x, @classical.prop_decidable _),
   apply A1,
-  apply exists.intro a,
-  apply A2,
 end
-
 
 lemma classical.exists_not_of_not_forall {α:Type*} {P:α → Prop}:(¬(∀ a:α, P a))→ (∃ a:α, ¬ P a) :=
 begin
- -- apply not_forall_of_exists_not,
   intro A1,
   apply classical.by_contradiction,
-  intro A2,
+  intro A2,  
   apply A1,
   apply classical.forall_of_not_exists_not,
   apply A2,
 end
+
 
 
 lemma classical.not_forall_iff_exists_not {α:Type*} {P:α → Prop}:(¬(∀ a:α, P a)) ↔(∃ a:α, ¬ P a) :=

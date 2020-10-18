@@ -240,28 +240,36 @@ noncomputable instance real_measurable_fun_comm_ring {Ω:Type*} [MΩ:measurable_
     real.topological_ring
 
 
+@[simp]
 lemma nnreal_measurable_fun_zero_val_def {Ω:Type*} [MΩ:measurable_space Ω]:
   (0:MΩ →ₘ (borel nnreal)).val = 0 := rfl
 
+@[simp]
 lemma real_measurable_fun_zero_val_def {Ω:Type*} [MΩ:measurable_space Ω]:
   (0:MΩ →ₘ (borel real)).val = 0 := rfl
 
 
+@[simp]
 lemma nnreal_measurable_fun_add_val_def {Ω:Type*} [MΩ:measurable_space Ω] {a b:MΩ →ₘ (borel nnreal)}:
   (a + b).val = (a.val + b.val) := rfl
 
+@[simp]
 lemma real_measurable_fun_add_val_def {Ω:Type*} [MΩ:measurable_space Ω] {a b:MΩ →ₘ (borel real)}:
   (a + b).val = (a.val + b.val) := rfl
 
+@[simp]
 lemma nnreal_measurable_fun_one_val_def {Ω:Type*} [MΩ:measurable_space Ω]:
   (1:MΩ →ₘ (borel nnreal)).val = 1 := rfl
 
+@[simp]
 lemma real_measurable_fun_one_val_def {Ω:Type*} [MΩ:measurable_space Ω]:
   (1:MΩ →ₘ (borel real)).val = 1 := rfl
 
+@[simp]
 lemma nnreal_measurable_fun_mul_val_def {Ω:Type*} [MΩ:measurable_space Ω] {a b:MΩ →ₘ (borel nnreal)}:
   (a * b).val = (a.val * b.val) := rfl
 
+@[simp]
 lemma real_measurable_fun_mul_val_def {Ω:Type*} [MΩ:measurable_space Ω] {a b:MΩ →ₘ (borel real)}:
   (a * b).val = (a.val * b.val) := rfl
 
@@ -276,24 +284,27 @@ noncomputable instance real_random_variable_comm_ring {Ω:Type*}
   real_measurable_fun_comm_ring
 
 
+@[simp]
 lemma nnreal_random_variable_add_val_def {Ω:Type*}
   {P:probability_space Ω} {a b:P →ᵣ (borel nnreal)}:
   (a + b).val = (a.val + b.val) := rfl
 
+@[simp]
 lemma real_random_variable_add_val_def {Ω:Type*}
   {P:probability_space Ω} {a b:P →ᵣ (borel real)}:
   (a + b).val = (a.val + b.val) := rfl
 
-
+@[simp]
 lemma nnreal_random_variable_mul_val_def {Ω:Type*}
   {P:probability_space Ω} {a b:P →ᵣ (borel nnreal)}:
   (a * b).val = (a.val * b.val) := rfl
 
+@[simp]
 lemma real_random_variable_mul_val_def {Ω:Type*}
   {P:probability_space Ω} {a b:P →ᵣ (borel nnreal)}:
   (a * b).val = (a.val * b.val) := rfl
 
-
+@[simp]
 lemma real_random_variable_neg_val_def {Ω:Type*}
   {P:probability_space Ω} {a:P →ᵣ (borel real)}:
   (-a).val = -(a.val) := rfl
@@ -309,7 +320,6 @@ def ennreal_measurable_is_submonoid
   begin
     intros x y A1 A2,
     apply measurable.ennreal_mul A1 A2,
-
   end
 }
 
@@ -326,7 +336,6 @@ def ennreal_measurable_is_add_submonoid
   end
 }
 
-
 def ennreal_measurable_is_sub_semiring
 {Ω:Type*} [MΩ:measurable_space Ω]:
   is_sub_semiring (@measurable Ω ennreal MΩ (borel ennreal)) := {
@@ -334,21 +343,21 @@ def ennreal_measurable_is_sub_semiring
     ..(@ennreal_measurable_is_submonoid Ω MΩ),
 }
 
-
 noncomputable instance ennreal_measurable_fun_comm_semiring {Ω:Type*} [MΩ:measurable_space Ω]:
   comm_semiring (measurable_fun MΩ (borel ennreal)):= 
   @subtype.comm_semiring (Ω → ennreal) _ (@measurable Ω ennreal MΩ (borel ennreal))
   (@ennreal_measurable_is_sub_semiring Ω MΩ)
-
 
 noncomputable instance ennreal_random_variable_comm_semiring {Ω:Type*}
   {p:probability_space Ω}:
   comm_semiring (random_variable p (borel ennreal)):=
   ennreal_measurable_fun_comm_semiring
 
+@[simp]
 lemma ennreal_measurable_fun_zero_val_def {Ω:Type*} [MΩ:measurable_space Ω]:
   (0:MΩ →ₘ (borel ennreal)).val = 0 := rfl
 
+@[simp]
 lemma ennreal_measurable_fun_add_val_def {Ω:Type*} [MΩ:measurable_space Ω] {a b:MΩ →ₘ (borel ennreal)}:
   (a + b).val = (a.val + b.val) := rfl
 
@@ -366,6 +375,7 @@ def measurable_set_le {β : Type*} [Mβ:measurable_space β] [L:measurable_linea
      property:=L.is_measurable_le,
    }
 
+@[simp]
 lemma measurable_set_le_val_def {β : Type*} [Mβ:measurable_space β] [L:measurable_linear_order β]:(@measurable_set_le β Mβ L).val = {p:β × β|p.fst ≤ p.snd} := rfl
 
 
@@ -384,12 +394,12 @@ def measurable_set_lt {β : Type*} [Mβ:measurable_space β] [L:measurable_linea
      property:=@measurable_linear_order.is_measurable_lt _ _ L,
    }
 
-
+@[simp]
 lemma event_eq_val_def {Ω : Type*} {P:probability_space Ω}
    {β : Type*} [Mβ:measurable_space β] [L:measurable_linear_order β]
    (X Y:P →ᵣ Mβ):(X =ᵣ Y).val = {a : Ω | X.val a = Y.val a} :=
 begin
-  rw rv_eq_val_def,
+  simp,
 end
 
 def event_lt
@@ -416,15 +426,13 @@ lemma event_le_def
    {β : Type*} [Mβ:measurable_space β] [L:measurable_linear_order β]
    (X Y:P →ᵣ Mβ):(X ≤ᵣ Y) = rv_event (X ×ᵣ Y) (measurable_set_le) := rfl
 
+@[simp]
 lemma event_le_val_def
    {Ω : Type*} {P:probability_space Ω}
    {β : Type*} [Mβ:measurable_space β] [L:measurable_linear_order β]
    (X Y:P →ᵣ Mβ):(X ≤ᵣ Y).val = {ω : Ω | X.val ω ≤ Y.val ω} :=
 begin
   rw event_le_def,
-  rw rv_event_val_def,
-  rw prod_random_variable_val_def,
-  rw measurable_set_le_val_def,
   simp,
 end
 
@@ -457,6 +465,7 @@ noncomputable instance coe_random_variable_of_real
 lemma coe_random_variable_of_real_def {Ω : Type*} {P:probability_space Ω} {x:ℝ}:
   (x:P →ᵣ (borel ℝ)) = const_random_variable x := rfl
 
+@[simp]
 lemma coe_random_variable_of_real_val_def {Ω : Type*} {P:probability_space Ω} {x:ℝ}:
   (x:P →ᵣ (borel ℝ)).val = λ (ω:Ω), x := rfl
 
@@ -464,7 +473,7 @@ lemma coe_random_variable_of_real_val_def {Ω : Type*} {P:probability_space Ω} 
 noncomputable def to_nnreal_rv {Ω : Type*}
     {P:probability_space Ω} (x:nnreal):(P →ᵣ borel nnreal) := x
 
-
+@[simp]
 lemma to_nnreal_rv_val_def {Ω : Type*}
     {P:probability_space Ω} (x:nnreal):(@to_nnreal_rv Ω P x).val = λ ω:Ω, x := rfl
 
@@ -483,13 +492,10 @@ noncomputable instance coe_random_variable_of_ennreal
 noncomputable def to_ennreal_rv {Ω : Type*}
     {P:probability_space Ω} (x:ennreal):(P →ᵣ borel ennreal) := x
 
+@[simp]
 def to_ennreal_rv_val_def {Ω : Type*}
     {P:probability_space Ω} (x:ennreal):
-    (@to_ennreal_rv Ω P x).val = λ ω:Ω, x :=
-begin
-  rw to_ennreal_rv,
-  refl,
-end
+    (@to_ennreal_rv Ω P x).val = λ ω:Ω, x := rfl
 
 
 noncomputable def expected_value_ennreal {α:Type*} {p:probability_space α}
@@ -667,6 +673,7 @@ noncomputable def nnreal_of_real_fun:measurable_fun (borel real) (borel nnreal) 
   property := measurable_nnreal_of_real,
 }
 
+@[simp]
 lemma nnreal_of_real_fun_val_def:nnreal_of_real_fun.val = nnreal.of_real := rfl
 
 noncomputable def real_abs_fun:measurable_fun (borel real) (borel real) := {
@@ -674,6 +681,7 @@ noncomputable def real_abs_fun:measurable_fun (borel real) (borel real) := {
   property := measurable_abs,
 }
 
+@[simp]
 lemma real_abs_fun_val_def:real_abs_fun.val = (@abs ℝ _) := rfl
 
 
@@ -681,14 +689,14 @@ noncomputable def measurable_fun_nnreal_of_measurable_fun_real {α:Type*} {Mα:m
      (X:measurable_fun Mα (borel real)):measurable_fun Mα (borel nnreal) :=
   compose_measurable_fun nnreal_of_real_fun X
 
+@[simp]
 lemma measurable_fun_nnreal_of_measurable_fun_real_val_def {α:Type*} {Mα:measurable_space α} 
     (X:measurable_fun Mα (borel real)):
     (measurable_fun_nnreal_of_measurable_fun_real X).val = 
     (nnreal.of_real ∘ X.val) :=
 begin
   unfold measurable_fun_nnreal_of_measurable_fun_real,
-  rw compose_measurable_fun_val_def,
-  rw nnreal_of_real_fun_val_def
+  simp,
 end
 
 
@@ -704,13 +712,13 @@ noncomputable def nnreal_to_ennreal_random_variable {Ω:Type*}
   nnreal_to_ennreal_measurable_fun ∘r X
 
 
+@[simp]
 lemma nnreal_to_ennreal_random_variable_val_def {Ω:Type*}
   {p:probability_space Ω} (X:p →ᵣ borel nnreal):
   (nnreal_to_ennreal_random_variable X).val = (λ (ω:Ω), ((X.val ω):ennreal)) :=
 begin
-  unfold nnreal_to_ennreal_random_variable,
-  rw rv_compose_val_def,
-  unfold nnreal_to_ennreal_measurable_fun,
+  unfold nnreal_to_ennreal_random_variable nnreal_to_ennreal_measurable_fun,
+  simp
 end
 
 noncomputable def expected_value_nnreal {Ω:Type*} {p:probability_space Ω}
@@ -817,35 +825,33 @@ noncomputable def min_rv
 noncomputable def absolute_nnreal {Ω:Type*} {P:probability_space Ω} (X:random_variable P (borel ℝ)):random_variable P (borel nnreal) := 
   @measurable_fun_nnreal_of_measurable_fun_real Ω (probability_space.to_measurable_space Ω) (real_abs_fun ∘r X)
 
+@[simp]
 lemma absolute_nnreal_val_def {Ω:Type*} {P:probability_space Ω} (X:random_variable P (borel ℝ)):
     (absolute_nnreal X).val = nnreal.of_real ∘ (@abs ℝ _) ∘ X.val :=
 begin
   unfold absolute_nnreal,
-  rw measurable_fun_nnreal_of_measurable_fun_real_val_def,
-  rw rv_compose_val_def,
-  rw real_abs_fun_val_def,
+  simp
 end
 
 
 noncomputable def pos_nnreal {Ω:Type*} {P:probability_space Ω} (X:random_variable P (borel ℝ)):random_variable P (borel nnreal) := 
   @measurable_fun_nnreal_of_measurable_fun_real Ω (probability_space.to_measurable_space Ω) X
 
+@[simp]
 lemma pos_nnreal_val_def {Ω:Type*} {P:probability_space Ω} (X:random_variable P (borel ℝ)):
     (pos_nnreal X).val = nnreal.of_real ∘ X.val :=
 begin
-  unfold pos_nnreal,
-  rw measurable_fun_nnreal_of_measurable_fun_real_val_def,
+  simp [pos_nnreal]
 end
 
 noncomputable def neg_nnreal {Ω:Type*} {P:probability_space Ω} (X:random_variable P (borel ℝ)):random_variable P (borel nnreal) := 
   @measurable_fun_nnreal_of_measurable_fun_real Ω (probability_space.to_measurable_space Ω) (-X)
 
+@[simp]
 lemma neg_nnreal_val_def {Ω:Type*} {P:probability_space Ω} (X:random_variable P (borel ℝ)):
     (neg_nnreal X).val = nnreal.of_real ∘ (- X.val) :=
 begin
-  unfold neg_nnreal,
-  rw measurable_fun_nnreal_of_measurable_fun_real_val_def,
-  rw real_random_variable_neg_val_def,
+  simp [neg_nnreal]
 end
 
 
@@ -866,48 +872,38 @@ noncomputable def expected_value_real_raw {Ω:Type*} {P:probability_space Ω} (X
   ennreal.to_real (expected_value_nnreal (pos_nnreal X)) -
   (ennreal.to_real (expected_value_nnreal (neg_nnreal X)))
 
+lemma nnreal.coe_of_real' (x:real) (h:x ≤ 0):((↑(nnreal.of_real x)):real) = 0 :=
+begin
+  unfold nnreal.of_real,
+  simp only [subtype.coe_mk],
+  apply max_eq_right h,
+end
 
 lemma absolute_nnreal_pos_nnreal_plus_neg_nnreal {Ω:Type*} {P:probability_space Ω} (X:random_variable P (borel ℝ)):
   (absolute_nnreal X) = (pos_nnreal X) + (neg_nnreal X) :=
 begin
   apply subtype.eq,
-  rw absolute_nnreal_val_def,
-  rw nnreal_measurable_fun_add_val_def,
---  unfold absolute_nnreal pos_nnreal neg_nnreal,
-  rw pos_nnreal_val_def,
-  rw neg_nnreal_val_def,
+  simp,
   ext ω,
   simp,
-  let x:ℝ := X.val ω,
+  let x:ℝ := (@coe (subtype (@measurable Ω ℝ _ _)) (Ω → ℝ) _ X) ω,
   begin
-    have A1:x = X.val ω:=rfl,
-    rw ← random_variable_val_eq_coe,
+    have A1:x = (@coe (subtype (@measurable Ω ℝ _ _)) (Ω → ℝ) _ X) ω := rfl,
     rw ← A1,
-    have A2:x ≤ 0 ∨ (0 < x) := le_or_lt x 0,
-    cases A2,
+    cases (le_total x 0) with A2 A2,
     {
       rw abs_of_nonpos,
-      have A3:nnreal.of_real x = 0,
-      {
-        apply nnreal.of_real_of_nonpos A2,
-      },
-      rw A3,
-      simp,
-      apply A2,
+      rw nnreal.coe_of_real (-x),
+      rw nnreal.coe_of_real' x,
+      rw zero_add,
+      repeat {simp [A2]},
     },
     {
-      rw abs_of_pos A2,
-      have A3:nnreal.of_real (-x) = 0,
-      {
-        apply nnreal.of_real_of_nonpos,
-        apply le_of_lt,
-        apply neg_lt_of_pos,
-        apply A2,
-      },
-      {
-        rw A3,
-        simp,
-      },
+      rw abs_of_nonneg A2,
+      rw nnreal.coe_of_real x,
+      rw nnreal.coe_of_real' (-x),
+      rw add_zero,
+      repeat {simp [A2]},
     },
   end
 end
@@ -964,7 +960,7 @@ noncomputable def indicator {Ω : Type*} {MΩ:measurable_space Ω}
   (E:measurable_set MΩ):measurable_fun MΩ (borel nnreal) :=
   @indicatorh Ω MΩ E.val (classical.decidable_pred E.val) E.property
 
-
+@[simp]
 lemma indicator_val_def {Ω : Type*} {MΩ:measurable_space Ω}
   (E:measurable_set MΩ):(indicator E).val =
   (λ ω:Ω, @ite (ω ∈ E.val) (@classical.decidable_pred Ω E.val ω) nnreal (1:nnreal) (0:nnreal)) :=
@@ -1002,6 +998,7 @@ def finset_sum_measurable_fun {Ω β:Type*} {MΩ:measurable_space Ω}
      property := @finset_sum_measurable2 Ω β MΩ γ T SC CSR TA S X,
    }
 
+@[simp]
 lemma finset_sum_measurable_fun_val_def {Ω β:Type*} {MΩ:measurable_space Ω}
   {γ:Type*} [T:topological_space γ] [SC:topological_space.second_countable_topology γ]
    [CSR:add_comm_monoid γ] [TA:has_continuous_add γ]
@@ -1018,30 +1015,32 @@ noncomputable def count_finset {Ω β:Type*} {MΩ:measurable_space Ω}
 
 
 
-
+@[simp]
 lemma count_finset_val_def {Ω β:Type*} {MΩ:measurable_space Ω}
   (S:finset β) (X:β → measurable_set MΩ):(count_finset S X).val =
   λ ω:Ω, S.sum (λ (b : β), @ite (ω ∈ (X b).val) (@classical.decidable_pred Ω (X b).val ω) nnreal 1 0) :=
 begin
   unfold count_finset,
-  rw finset_sum_measurable_fun_val_def,
-  ext ω,
-  have A1:(λ (b : β), (indicator (X b)).val ω) =
-    (λ b, @ite (ω ∈ (X b).val) (@classical.decidable_pred Ω (X b).val ω) nnreal 1 0),
-  {
-    ext,
-    rw indicator_val_def,
-  },
-  rw A1,
+  simp,
 end
 
 noncomputable def count_finset_rv {Ω β:Type*} {P:probability_space Ω}
   (S:finset β) (X:β → event P):P →ᵣ borel nnreal :=
   count_finset S X
 
+@[simp]
+lemma count_finset_rv_val_def {Ω β:Type*} {MΩ:probability_space Ω}
+  (S:finset β) (X:β → event MΩ):(count_finset_rv S X).val =
+  λ ω:Ω, S.sum (λ (b : β), @ite (ω ∈ (X b).val) (@classical.decidable_pred Ω (X b).val ω) nnreal 1 0) :=
+begin
+  unfold count_finset_rv,
+  simp,
+end
+
+
 noncomputable def count {Ω β:Type*} {MΩ:measurable_space Ω}
   [F:fintype β] (X:β → measurable_set MΩ):MΩ →ₘ borel nnreal :=
-  count_finset F.elems X
+  count_finset finset.univ X
 
 --Before going on, we need linearity of expectation.
 --We have to either prove that the ennreal random variables are a commutative semiring, or
@@ -1280,7 +1279,7 @@ lemma nnreal_zero_eq_ennreal_zero {Ω:Type*} {P:probability_space Ω}:
   (0:P→ᵣ (borel ennreal)) :=
 begin
   apply subtype.eq,
-  rw nnreal_to_ennreal_random_variable_val_def,
+  --rw nnreal_to_ennreal_random_variable_val_def,
   refl,
 end
 
@@ -1298,7 +1297,7 @@ lemma to_nnreal_rv_eq_to_ennreal_rv {Ω:Type*} {P:probability_space Ω}
   (to_ennreal_rv (x:ennreal)) :=
 begin
   apply subtype.eq,
-  rw nnreal_to_ennreal_random_variable_val_def,
+  --rw nnreal_to_ennreal_random_variable_val_def,
   refl,
 end
 
@@ -1337,9 +1336,7 @@ lemma finset_sum_measurable_fun_insert {Ω β:Type*} [decidable_eq β]
 begin
   intros A1,
   apply subtype.eq,
-  rw finset_sum_measurable_fun_val_def,
-  rw nnreal_measurable_fun_add_val_def,
-  rw finset_sum_measurable_fun_val_def,
+  simp,
   ext ω,
   rw finset.sum_insert,
   refl,
@@ -1353,17 +1350,6 @@ lemma lift_add_nnreal_random_variable {Ω:Type*} {p:probability_space Ω}
   (nnreal_to_ennreal_random_variable Y) :=
 begin
   apply subtype.eq,
-  rw ennreal_measurable_fun_add_val_def,
-  rw nnreal_to_ennreal_random_variable_val_def,
-  rw nnreal_to_ennreal_random_variable_val_def,
-  rw nnreal_to_ennreal_random_variable_val_def,
-  rw nnreal_measurable_fun_add_val_def,
-  have A1:(λ (ω : Ω), (((X.val + Y.val) ω):ennreal))=(λ (ω : Ω), ((X.val ω):ennreal) + ((Y.val ω):ennreal)),
-  {
-    ext ω,
-    simp,
-  },
-  rw A1,
   refl,
 end
 
@@ -1407,11 +1393,8 @@ lemma indicator_eq_simple_func {Ω:Type*} {P:probability_space Ω}
   (@measure_theory.simple_func.const Ω ennreal (probability_space.to_measurable_space Ω) 1) S.val) :=
 begin
   ext ω,
-  rw nnreal_to_ennreal_random_variable_val_def,
-  rw indicator_val_def,
   rw measure_theory.simple_func.restrict_apply,
-  rw measure_theory.simple_func.const_apply,
-  simp,
+  {simp},
   apply S.property,
 end
 
@@ -2609,8 +2592,6 @@ begin
             rw A5O,
             unfold measurable_set.mk,
             simp,
-            rw ← measurable_set_val_eq_coe,
-            rw measurable_Union_val_def,
             ext ω,split;intro A5PA;simp at A5PA;cases A5PA with i A5PA;simp;
             apply exists.intro i;have A5PB:f i = (g i).val := rfl,
             {
@@ -2928,9 +2909,6 @@ begin
   rw event_le_val_def,
   unfold set.Iic,
   simp,
-  rw ← random_variable_val_eq_coe,
-  rw ← random_variable_val_eq_coe,
-  rw coe_random_variable_of_real_val_def,
 end
 
 
@@ -3124,9 +3102,6 @@ def is_probability_mass_function {Ω:Type*} {p:probability_space Ω} (X:p →ᵣ
    (set.countable S) ∧
    (∀ E:measurable_set (borel ℝ), has_sum f (Pr[X∈ᵣ E]))
 
-
-
-
 def is_absolutely_continuous_wrt 
   {Ω:Type*} {M:measurable_space Ω} (μ ν:measure_theory.measure Ω):Prop :=
   ∀ A:set Ω, is_measurable A → (ν A = 0) → (μ A = 0)
@@ -3140,3 +3115,178 @@ begin
   unfold is_absolutely_continuous_wrt at A1,
   apply A1 A A2 A3,
 end
+
+/-
+  A type is of class inhabited if it has at least one element.
+  Thus, its cardinality is not zero.
+--Not sure where to put this. Here is fine for now.
+--Note: this is the kind of trivial thing that takes ten minutes to prove.
+-/
+lemma card_ne_zero_of_inhabited {α:Type*} [inhabited α] [F:fintype α]:
+  fintype.card α ≠ 0 :=
+begin
+  rw ← nat.pos_iff_ne_zero,
+  rw fintype.card_pos_iff,
+  apply nonempty_of_inhabited,
+end
+
+noncomputable def average_identifier {α Ω:Type*} {P:probability_space Ω} (f:α → event P) (F:fintype α):P →ᵣ (borel nnreal) :=
+    (count_finset_rv finset.univ f) * (to_nnreal_rv ((@fintype.card α F:nnreal)⁻¹))
+
+@[simp]
+lemma average_identifier_val_def {α Ω:Type*} {P:probability_space Ω} (f:α → event P) (F:fintype α):(average_identifier f F).val = 
+  (λ ω:Ω, (finset.univ.sum (λ (b : α), @ite (ω ∈ (f b).val) (@classical.decidable_pred Ω (f b).val ω) nnreal 1 0) ) / ((@fintype.card α F):nnreal)) := 
+begin
+  unfold average_identifier,
+  refl
+end
+
+lemma average_identifier_eq_pr_elem {α Ω:Type*} {P:probability_space Ω} (f:α → event P) (F:fintype α) {i:α}:events_IID f →
+  (Pr[f i]:ennreal) = E[average_identifier f F]:=
+begin
+  intro A1,
+  unfold average_identifier,
+  rw scalar_expected_value,
+  rw linear_count_finset_rv,
+  have A2:(λ (k:α), (Pr[f k]:ennreal))=(λ (k:α), (Pr[f i]:ennreal)),
+  {
+    apply funext,
+    intro k,
+    simp,
+    cases A1 with A1 A2,
+    apply A2,
+  },
+  rw A2,clear A2,
+  simp,
+  have A3:(@finset.univ α F).card = (fintype.card α) := rfl,
+  rw A3, clear A3,
+  rw mul_comm,
+  rw ← mul_assoc,
+  simp,
+  have A4:(((fintype.card α):nnreal):ennreal) = ((fintype.card α):ennreal),
+  {simp},
+  rw ← A4,
+  rw ← ennreal.coe_mul,
+  rw ← ennreal.coe_mul,
+  rw  ennreal.coe_eq_coe,
+  rw nnreal.inv_mul_cancel,
+  rw one_mul,
+  simp,
+  apply @card_ne_zero_of_inhabited α (inhabited.mk i),
+end
+
+
+lemma finset_filter_univ {α:Type*} [F:fintype α] {P:α → Prop} {H:decidable_pred P}:
+  finset.filter P (finset.univ) = ∅ ↔ (∀ a:α, ¬ P a) :=
+begin
+  split;intro A1,
+  {
+    intro a,
+    have A2:a∉ finset.filter P (finset.univ),
+    {
+      intro A2A,
+      rw A1 at A2A,
+      apply A2A,
+    },
+    intro A3,
+    apply A2,
+    rw finset.mem_filter,
+    split,
+    {
+      apply fintype.complete,
+    },
+    {
+      apply A3,
+    }
+  },
+  {
+    ext,
+    rw finset.mem_filter,
+    split;intro A2,
+    {
+      apply (A1 a),
+      apply A2.right,
+    },
+    {
+      exfalso,
+      apply A2,
+    }
+  }
+end
+
+lemma event_val_def {α Ω:Type*} {P:probability_space Ω} {A:event P}:
+  @has_coe.coe (event P) (set Ω) (coe_subtype) (A)=A.val := rfl
+
+lemma eall_fintype_independent_events {α Ω:Type*} {P:probability_space Ω} (f:α → event P) [F:fintype α]:independent_events f →
+  Pr[∀ᵣ a, f a]=finset.univ.prod (λ a, Pr[f a]) :=
+begin
+  rw eall_fintype_eq_eall_finset,
+  unfold independent_events,
+  intros A1,
+  rw A1,
+  have A2:eall_finset (finset.univ) (λ (b : α), f b) = ∀ᵣ (s : α) in finset.univ,f s,
+  {apply event.eq,simp [-subtype.val_eq_coe],rw has_eall_in_finset_val_def2,
+simp},
+  rw A2,
+end
+
+lemma average_identifier_eq_not_event {α Ω:Type*} {P:probability_space Ω} (f:α → event P) (F:fintype α) [NE:inhabited α]:
+  ((average_identifier f F) =ᵣ 0) = (eall_fintype F (enot ∘ f)) :=
+begin
+  apply event.eq,
+  simp,
+  ext ω,split;intros A1A,
+  {
+    simp,
+    intro j,
+    simp at A1A,
+    cases A1A,
+    {
+      rw finset_filter_univ at A1A,
+      rw ← event_val_eq_coe,
+      apply A1A,  
+    },
+    {
+      exfalso,
+      apply @card_ne_zero_of_inhabited α NE F A1A, 
+    }
+  },
+  {
+    simp,
+    left,
+    rw finset_filter_univ,
+    intros j,
+    simp at A1A,
+    rw ← event_val_eq_coe,
+    have A1B := A1A j, 
+    rw ← event_val_eq_coe at A1B,
+    apply A1A,
+  }
+end
+
+lemma Pr_average_identifier_eq_zero {α Ω:Type*} {P:probability_space Ω} (f:α → event P) (F:fintype α) {i:α}:events_IID f →
+  Pr[(average_identifier f F) =ᵣ 0] = (1-Pr[f i])^(@fintype.card α F) :=
+begin
+  intro A1,
+  have A2:inhabited α :=
+  {
+    default := i,
+  },
+  rw @average_identifier_eq_not_event α Ω P f F A2,
+  have A3:events_IID (enot ∘ f),
+  {
+     apply events_IID_not_of_events_IID f F A1,
+  },
+  haveI A4:=@classical.decidable_eq α,
+  rw eall_fintype_def,
+  rw eall_fintype_eq_eall_finset,
+  rw events_IID_pow,
+  --unfold events_IID at A3,
+  simp,
+  unfold fintype.card,
+  rw ← Pr_one_minus_eq_not,
+  unfold events_IID at A1,
+  rw A1.right (default α)  i,
+  apply A3,
+end
+

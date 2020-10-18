@@ -1,7 +1,7 @@
 [package]
 name = "formal_ml"
 version = "0.0.2"
-lean_version = "leanprover-community/lean:3.20.0"
+lean_version = "leanprover-community/lean:3.21.0"
 path = "src"
 [dependencies]
-mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "b6ce982d21eb3c536a11ac19f06e9fcaf10faf55"}
+mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "3e12a7b955af6855213cb0ccf9e2e72468bf09da"}

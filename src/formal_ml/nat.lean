@@ -61,7 +61,7 @@ begin
 end
 
 
-lemma nat_fact_pos {n:ℕ}:0 < nat.fact n :=
+lemma nat_fact_pos {n:ℕ}:0 < nat.factorial n :=
 begin
   induction n,
   {
@@ -95,11 +95,11 @@ begin
   }
 end
 
-
-lemma nat_fact_nonzero {n:ℕ}:nat.fact n ≠ 0 :=
+--#check nat.factorial
+lemma nat_fact_nonzero {n:ℕ}:nat.factorial n ≠ 0 :=
 begin
   intro A1,
-  have A2:0 < nat.fact n := nat_fact_pos,
+  have A2:0 < nat.factorial n := nat_fact_pos,
   rw A1 at A2,
   apply lt_irrefl 0 A2,
 end
@@ -430,5 +430,3 @@ begin
   apply lt_of_lt_of_le zero_lt_one,
   apply linear_ordered_semiring.one_le_pow A1,
 end
-
-

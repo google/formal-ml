@@ -257,19 +257,22 @@ end
   complete lattice. However, the relationship between complementary sets and
   disjointedness is lost, as complementarity doesn't exist in a generic complete
   lattice.
+
+  SIDE NOTE: lattice.lean now has a ton of theorems. Follow set.disjoint_compl_right
  -/
+--Replace with disjoint.symm
+
+
 lemma set.disjoint.symm {α:Type*} {A B:set α}:disjoint A B → disjoint B A :=
 begin
-  rw set.disjoint_iff_inter_eq_empty,
-  rw set.disjoint_iff_inter_eq_empty,
-  rw set.inter_comm,
-  simp,
+  apply @disjoint.symm (set α) _,
 end
 
 --Unused, but there are parallels in mathlib for finset and list.
+--Too trivial now.
 lemma set.disjoint_comm {α:Type*} {A B:set α}:disjoint A B ↔ disjoint B A :=
 begin
-  split;intros A1;apply set.disjoint.symm A1,
+  apply @disjoint.comm (set α) _,
 end
 
 lemma set.disjoint_inter_compl {α:Type*} (A B C:set α):disjoint (A ∩ B) (C∩ Bᶜ) :=

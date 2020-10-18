@@ -1362,23 +1362,14 @@ lemma lower_bounds_top (α:Type*) (S:set (filter α)):lower_bounds S = lower_bou
 begin
   ext,
   unfold lower_bounds,
-  split;intros;simp;simp at a;intros,
-  {
-    cases a_2,
-    {
-      rw a_2,
-      simp,
-    },
-    {
-      apply a,
-      apply a_2,
-    }
-  },
+  split;intros;
+   simp only [true_and, set.mem_insert_iff, forall_eq_or_imp, le_top, set.mem_set_of_eq, set.union_singleton];
+  simp only [true_and, set.mem_insert_iff, forall_eq_or_imp, le_top, set.mem_set_of_eq, 
+             set.union_singleton] at a;intros;
   {
     apply a,
-    right,
     apply a_2,
-  }
+  },
 end
 
 lemma Inf_union_top (α:Type*) (S:set (filter α)):
@@ -1778,3 +1769,4 @@ begin
     apply A1,
   },
 end
+

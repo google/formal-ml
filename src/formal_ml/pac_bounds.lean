@@ -132,20 +132,6 @@ begin
 end
 
 /-
-  A type is of class inhabited if it has at least one element.
-  Thus, its cardinality is not zero.
---Not sure where to put this. Here is fine for now.
---Note: this is the kind of trivial thing that takes ten minutes to prove.
--/
-lemma card_ne_zero_of_inhabited {α:Type*} [inhabited α] [F:fintype α]:
-  fintype.card α ≠ 0 :=
-begin
-  rw ← nat.pos_iff_ne_zero,
-  rw fintype.card_pos_iff,
-  apply nonempty_of_inhabited,
-end
-
-/-
   The number of examples do not equal zero.
  -/
 lemma num_examples_ne_zero (P:PAC_problem):
@@ -169,7 +155,8 @@ def num_hypotheses (P:PAC_problem):nat
 -/
 noncomputable def training_error (P:PAC_problem)
   (i:P.Hi):P.p →ᵣ (borel nnreal) :=
-  (count_finset_rv P.FDi.elems (example_error P i)) * (to_nnreal_rv ((num_examples P):nnreal)⁻¹)
+  average_identifier (example_error P i) P.FDi 
+ -- (count_finset_rv P.FDi.elems (example_error P i)) * (to_nnreal_rv ((num_examples P):nnreal)⁻¹)
 
 /-
   The expected test error.
@@ -185,7 +172,7 @@ noncomputable def test_error (P:PAC_problem)
 -/
 noncomputable def fake_hypothesis (P:PAC_problem) (ε:nnreal)
   (i:P.Hi):event P.p :=
-  ((training_error P i) =ᵣ (to_nnreal_rv 0)) ∧ₑ (event_const (test_error P i > ε))
+  ((training_error P i) =ᵣ 0) ∧ₑ (event_const (test_error P i > ε))
 
 /-
   The event that all hypotheses with training error zero have test error ≤ ε.
@@ -203,15 +190,8 @@ lemma enot_example_correct_eq_example_error
   (P:PAC_problem) (i:P.Hi) (j:P.Di):enot (example_correct P i j) = (example_error P i j) :=
 begin
   apply event.eq,
-  unfold example_error,
-  unfold example_correct,
-  unfold rv_label_ne,
-  unfold rv_label_eq,
-  rw enot_val_def,
-  rw rv_ne_val_def,
-  rw rv_eq_val_def,
-  ext ω,
-  simp,
+  unfold example_error example_correct rv_label_ne rv_label_eq,
+  refl,
 end
 
 
@@ -219,7 +199,7 @@ lemma enot_example_error_eq_example_correct
   (P:PAC_problem) (i:P.Hi) (j:P.Di):enot (example_error P i j) = (example_correct P i j) :=
 begin
   rw ← enot_example_correct_eq_example_error,
-  rw enot_enot_eq_self,
+  simp,
 end
 
 
@@ -228,7 +208,6 @@ lemma example_correct_iff_not_example_error
   ω ∈ (example_correct P i j).val :=
 begin
   rw ← enot_example_error_eq_example_correct,
-  rw enot_val_def,
   simp,
 end
 
@@ -253,19 +232,6 @@ begin
   let Y:(P.Mβ ×ₘ P.Mγ)→ₘ (P.Mγ ×ₘ P.Mγ) := prod_measurable_fun ((P.H i) ∘m (mf_fst)) (mf_snd),
   begin
   let S:@measurable_set _ (P.Mγ ×ₘ P.Mγ) := @measurable_set_ne P.γ P.Mγ P.HMEγ,
-/-{
-    val := {x:P.γ × P.γ|x.fst ≠ x.snd},
-    property :=
-    begin
-      have A1:{x : P.γ × P.γ | x.fst ≠ x.snd}={x : P.γ × P.γ | x.fst = x.snd}ᶜ,
-      {
-        ext,split;intros A1A;simp;simp at A1A;apply A1A,
-      },
-      rw A1,
-      apply is_measurable.compl,
-      apply P.HMEγ.is_measurable_eq,
-    end
-  },-/
   begin
   have A1:@random_variables_IID P.Ω P.p P.Di P.FDi (P.γ × P.γ) (P.Mγ ×ₘ P.Mγ)
   (λ j:P.Di, Y ∘r (P.D j) ),
@@ -284,19 +250,7 @@ begin
     intro j,
     apply event.eq,
     unfold example_error example_label example_classification rv_label_ne example_instance,
-    rw rv_ne_val_def,
-    rw rv_event_val_def,
-    have A3A:S.val = {x:P.γ × P.γ|x.fst ≠ x.snd} := rfl,
-    rw A3A,
-    have A3B:Y = prod_measurable_fun ((P.H i) ∘m (mf_fst)) (mf_snd) := rfl,
-    rw A3B,
-    rw rv_compose_val_def,
-    rw prod_measurable_fun_val_def,
-    rw rv_compose_val_def,
-    rw rv_compose_val_def,
-    rw rv_compose_val_def,
-    rw compose_measurable_fun_val_def,
-    simp,
+    refl,
   },
   rw ← A3,
   exact A2,
@@ -335,16 +289,7 @@ begin
     intro j,
     apply event.eq,
     unfold example_correct example_label example_classification rv_label_eq example_instance,
-    rw rv_eq_val_def,
-    rw rv_event_val_def,
-    have A3A:S.val = {x:P.γ × P.γ|x.fst = x.snd} := rfl,
-    rw A3A,
-    have A3B:Y = prod_measurable_fun ((P.H i) ∘m (mf_fst)) (mf_snd) := rfl,
-    rw A3B,
-    --Unwrap the underlying sets from the events.
-    rw [rv_compose_val_def, prod_measurable_fun_val_def, rv_compose_val_def, rv_compose_val_def,
-        rv_compose_val_def, compose_measurable_fun_val_def],
-    simp,
+    refl,
   },
   rw ← A3,
   exact A2,
@@ -463,109 +408,28 @@ begin
   apply P.has_example.default,
 end
 
-
-
-lemma finset_filter_univ {α:Type*} [F:fintype α] {P:α → Prop} {H:decidable_pred P}:
-  finset.filter P (fintype.elems α) = ∅ ↔ (∀ a:α, ¬ P a) :=
-begin
-  split;intro A1,
-  {
-    intro a,
-    have A2:a∉ finset.filter P (fintype.elems α),
-    {
-      intro A2A,
-      rw A1 at A2A,
-      apply A2A,
-    },
-    intro A3,
-    apply A2,
-    rw finset.mem_filter,
-    split,
-    {
-      apply fintype.complete,
-    },
-    {
-      apply A3,
-    }
-  },
-  {
-    ext,
-    rw finset.mem_filter,
-    split;intro A2,
-    {
-      apply (A1 a),
-      apply A2.right,
-    },
-    {
-      exfalso,
-      apply A2,
-    }
-  }
-end
 /-
 event_IID_pow :
   ∀ {α : Type u_1} [Mα : measurable_space α] {p : probability_measure α} {β : Type u_2} [F : fintype β]
   [I : inhabited β] {γ : Type u_3} [Mγ : measurable_space γ] (A : β → event p) (S : finset β),
     events_IID A → Pr[eall_finset S A] = Pr[A (inhabited.default β)] ^ finset.card S
 -/
+--sorry
+set_option pp.implicit true
 lemma training_error_zero_prob (P:PAC_problem) (i:P.Hi):
-  Pr[training_error P i =ᵣ to_nnreal_rv 0] =
+  Pr[training_error P i =ᵣ 0] =
    (Pr[(example_correct P i P.has_example.default)])^(num_examples P) :=
 begin
-  have A1:(training_error P i =ᵣ to_nnreal_rv 0) =
-      (eall_fintype P.FDi (example_correct P i) ),
-  {
-    apply event.eq,
-    rw eall_fintype_val_def,
-    unfold training_error,
-    unfold count_finset_rv,
-    rw event_eq_val_def,
-    rw to_nnreal_rv_val_def,
-    rw nnreal_random_variable_mul_val_def,
-    rw to_nnreal_rv_val_def,
-    simp,
-    rw ← random_variable_val_eq_coe,
-    rw count_finset_val_def,
-    ext ω,split;intros A1A,
-    {
-
-      simp,
-      intro j,
-      simp at A1A,
-      cases A1A,
-      {
-        rw finset_filter_univ at A1A,
-        rw ← event_val_eq_coe,
-        rw ← example_correct_iff_not_example_error,
-        apply A1A,  
-      },
-      {
-        exfalso,
-        apply (@num_examples_ne_zero P),
-        apply A1A,
-      }
-    },
-    {
-      simp,
-      left,
-      rw finset_filter_univ,
-      intros j,
-      simp at A1A,
-      rw ← event_val_eq_coe,
-      have A1B := A1A j, 
-      rw ← event_val_eq_coe at A1B,
-      rw example_correct_iff_not_example_error,
-      apply A1A,
-    }
-  },
-  rw A1,
-  unfold eall_fintype,
-  unfold num_examples,
+  unfold training_error,
+  rw @Pr_average_identifier_eq_zero P.Di P.Ω P.p (example_error P i) P.FDi P.has_example.default,
+  rw ← enot_example_correct_eq_example_error,
+  rw Pr_one_minus_not_eq,
+  rw num_examples_eq_finset_card,
   unfold fintype.card,
-  rw @events_IID_pow P.Ω P.p P.Di P.FDi P.has_example,
-  unfold finset.univ,
-  apply example_correct_IID,
+  refl,
+  apply example_error_IID,
 end
+
 
 
 lemma fake_hypothesis_prob (P:PAC_problem)
@@ -591,8 +455,6 @@ begin
       apply test_error_ne_top,
       exact B1,
     },
-
-
     rw training_error_zero_prob,
     rw example_correct_prob,
     apply nnreal_pow_mono,
@@ -662,3 +524,5 @@ begin
   unfold probably_approximately_correct,
   apply pac_bound,
 end
+
+

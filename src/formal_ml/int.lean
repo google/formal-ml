@@ -73,8 +73,21 @@ begin
   simp,
 end
 
+lemma int.neg_succ_le_int_of_nat (a b:ℕ): (int.neg_succ_of_nat b) ≤ (int.of_nat a) :=
+begin
+  apply @int.le.intro_sub _ _ (a + b + 1),
+  rw sub_eq_add_neg,
+  rw int.neg_neg_of_nat_succ,
+  refl,
+end 
 
-
+lemma int.not_int_of_nat_lt_neg_succ (a b:ℕ):(int.of_nat a) < (int.neg_succ_of_nat b) → false :=
+begin
+  intros A1,
+  have A2:=int.neg_succ_le_int_of_nat a b,
+  apply not_lt_of_ge A2,
+  apply A1,
+end 
 
 --This is the hard part. The converse is trivial,
 --and once we have this, all other variants can be
@@ -98,6 +111,8 @@ begin
   },
   {
     exfalso,
+    simp at A1,
+    apply int.not_int_of_nat_lt_neg_succ,
     apply A1,
   },
   {
@@ -154,6 +169,7 @@ begin
     have B1:x + 0 < x + 1,
     {
       simp,
+      apply zero_lt_one,
     },
     rw add_zero at B1,
     apply lt_of_lt_of_le B1 A1,
@@ -201,6 +217,7 @@ begin
     have B2:a = c.succ := int.pred_succ_iff.mp B1,
     rw B2,
     apply iff.trans (@int.succ_lt_succ_iff c b),
+    symmetry,
     apply @int.succ_le_iff c b,
   end
 end
@@ -227,6 +244,7 @@ begin
     have B2:a = c.succ := int.pred_succ_iff.mp B1,
     rw ← B1,
     rw B2,
+    symmetry,
     apply @int.succ_le_iff c b,
   end
 end

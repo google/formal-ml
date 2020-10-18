@@ -631,3 +631,12 @@ lemma finset.Union_insert' {α β:Type*} [E:encodable β]
 begin
   simp
 end
+
+lemma finset.powerset_singleton {α:Type*}[decidable_eq α] {x:α}:@finset.powerset α {x} = {∅,{x}} :=
+begin
+  have B1:{x} = insert x (∅:finset α),
+  refl,
+  rw B1,
+  rw finset.powerset_insert,
+  refl,
+end

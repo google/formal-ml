@@ -215,3 +215,12 @@ begin
     exact A3,
   },
 end
+
+lemma nnreal.lt_of_add_le_of_pos {x y z:nnreal}:x + y ≤ z → 0 < y → x < z :=
+begin
+  --intros A1 A2 A3,
+  repeat {rw ← nnreal.coe_lt_coe}, rw ← nnreal.coe_le_coe,repeat {rw nnreal.coe_add},
+  intros A1 A2,
+  simp at A2,
+  linarith [A1, A2],
+end

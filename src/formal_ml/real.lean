@@ -581,11 +581,18 @@ begin
   linarith,
 end
 
+#check abs_of_neg
+#check abs
+#check lt_or_ge
 lemma abs_triangle {a b c:ℝ}:abs (a - b) ≤ abs (a - c) + abs (c - b) :=
 begin
-  have A1:(a - b) = (a - c) + (c - b) := add_sub_triangle,
-  rw A1,
-  apply abs_add_le_abs_add_abs,
+  have h_nonneg_or_neg:∀ a:ℝ, (0 ≤ a)∨ (a<0),
+  {intros a,have A1:=lt_or_ge a 0, cases A1,apply or.inr A1, apply or.inl A1},
+  cases (h_nonneg_or_neg  (a - b)) with A1 A1;
+  cases (h_nonneg_or_neg  (a - c)) with A2 A2;
+  cases (h_nonneg_or_neg  (c - b)) with A3 A3;
+  simp [A1,A2,A3,abs_of_nonneg,abs_of_neg];
+  linarith,
 end
 
 lemma pow_complex {x:ℝ} {n:ℕ}:((x:ℂ)^n).re=(x^n) :=
@@ -599,6 +606,7 @@ begin
     rw pow_succ,
     simp,
     rw n_ih,
+    simp,
   }
 end
 
@@ -697,3 +705,4 @@ begin
   },
   apply add_right_cancel A2,
 end
+

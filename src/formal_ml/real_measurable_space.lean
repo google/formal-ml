@@ -687,7 +687,6 @@ begin
   {
     intros A1,
     simp,
-    apply const_measurable,
   },
   {
     intros b T A2 A3 A4,
@@ -805,3 +804,4 @@ begin
   apply is_closed_is_measurable_binary,
   apply is_closed_diagonal,
 end
+
