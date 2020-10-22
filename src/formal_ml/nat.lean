@@ -418,7 +418,7 @@ begin
 end 
 
 lemma linear_ordered_semiring.pow_monotone 
-    {α:Type*} [linear_ordered_semiring α] {a:α} {b c:ℕ}:1 ≤ a → b ≤ c →  a^b ≤ a^c :=
+    {α:Type*} [linear_ordered_semiring α] [N:nontrivial α] {a:α} {b c:ℕ}:1 ≤ a → b ≤ c →  a^b ≤ a^c :=
 begin
   intros A1 A2,
   rw le_iff_exists_add at A2,
@@ -429,4 +429,5 @@ begin
   apply linear_ordered_semiring.one_le_pow A1,
   apply lt_of_lt_of_le zero_lt_one,
   apply linear_ordered_semiring.one_le_pow A1,
+  apply N
 end

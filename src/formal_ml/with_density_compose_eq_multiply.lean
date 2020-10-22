@@ -1327,21 +1327,6 @@ begin
   apply A1,
 end
 
-lemma ennreal.le_of_add_le_add_left {a b c:ennreal}:a < ⊤ →
-    a + b ≤ a + c → b ≤ c :=
-begin
-  cases a,
-  {simp},
-  cases c,
-  {simp},
-  cases b,
-  {simp, apply ennreal.coe_ne_top},
-  simp only [forall_prop_of_true, ennreal.coe_le_coe, ennreal.coe_lt_top, ennreal.some_eq_coe],
-  repeat {rw  ← ennreal.coe_add},
-  rw ennreal.coe_le_coe,
-  apply le_of_add_le_add_left,
-end
-
 lemma ennreal.le_of_add_le_add_right 
     {a b c:ennreal}:(c < ⊤)→
    (a + c ≤ b + c) → (a ≤ b) :=
@@ -1383,13 +1368,6 @@ begin
   intros A1,
   simp at A1,
   apply A1,
-end
-
-
---TODO: replace with le_zero_iff_eq
-lemma ennreal.le_zero_iff {a:ennreal}:a ≤ 0 ↔ a=0 :=
-begin
-  squeeze_simp
 end
 
 --Used once in hahn.lean.

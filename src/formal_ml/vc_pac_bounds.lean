@@ -57,16 +57,6 @@ begin
 end
 
 
-lemma enat.zero_lt_one:(0:enat) < (1:enat) :=
-begin
-  have A1:(0:enat)=(0:nat) := rfl,
-  have A2:(1:enat)=(1:nat) := rfl,
-  rw A1,
-  rw A2,
-  rw enat.coe_lt_coe,
-  apply zero_lt_one
-end
-
 
 /-
   A type is of class inhabited if it has at least one element.

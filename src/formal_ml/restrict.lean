@@ -51,7 +51,7 @@ begin
     apply set.subset.trans (set.inter_subset_left t s) h_subset },
 end
 
-lemma of_function_apply {α : Type*} [measurable_space α]
+lemma of_function_apply {α : Type*} 
   {g : set α → ennreal} (h_empty : g ∅ = 0) (s: set α):
   outer_measure.of_function g h_empty s = 
   (⨅ (f : ℕ → set α) (h : s ⊆ set.Union f), ∑' n, g (f n)) := rfl
@@ -59,7 +59,7 @@ lemma of_function_apply {α : Type*} [measurable_space α]
 /-- The value of the Infimum of a nonempty set of outer measures on a set is not simply
 the minimum value of a measure on that set: it is the infimum sum of measures of countable set of sets that 
 covers that set, where a different measure can be used for each set in the cover. -/ 
-lemma Inf_apply {α : Type*} [measurable_space α]
+lemma Inf_apply {α : Type*}
   {s : set (measure_theory.outer_measure α)} {t : set α} (h : s.nonempty):
   Inf s t = (⨅ (f : ℕ →  set α) (h : t ⊆ set.Union f), ∑' n, ⨅  (μ : outer_measure α) (h2 : μ ∈ s), μ (f n)) := 
 begin
@@ -71,23 +71,24 @@ begin
 end
 
 /-- This proves that Inf and restrict commute for outer measures. -/
-lemma restrict_Inf_eq_Inf_restrict {α : Type*} [measurable_space α]
-  (s : set (measure_theory.outer_measure α)) {t : set α} (h_meas : is_measurable t) (h_nonempty : s.nonempty) :
+lemma restrict_Inf_eq_Inf_restrict {α : Type*} 
+  (s : set (measure_theory.outer_measure α)) {t : set α} (h_nonempty : s.nonempty) :
   measure_theory.outer_measure.restrict t (Inf s) = Inf ((measure_theory.outer_measure.restrict t) '' s) := 
 begin
-  have h_nonempty_image:((measure_theory.outer_measure.restrict t) '' s).nonempty,
+  have h_nonempty_image : ((measure_theory.outer_measure.restrict t) '' s).nonempty,
   { apply set.nonempty_image_iff.mpr h_nonempty },
   ext1 u, rw restrict_apply, 
   repeat {rw Inf_apply},
-  apply le_antisymm; simp; intros f h_meas,
+  apply le_antisymm; simp only [set.mem_image, infi_exists, le_infi_iff]; intros f h_subset,
   { apply @infi_le_of_le ennreal _ _ _ _ (λ n, (f n) ∩ t),
     apply @infi_le_of_le ennreal _ _ _ _ _,
-    apply ennreal.tsum_le_tsum, simp, intros n μ₁ μ₂ h_μ₂_in_s h_restrict_eq, subst μ₁,
+    apply ennreal.tsum_le_tsum, simp only [and_imp, set.mem_image, infi_exists, le_infi_iff],
+    intros n μ₁ h_exists, cases h_exists with μ₂ h_constraints, cases h_constraints with h_μ₂_in_s h_restrict_eq, subst μ₁,
     apply @infi_le_of_le ennreal _ _ _ _ μ₂,
     apply @infi_le_of_le ennreal _ _ _ _ h_μ₂_in_s,
     { simp [le_refl] },
     { rw set.subset_def, intros x h_x_in_union, rw set.mem_inter_eq at h_x_in_union,
-      have h_exists := (set.mem_Union.mp ((set.subset_def.mp h_meas) x h_x_in_union.left)), cases h_exists with i h_x_in_f_i, 
+      have h_exists := (set.mem_Union.mp ((set.subset_def.mp h_subset) x h_x_in_union.left)), cases h_exists with i h_x_in_f_i, 
       rw set.mem_Union, apply exists.intro i, rw set.mem_inter_eq, apply and.intro h_x_in_f_i h_x_in_union.right } },
   { apply @infi_le_of_le ennreal _ _ _ _ (λ n, (f n) ∪ tᶜ),
     apply @infi_le_of_le ennreal _ _ _ _ _,
@@ -102,7 +103,7 @@ begin
     { simp [h_nonempty] },  
     { rw set.subset_def, intros x h_x_in_u,
       rw [set.mem_Union],
-      have h_subset_x := (set.subset_def.mp h_meas) x,
+      have h_subset_x := (set.subset_def.mp h_subset) x,
       simp only [and_imp, set.mem_Union, set.mem_inter_eq] at h_subset_x,
       cases (classical.em (x ∈ t)) with h_x_in_t h_x_notin_t,
       have h_exists_i := h_subset_x h_x_in_u h_x_in_t, cases h_exists_i with i x_in_f_i,
@@ -110,7 +111,7 @@ begin
       apply exists.intro 0,
       rw [set.mem_union_eq, set.mem_compl_eq],
       apply or.inr h_x_notin_t } },
-  repeat {assumption},
+  repeat {assumption}, 
 end
 
 end outer_measure
@@ -142,7 +143,7 @@ begin
   { ext1 x, rw restrict_to_outer_measure_eq_to_outer_measure_restrict A1 },
   rw [Inf_apply B1, restrict_apply B1, Inf_apply (is_measurable.inter B1 A1), set.image_image,
     h_image_comm, ← set.image_image _ to_outer_measure,
-    ← outer_measure.restrict_Inf_eq_Inf_restrict _ A1,
+    ← outer_measure.restrict_Inf_eq_Inf_restrict,
     outer_measure.restrict_apply],
   apply set.nonempty_image_iff.mpr AX,
 end

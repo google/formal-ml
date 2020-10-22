@@ -32,19 +32,19 @@ import formal_ml.exp_bound
 import formal_ml.classical
 
 structure PAC_problem :=
-  (Ω:Type*)                           -- Underlying outcome type
-  (p:probability_space Ω)             -- underlying probability space
-  (β:Type*)                           -- instance type
-  (Mβ:measurable_space β)             -- Measurable space for the instances
-(γ:Type*)                             -- label type, with ⊤ measurable space
+(Ω:Type*)                             -- Underlying outcome type
+(p:probability_space Ω)               -- underlying probability space
+(β:Type*)                             -- instance type
+(Mβ:measurable_space β)               -- Measurable space for the instances
+(γ:Type*)                             -- label type
 (Mγ:measurable_space γ)               -- Measurable space for the labels
 (HMEγ:has_measurable_equality Mγ)     -- Measurable equality for the labels
 (Eγ:encodable γ)                      -- Encodable labels is very useful
-(Di:Type*)                            -- number of examples
+(Di:Type*)                            -- example index type
 (FDi:fintype Di)                      -- number of examples are finite
 (EDi:encodable Di)                    -- example index is encodable
                                       -- see trunc_encodable_of_fintype
-(Hi:Type*)                            -- number of examples
+(Hi:Type*)                            -- hypothesis index type
 (FHi:fintype Hi)                      -- number of examples are finite
 (EHi:encodable Hi)                    -- hypothesis index is encodable
                                       -- see trunc_encodable_of_fintype

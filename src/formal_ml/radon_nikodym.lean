@@ -34,269 +34,7 @@ import topology.instances.ennreal
 import formal_ml.int
 import formal_ml.with_density_compose_eq_multiply
 import formal_ml.hahn
-
-/-
-  This only works if the sum of g is finite.
-  For example, if f = (λ i:ℕ, 1 + (1/((i + 1):ennreal)^2), and
-  g = (λ i:ℕ, 1), then f - g =  (λ i:ℕ, (1/((i + 1):ennreal)^2), so
-  ∑ (f - g) = π^2/6, but (∑ f) - (∑ g)=⊤ - ⊤ = 0. 
- -/
-lemma ennreal.tsum_sub {f:ℕ → ennreal} {g:ℕ → ennreal}:
-(∑' i, g i) ≠ ⊤ → (g ≤ f) → (∑' i, (f i - g i)) = (∑' i, f i) - (∑' i, g i) :=
-begin
-  intros A1 B2,
-  let h:ℕ → ennreal := (λ i, f i - g i),
-  begin
-    have B1:h = (λ i, f i - g i) := rfl,
-    have A2:(∑' i, (h i) + (g i))=(∑' i, h i) + (∑' i, g i),
-    {
-      apply tsum_add,
-      apply ennreal.summable,
-      apply ennreal.summable,
-    },
-    have A3:g ≤ (h + g),
-    {
-      rw B1,
-      rw le_func_def2,
-      intro n,
-      simp,
-      rw ennreal.sub_add_cancel_of_le,
-      apply B2,
-      apply B2,
-    },
-    have A4:(∑' i, g i) ≤ (∑' i, (h i) + (g i)),
-    {
-      apply @tsum_le_tsum ennreal ℕ _ _ _,
-      {
-        intro n,
-        apply A3,
-      },
-      apply ennreal.summable,
-      apply ennreal.summable,
-    },
-    have A5:(∑' i, (h i) + (g i))-(∑' i, g i)=(∑' i, h i),
-    {
-      apply ennreal.sub_eq_of_add_of_not_top_of_le A2 A1 A4,
-    },
-    have A6:(λ i, (h i) + (g i)) = f,
-    {
-      apply funext,
-      intro n,
-      rw B1,
-      simp,
-      rw ennreal.sub_add_cancel_of_le,
-      apply B2,
-    }, 
-    rw A6 at A5,
-    rw B1 at A5,
-    symmetry,
-    apply A5,
-  end
-end
-
-namespace measure_theory
-namespace measure
-
-/-- This is the equivalent of (a-b) ⊔ 0, if a and b were signed measures.
-Compare with ennreal.has_sub. 
-Specifically, note that if you have α = {1,2}, and  a {1} = 2, a {2} = 0, and 
-b {2} = 2, b {1} = 0, then (a - b) {1, 2} = 2. However, if a ≤ b, and
-b set.univ ≠ ⊤, then (a - b) + b = a. -/
-noncomputable instance has_sub {α:Type*}
-  [measurable_space α]:has_sub (measure_theory.measure α) := ⟨λa b, Inf {d | a ≤ d + b}⟩
-
-lemma sub_def {α:Type*}
-  [measurable_space α] {a b:measure_theory.measure α}:
-  (a - b) = Inf {d | a ≤ d + b} := rfl
-
-lemma le_zero_iff {Ω:Type*} [measurable_space Ω]
-  (μ:measure_theory.measure Ω):μ ≤ 0 ↔ μ = 0 :=
-begin
-  split;intros A1,
-  {
-    apply le_antisymm A1,
-    apply measure_theory.measure.zero_le,
-  },
-  {
-    rw A1,
-    apply le_refl _,
-  },
-end
-
-lemma sub_eq_zero_if_le {Ω:Type*} [measurable_space Ω]
-  (μ ν:measure_theory.measure Ω):μ ≤ ν → μ - ν = 0 :=
-begin
-  intros A1,
-  rw ← measure_theory.measure.le_zero_iff,
-  rw measure_theory.measure.sub_def,
-  apply @Inf_le (measure_theory.measure Ω) _ _,
-  simp [A1],
-end
-
-lemma le_of_add_le_add_left {α:Type*} 
-  [M:measurable_space α]
-  {μ ν₁ ν₂:measure_theory.measure α} [measure_theory.finite_measure μ]: 
-  μ + ν₁ ≤ μ + ν₂ → ν₁ ≤ ν₂ :=
-begin
-  intros A2,
-  rw measure_theory.measure.le_iff,
-  intros S B1,
-  rw measure_theory.measure.le_iff at A2,
-  have A3 := A2 S B1,
-  simp at A3,
-  apply ennreal.le_of_add_le_add_left _ A3,
-  apply measure_theory.measure_lt_top,
-end
-
-lemma measure_theory.measure.le_of_add_le_add_right 
-    {α:Type*} [M:measurable_space α] 
-    {μ₁ ν μ₂:measure_theory.measure α} [measure_theory.finite_measure ν]:
-   (μ₁ + ν ≤ μ₂ + ν) → (μ₁ ≤ μ₂) :=
-begin
-  intros A2,
-  rw add_comm μ₁ ν at A2,
-  rw add_comm μ₂ ν at A2,
-  apply measure_theory.measure.le_of_add_le_add_left A2,
-end
-
-namespace sub
-
-/--This is a function that is equivalent to subtraction above if
-ν ≤ μ and ν is finite (ν set.univ ≠ ⊤).
-Because the above definition is defined as an infimum, this
-measure_sub_fn serves as an existence proof of that definition.-/
-noncomputable def measure_sub_fn {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α):Π (s:set α),is_measurable s → ennreal := 
-  λ (S:set α) (H:is_measurable S), (μ S - ν S)
-
-
-lemma measure_sub_fn_apply {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α) (s:set α) (H:is_measurable s):
-  measure_sub_fn μ ν s H = (μ s - ν s) := rfl
-
-
-lemma measure_sub_fn_apply_empty {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α): 
-  (measure_sub_fn μ ν) ∅ is_measurable.empty = 0 :=
-begin
-  rw measure_sub_fn_apply,
-  rw measure_theory.measure_empty,
-  rw measure_theory.measure_empty,
-  rw ennreal.sub_zero,
-end
-
-
-lemma measure_sub_fn_m_Union {α:Type*} [M:measurable_space α] 
-    (μ ν:measure_theory.measure α) (H:ν ≤ μ) 
-    [H2:measure_theory.finite_measure ν]:
-(∀ (g : ℕ → set α) (h : ∀ (i : ℕ), is_measurable (g i)), 
-  pairwise (disjoint on g) → 
- ((measure_sub_fn μ ν) (⋃ (i : ℕ), g i) (M.is_measurable_Union g h)) = 
-  ∑' (i : ℕ), (measure_sub_fn μ ν) (g i) (h i)) :=
-begin
-  intros g A1 A2,
-  have A3:(λ n:ℕ, (measure_sub_fn μ ν (g n) (A1 n)))
-      =(λ n:ℕ, (μ (g n)) - (ν (g n))),
-  { apply funext, intro n, rw measure_sub_fn_apply},
-  rw measure_sub_fn_apply,
-  rw A3,
-  rw ennreal.tsum_sub,
-  repeat {rw measure_theory.measure_Union A2 A1},
-  {
-    rw ← measure_theory.measure_Union A2 A1,
-    apply measure_theory.measure_ne_top,
-  },
-  {
-    rw le_func_def2,
-    intro i,
-    apply H,
-    apply A1,
-  }, 
-end
-
-noncomputable def measure_sub {α:Type*} [M:measurable_space α] 
-    {μ ν:measure_theory.measure α} (H:ν ≤ μ) 
-    [H2:measure_theory.finite_measure ν]:measure_theory.measure α := @measure_theory.measure.of_measurable α M (measure_sub_fn μ ν)  (measure_sub_fn_apply_empty μ ν) (measure_sub_fn_m_Union μ ν H)
-
-
-
-lemma measure_sub_def {α:Type*} [M:measurable_space α] 
-    {μ ν:measure_theory.measure α} (H:ν ≤ μ) [H2:measure_theory.finite_measure ν]
-  :measure_sub H = @measure_theory.measure.of_measurable α M (measure_sub_fn μ ν)  (measure_sub_fn_apply_empty μ ν) (measure_sub_fn_m_Union μ ν H) := rfl
-
-lemma measure_sub_apply {α:Type*} [M:measurable_space α] 
-    {μ ν:measure_theory.measure α} (H:ν ≤ μ) 
-    [H2:measure_theory.finite_measure ν] {S:set α} (H3:is_measurable S):
-    measure_sub H S = μ S - ν S :=
-begin
-  rw measure_sub_def,
-  rw measure_theory.measure.of_measurable_apply,
-  rw measure_sub_fn_apply,
-  apply H3,
-end
-
-
-lemma measure_sub_add {α:Type*} [M:measurable_space α] 
-    {μ ν:measure_theory.measure α} (H:ν ≤ μ) 
-    [H2:measure_theory.finite_measure ν]:μ = ν + (measure_sub H) :=
-begin
-  apply measure_theory.measure.ext,
-  intros s A3,
-  simp,
-  rw measure_sub_apply,
-  rw add_comm,
-  rw ennreal.sub_add_cancel_of_le,
-  apply H,
-  repeat {apply A3},
-end
-
-lemma measure_sub_eq {α:Type*} [M:measurable_space α] 
-    (μ ν:measure_theory.measure α) (H:ν ≤ μ) 
-    (H2:measure_theory.finite_measure ν):(μ - ν) = (measure_sub H) :=
-begin
-  rw measure_theory.measure.sub_def,
-  have A1B:μ = ν + measure_sub H :=
-          measure_sub_add H,
-
-  apply le_antisymm,
-  {
-    have A1:μ ≤ (measure_sub H) + ν,
-    {
-      rw add_comm,
-      rw ← A1B,
-      apply le_refl μ,
-    },
-    have A2:(measure_sub H) ∈ {d|μ ≤ d + ν} := A1, 
-    apply Inf_le A2,
-  },
-  {
-    apply @le_Inf (measure_theory.measure α) _,
-    intros b B1,
-    simp at B1,
-    rw A1B at B1,
-    rw add_comm at B1,
-    apply measure_theory.measure.le_of_add_le_add_right B1,
-  },
-end
-
-end sub
-
-lemma sub_apply {Ω:Type*} [measurable_space Ω]
-  (μ ν:measure_theory.measure Ω) {S:set Ω} [A2:measure_theory.finite_measure ν]:
-  is_measurable S → 
-  ν ≤ μ → (μ - ν) S = μ S - ν S :=
-begin
-  intros A1 A3,
-  rw sub.measure_sub_eq μ ν A3 A2,
-  apply sub.measure_sub_apply,
-  apply A1,
-end
-
-
-end measure
-
-
-end measure_theory
+import tactic.cache
 
 ---------------------------------------------------------------------------------------------------
 
@@ -1376,7 +1114,6 @@ begin
           rw E4,
           simp,
         },
-
         {
           rw measure_theory.measure.restrict_apply,
           have E5:Sᶜ ∩ T ∩ Sᶜ = Sᶜ ∩ T,
@@ -1444,7 +1181,7 @@ begin
   intros A1 B1,
   rw ← measure_theory.measure.restrict_apply_self _ B1,
   rw measure_theory.measure.sub_restrict_comm,
-  rw measure_theory.measure.sub_eq_zero_if_le,
+  rw measure_theory.measure.sub_eq_zero_of_le,
   repeat {simp [*]},
 end
 
@@ -1824,24 +1561,6 @@ begin
   simp at C2,
   apply C2,
   apply C1,
-end
-
-
-
---Similar, but slightly different than, measure_sub_add.
-lemma measure_theory.measure.sub_add_cancel_of_le {α:Type*} [measurable_space α] {μ ν:measure_theory.measure α} [measure_theory.finite_measure μ]:
-  μ ≤ ν → ν - μ + μ = ν :=
-begin
-  intros A1,
-  apply measure_theory.measure.ext,
-  intros S B1,
-  rw measure_theory.measure.add_apply,
-  rw jordan_decomposition_junior_apply,
-  rw ennreal.sub_add_cancel_of_le,
-  apply A1,
-  exact B1,
-  apply measure_theory.measure.restrict_le_restrict_of_le S A1,
-  exact B1,
 end
 
 
@@ -2382,7 +2101,7 @@ begin
           rw A6,
           apply B3,
         },
-        rw @measure_theory.measure.sub_add_cancel_of_le Ω N (μ.with_density g) ν C4A,
+        rw @measure_theory.measure.sub_add_cancel_of_le Ω N ν (μ.with_density g) C4A,
         apply A7,       
       }, 
       have C5:measurable g,
