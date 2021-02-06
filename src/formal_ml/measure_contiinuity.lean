@@ -36,13 +36,13 @@ import formal_ml.int
 
 def is_absolutely_continuous_wrt 
   {Ω:Type*} {M:measurable_space Ω} (μ ν:measure_theory.measure Ω):Prop :=
-  ∀ A:set Ω, is_measurable A → (ν A = 0) → (μ A = 0)
+  ∀ A:set Ω, measurable_set A → (ν A = 0) → (μ A = 0)
 
 
 lemma measure_zero_of_is_absolutely_continuous_wrt 
   {Ω:Type*} {M:measurable_space Ω} (μ ν:measure_theory.measure Ω) (A:set Ω):
   is_absolutely_continuous_wrt μ ν → 
-  is_measurable A → (ν A = 0) → (μ A = 0) :=
+  measurable_set A → (ν A = 0) → (μ A = 0) :=
 begin
   intros A1 A2 A3,
   unfold is_absolutely_continuous_wrt at A1,
@@ -67,7 +67,7 @@ def is_absolutely_continuous_wrt_lebesgue
   is_absolutely_continuous_wrt μ lebesgue_measure_on_borel
 
 lemma prob_zero_of_is_absolute_continuous_wrt_lebesgue (μ:measure_theory.measure ℝ) (E:set ℝ):is_absolutely_continuous_wrt_lebesgue μ →
-   is_measurable E →   
+   measurable_set E →   
    measure_theory.lebesgue_outer E = 0 →
     μ E=0 :=
 begin

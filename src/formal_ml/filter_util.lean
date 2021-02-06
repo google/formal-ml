@@ -84,10 +84,9 @@ begin
 end
 
 
-lemma filter_map_intro (α β:Type*) (A:filter α) (f:α → β) (X:set α) (Y:set β):
-  (X∈ A) → (X=set.preimage f Y)→ (Y∈ filter.map f A)  :=
+lemma filter_map_intro (α β : Type*) (A : filter α) (f : α → β) (X : set α) (Y : set β)
+ (a: X∈ A) (a_1 : X=set.preimage f Y) : (Y∈ filter.map f A)  :=
 begin
-  intros,
   rw filter_mem_def,
   rw filter_map_def,
   unfold set.preimage,
@@ -98,10 +97,9 @@ begin
   assumption,
 end
 
-lemma filter_map_elim (α β:Type*) (A:filter α) (f:α → β) (Y:set β):
-  (Y∈ filter.map f A)→ (∃ (X∈ A), (X=set.preimage f Y))   :=
+lemma filter_map_elim (α β:Type*) (A:filter α) (f:α → β) (Y:set β)
+  (a : Y ∈ filter.map f A) : (∃ (X∈ A), (X=set.preimage f Y))   :=
 begin
-  intros,
   rw filter_mem_def at a,
   rw filter_map_def at a,
   --unfold set.preimage,
@@ -114,10 +112,10 @@ end
 lemma filter_tendsto_intro (α β:Type*)   (f:α → β) (A:filter α) (B:filter β):
   (∀ b∈ B, set.preimage f b ∈ A) → (@filter.tendsto α β  f A B)  :=
 begin
-  intros,
+  intros a,
   unfold filter.tendsto,
   apply filter_le_intro,
-  intros,
+  intros a_1 a_2,
   apply filter_map_intro,
   have A1:a_1 ∈ B → f ⁻¹' a_1 ∈ A,
   {
@@ -136,7 +134,7 @@ end
 lemma filter_tendsto_elim {α β:Type*} {f:α → β} {A:filter α} {B:filter β} {s:set β}:
    (@filter.tendsto α β  f A B) →(s∈ B)→  (set.preimage f s ∈ A) :=
 begin
-  intros,
+  intros a a_1,
   unfold filter.tendsto at a,
   have A1:s∈ filter.map f A,
   {
@@ -161,7 +159,7 @@ lemma filter_principal_intro {α:Type*} (a:finset α) (b:set (finset α)):
   ({c : finset α | a ⊆ c} ⊆ b) → b ∈ (filter.principal  {c:finset α | a⊆ c}):=
 begin
   --apply b∈ (filter.principal  {c:finset ℕ | a⊆ c}),
-  intros,
+  intros a_1,
   unfold filter.principal,
   have A1:b ∈ {t : set (finset α) | {c : finset α | a ⊆ c} ⊆ t},
   {
@@ -175,7 +173,7 @@ end
 lemma filter_principal_elim {α:Type*} (a:finset α) (b:set (finset α)):
   b ∈ (filter.principal  {c:finset α | a⊆ c}) → ({c : finset α | a ⊆ c} ⊆ b) :=
 begin
-  intros,
+  intros a_1,
   apply (@filter.mem_principal_sets (finset α) b {c:finset α | a⊆ c}).mp,
   apply a_1,
 end
@@ -185,10 +183,10 @@ end
 lemma filter_principal_intro2 {α:Type*} (a:finset α) (b:set (finset α)):
   (∀ c:finset α, a⊆ c → c∈ b) → b ∈ (filter.principal  {c:finset α | a⊆ c}):=
 begin
-  intros,
+  intros a_1,
   apply filter_principal_intro,
   rw set.subset_def,
-  intros,
+  intros a_3 a_2,
   simp at a_2,
   apply a_1,
   apply a_2,
@@ -198,15 +196,14 @@ end
 lemma filter_principal_intro3 {α:Type*} (a b:set α):
   (a⊆ b) → b ∈ filter.principal  a:=
 begin
-  unfold filter.principal,
-  simp,
+  simp [filter.principal],
 end
 
 
 lemma filter_principal_elim2 {α:Type*} (a:finset α) (b:set (finset α)) (c:finset α):
   b ∈ (filter.principal  {c:finset α | a⊆ c}) → (a ⊆ c) → (c∈ b) :=
 begin
-  intros,
+  intros a_1 a_2,
   apply (@filter_principal_elim α a b),
   {
     apply a_1,
@@ -231,9 +228,6 @@ end
   filter.principal {{1,2},{1,2,3},{1,2,3,4}, {1,2,4}} ⊓
   filter.principal {{1,3},{1,2,3},{1,2,3,4}, {1,3,4}} =
   filter.principal {{1,2,3}, {1,2,3,4}}
-
-
-
  -/
 
 
@@ -252,7 +246,7 @@ begin
   have A1:{d:α |b ≤ d} ∩ {d:α |c ≤ d} = {d: α |(b ⊔ c) ≤ d},
   {
     ext,
-    split;intros,
+    split;intros a,
     {
       cases a,
       simp at a_left,
@@ -291,7 +285,7 @@ end
 lemma set_Inf_intro (α:Type*) (S:set (set α)) (x:α):
    (∀ X∈ S, x∈ X) → x∈ Inf S :=
 begin
-  intros,
+  intros a,
   rw set_Inf_def,
   simp,
   exact a,
@@ -301,7 +295,7 @@ end
 lemma set_Inf_range_intro (α β:Type*) (f:α → set (β)) (x:β):
    (∀ y:α, x∈ f y) →  x∈ Inf (set.range  (λ (a : α), f a)) :=
 begin
-  intros,
+  intros a,
   apply set_Inf_intro,
   intros,
   unfold set.range at H,
@@ -314,7 +308,7 @@ end
 lemma glb_intro {α β:Type*} (f:α → set (β)) (x:β):
 (∀ a:α, x∈ f a) → x ∈  ⨅ a, f a :=
 begin
-  intros,
+  intros a,
   unfold infi,
   unfold Inf,
   apply set_Inf_range_intro,
@@ -322,19 +316,19 @@ begin
 end
 
 
-lemma le_Inf_simp : ∀ (α:Type*) (s : set (filter α)) (a : filter α),
+lemma le_Inf_simp (α:Type*) (s : set (filter α)) (a : filter α) :
     (∀ (b : filter α ), b ∈ s → a ≤ b) → a ≤ complete_lattice.Inf s :=
 begin
-  intros,
+  intros a_1,
   apply (complete_lattice.le_Inf s),
   apply a_1,
 end
 
 
-lemma Inf_le_simp : ∀ (α : Type*)  (s : set (filter α)) (a : filter α),
+lemma Inf_le_simp (α : Type*)  (s : set (filter α)) (a : filter α) :
   a ∈ s → complete_lattice.Inf s ≤ a :=
 begin
-  intros,
+  intros a_1,
   apply (complete_lattice.Inf_le s),
   assumption,
 end
@@ -356,14 +350,14 @@ def inf_filter_sets_def (α:Type*) (S : set (filter α)):set (set α) :=
 lemma inf_filter_sets_of_superset2 (α:Type*) (S : set (filter α)) (s t:set α):
   s∈ (inf_filter_sets_def α S) → s⊆ t → t∈ (inf_filter_sets_def α S) :=
 begin
-  intro,
+  intro a,
   unfold inf_filter_sets_def,
   simp,
   unfold inf_filter_sets_def at a,
   simp at a,
   cases a,
   cases a_h,
-  intros,
+  intros a_1,
   apply exists.intro a_w,
   split,
   {
@@ -384,15 +378,15 @@ def inf_filter_sets_inter_sets2 (α:Type*) (S : set (filter α))
   s ∩ t ∈ (inf_filter_sets_def α S) :=
 begin
   unfold inf_filter_sets_def,
-  simp,
-  intros,
+  simp only [and_imp, exists_prop, set.mem_set_of_eq, exists_imp_distrib],
+  intros x a a_1 x_1 a_2 a_3,
   apply (exists.intro (x⊓x_1)),
   split,
   {
     apply H;assumption,
   },
   {
-     rw ← filter_mem_def,
+     simp only [filter.mem_inf_sets, ← filter_mem_def],
      have B1:(s ∩ t) ∈ x ⊓ x_1 ↔ ∃t₁∈x, ∃t₂∈x_1, t₁ ∩ t₂ ⊆ (s ∩ t),
      apply filter.mem_inf_sets,
      apply B1.mpr,
@@ -409,11 +403,9 @@ lemma inf_filter_univ_sets2 (α:Type*) (S : set (filter α)) (b:filter α):
 begin
   unfold inf_filter_sets_def,
   simp,
-  intros,
+  intros h1,
   apply exists.intro b,
-  split,
-  assumption,
-  apply filter.univ_sets,
+  repeat {assumption},
 end
 
 def inf_filter_def2 (α:Type*) (S : set (filter α)) (b:filter α) (H:b∈ S)
@@ -467,10 +459,10 @@ le_antisymm (le_Inf $ λ f hf s hs, h.2 ⟨f, hf, hs⟩)
 lemma le_principal (F:filter (finset ℕ)) (s:set (finset ℕ)):
   (s∈ F)→ (F ≤ filter.principal s) :=
 begin
-  intros,
+  intros a,
   apply (filter_le_intro2 (finset ℕ) F (filter.principal s)),
   rw set.subset_def,
-  intros,
+  intros x a_1,
 
   unfold filter.principal at a_1,
   simp at a_1,
@@ -508,7 +500,7 @@ lemma mem_nhds_elim_real_rat (b:set real) (x:real): b∈ nhds x →
 begin
   let rat_basis := (⋃ (a b : ℚ) (h : a < b), {set.Ioo ↑a ↑b}),
   begin
-  intros,
+  intros a,
   have A1:topological_space.is_topological_basis rat_basis,
   {
     apply real.is_topological_basis_Ioo_rat,
@@ -664,7 +656,7 @@ lemma mem_nhds_elim_real {b:set real} {x:real}: b∈ nhds x →
 (∃ p q:ℝ, (p < q) ∧ ((set.Ioo p q) ⊆ b) ∧ (p < x) ∧ (x < q))
   :=
 begin
-  intros,
+  intros a,
   have A1:(∃ prat qrat:ℚ, (prat < qrat) ∧ ((set.Ioo prat qrat:set ℝ) ⊆ b) ∧ ((prat:ℝ) < x) ∧ (x < (qrat:ℝ))),
   {
     apply mem_nhds_elim_real_rat,
@@ -919,7 +911,7 @@ lemma mem_nhds_elim_real_bound (b:set real) (x:real): b∈ nhds x →
 (∃ r>0, (set.Ioo (x-r) (x+r)) ⊆ b)
   :=
 begin
-  intros,
+  intros a,
   have A1:(∃ p q:ℝ, (p < q) ∧ ((set.Ioo p q) ⊆ b) ∧ (p < x) ∧ (x < q)),
   {
     apply mem_nhds_elim_real,
@@ -953,7 +945,7 @@ begin
   {
     unfold set.Ioo,
     simp,
-    intros,
+    intros a_1 a_2 a_3,
     split,
     {
       apply lt_of_le_of_lt,
@@ -980,7 +972,7 @@ begin
         apply (@le_neg_add_iff_add_le real _ x r A1_h_w).mp,
         have A7:((-x)+A1_h_w=A1_h_w-x),
         {
-          apply real.decidable_linear_ordered_comm_ring.add_comm,
+          apply real.linear_ordered_comm_ring.add_comm,
         },
         rw A7,
         assumption,
@@ -1097,7 +1089,7 @@ begin
   Y ∈ (set.range (λ (a : α), filter.principal {b : α | a ≤ b})) →
   X ⊓ Y ∈ (set.range (λ (a : α), filter.principal {b : α | a ≤ b}))),
   {
-    intros,
+    intros X Y a a_1,
     simp at a,
     cases a,
     subst X,
@@ -1128,7 +1120,7 @@ begin
   },
   apply iff.trans,
   apply A3,
-  split;intros,
+  split;intros a,
   {
     cases a,
     cases a_h,
@@ -1196,7 +1188,7 @@ lemma filter_at_top_intro2 {α:Type*} (b:set (finset α)) (c:finset α):
   ({d:finset α |c ≤ d} ⊆ b) →
   (b ∈ (@filter.at_top (finset α) _)) :=
 begin
-  intros,
+  intros a,
   have A1:b∈ filter.principal {d:finset α |c ≤ d},
   {
     unfold filter.principal,
@@ -1211,7 +1203,7 @@ end
 lemma filter_contains_preimage_superset (α β:Type) (B:filter β) (S T:set α) (f:β  → α):
   (S⊆ T)→ ({x:β |f x ∈ S}∈ B) → ({x:β |f x ∈ T}∈ B) :=
 begin
-  intros,
+  intros a a_1,
   have A1:{x:β |f x ∈ S} ⊆ {x:β |f x ∈ T},
   {
     apply set.preimage_mono,
@@ -1226,11 +1218,11 @@ lemma filter_at_top_intro3  {α β:Type*} (c:finset α) (S:set β) (f:finset α 
   (∀ d ≥ c, f d ∈ S) →
   ({x:finset α|f x∈ S} ∈ (@filter.at_top (finset α) _)) :=
 begin
-  intros,
+  intros a,
   have A1:({d:finset α |c ≤ d} ⊆ {x:finset α|f x∈ S}),
   {
     rw set.subset_def,
-    intros,
+    intros x a_1,
     simp,
     simp at a_1,
     apply a,
@@ -1283,20 +1275,20 @@ begin
   split,
   {
     simp,
-    intros,
+    intros a a_1 a_2,
     symmetry,
     exact a_2,
   },
   {
     simp,
-    intros,
+    intros a,
     split,
     {
       apply H2,
     },
     {
       symmetry,
-      exact a,
+      assumption,
     }
   }
 end
@@ -1338,13 +1330,13 @@ begin
   split,
   {
     simp,
-    intros,
+    intros a a_1,
     symmetry,
     exact a_1,
   },
   {
     simp,
-    intros,
+    intros a,
     split,
     {
       apply H2,
@@ -1362,13 +1354,13 @@ lemma lower_bounds_top (α:Type*) (S:set (filter α)):lower_bounds S = lower_bou
 begin
   ext,
   unfold lower_bounds,
-  split;intros;
+  split;intros a;
    simp only [true_and, set.mem_insert_iff, forall_eq_or_imp, le_top, set.mem_set_of_eq, set.union_singleton];
   simp only [true_and, set.mem_insert_iff, forall_eq_or_imp, le_top, set.mem_set_of_eq, 
              set.union_singleton] at a;intros;
   {
     apply a,
-    apply a_2,
+    assumption,
   },
 end
 
@@ -1449,7 +1441,7 @@ begin
     {
       intros,
       ext,
-      split;intros,
+      split;intros a,
       {
         cases a,
         cases a_h,
@@ -1484,7 +1476,7 @@ lemma open_nhds_inter
     (B∈ {s:set α|x∈ s∧ is_open s}) →
     ((A∩ B) ∈ {s:set α|x∈ s∧ is_open s}) :=
 begin
-  intros,
+  intros a a_1,
   cases a,
   cases a_1,
   split,
@@ -1495,14 +1487,6 @@ begin
     apply is_open_inter;assumption,
   },
 end
-
-
-/-
-lemma Inf_filter_def (α:Type) (S : set (filter α))
-(b:filter α) (H:b∈ S)
-  (H2:∀ a b:filter α, a∈ S→ b∈ S→ a⊓b∈ S) (s:set α):
-(s ∈ Inf S)↔ (∃ t∈ S, s∈ t) :=
--/
 
 lemma nhds_def1 (α:Type*) [topological_space α] (x:α):
 nhds x = Inf  (set.image (filter.principal) {S:set α|x∈ S ∧ is_open S}) :=
@@ -1553,9 +1537,9 @@ end
 lemma mem_nhds_filter_principal_intro (α:Type*) [topological_space α] (x:α) (V:set α):
   V∈ {S:set α|x∈ S ∧ is_open S}→ filter.principal V ∈ (set.image (filter.principal) {S:set α|x∈ S ∧ is_open S}) :=
 begin
-  intros,
-  simp,
-  apply a,
+  intros a,
+  simp only [filter.principal_eq_iff_eq, set.mem_image, exists_eq_right, set.mem_set_of_eq],
+  assumption,
 end
 
 
@@ -1563,7 +1547,7 @@ lemma mem_nhds_filter_principal_elim (α:Type*) [topological_space α] (x:α) (V
   filter.principal V ∈ (set.image (filter.principal) {S:set α|x∈ S ∧ is_open S}) →
   V∈ {S:set α|x∈ S ∧ is_open S} :=
 begin
-  intros,
+  intros a,
   simp at a,
   apply a,
 end
@@ -1573,7 +1557,7 @@ lemma mem_nhds_filter_principal_elim2 (α:Type*) [topological_space α] (x:α) (
   Z ∈ (set.image (filter.principal) {S:set α|x∈ S ∧ is_open S}) →
   (∃ V:set α, V∈ {S:set α|x∈ S ∧ is_open S} ∧ filter.principal V = Z) :=
 begin
-  intros,
+  intros a,
   simp at a,
   apply a,
 end
@@ -1617,7 +1601,7 @@ begin
       }
     },
     {
-      intros,
+      intros a b a_1 a_2,
       have A1:(∃ V:set α, V∈ {S:set α|x∈ S ∧ is_open S} ∧ filter.principal V = a),
       {
         apply mem_nhds_filter_principal_elim2,
@@ -1652,7 +1636,7 @@ begin
     }
   },
   {
-    split;intros,
+    split;intros a,
     {
       cases a,
       cases a_h,
@@ -1695,7 +1679,7 @@ end
 lemma nhds_contain_point (α:Type*) [topological_space α] (x:α) (S:set α):
 S ∈ nhds x → x∈ S :=
 begin
-  intros,
+  intros a,
    have A1:(∃ u:set α, (u⊆ S) ∧ is_open u ∧ (x∈ u)),
    {
      apply (nhds_def2 α x S).mp a,

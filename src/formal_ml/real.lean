@@ -45,20 +45,6 @@ begin
   apply A1,
 end
 
-lemma abs_pow {x:ℝ} {n:ℕ}:(abs (x^n)) = (abs x)^n :=
-begin
-  induction n,
-  {
-    simp,
-  },
-  {
-    rw pow_succ,
-    rw pow_succ,
-    rw abs_mul,
-    rw n_ih,
-  }
-end
-
 lemma real_nat_abs_coe {n:ℕ}:abs (n:ℝ)= (n:ℝ) :=
 begin
   have A1:abs (n:ℝ) =((abs n):ℝ) := rfl,
@@ -250,8 +236,6 @@ end
 
 
 
---Lift to division_ring, or delete
-lemma division_ring.div_def {α:Type*} [division_ring α] {a b:α}:a/b = a* b⁻¹ := rfl
 
 lemma div_def {a b:ℝ}:a/b = a * b⁻¹ := rfl
 
@@ -260,8 +244,8 @@ lemma div_def {a b:ℝ}:a/b = a * b⁻¹ := rfl
 lemma div_lt_div_of_lt_of_lt {a b c:ℝ}:(0<c) → (a < b) → (a/c < b/c) :=
 begin
   intros A1 A2,
-  rw division_ring.div_def,
-  rw division_ring.div_def,
+  rw div_def,
+  rw div_def,
   apply mul_lt_mul_of_pos_right,
   apply A2,
   apply inv_pos_of_pos,
@@ -454,16 +438,7 @@ end
 lemma x_in_Ioo {x r:ℝ}:(0 < r) → (x∈ set.Ioo (x- r) (x + r)) :=
 begin
   intro A1,
-  simp,
-  split,
-  {
-    apply lt_of_sub_pos,
-    rw sub_inv,
-    apply A1,
-  },
-  {
-    apply A1,
-  }
+  simp [A1],
 end
 
 --Classical.
@@ -535,7 +510,7 @@ end
 lemma sub_half_eq_half {a:ℝ}:(a - a * 2⁻¹)=a * 2⁻¹ :=
 begin
     rw add_of_sub,
-    rw ← division_ring.div_def,
+    rw ← div_def,
     simp,
 end
 
@@ -581,9 +556,6 @@ begin
   linarith,
 end
 
-#check abs_of_neg
-#check abs
-#check lt_or_ge
 lemma abs_triangle {a b c:ℝ}:abs (a - b) ≤ abs (a - c) + abs (c - b) :=
 begin
   have h_nonneg_or_neg:∀ a:ℝ, (0 ≤ a)∨ (a<0),
@@ -666,7 +638,7 @@ end
 lemma half_lt_one:(2:ℝ)⁻¹ < 1 :=
 begin
   have A1:1/(2:ℝ) < 1 := epsilon_half_lt_epsilon zero_lt_one,
-  rw division_ring.div_def at A1,
+  rw div_def at A1,
   rw one_mul at A1,
   apply A1,
 end
@@ -705,4 +677,66 @@ begin
   },
   apply add_right_cancel A2,
 end
+
+lemma real.unit_frac_pos (n:ℕ):0 < (1/((n:real) + 1)) :=
+begin
+  simp,
+  -- ⊢ 0 < ↑n + 1
+  rw add_comm,
+  apply add_pos_of_pos_of_nonneg,
+  {
+    apply zero_lt_one,
+  },
+  {
+    simp,
+  },
+end
+
+
+--TODO:Unlikely to be novel.
+--Solvable by linarith.
+lemma real.sub_lt_sub_of_lt {a b c:real}:a < b →
+  a - c < b - c :=
+begin
+  simp,
+end
+
+lemma real.rat_le_rat_iff {q r:ℚ}:q ≤ r ↔ (q:ℝ) ≤  (r:ℝ) := 
+begin
+  rw ← real.of_rat_eq_cast,
+  rw ← real.of_rat_eq_cast,
+  rw le_iff_lt_or_eq,
+  rw le_iff_lt_or_eq,
+  split;intros A3;cases A3,
+  {
+    left,
+    rw real.of_rat_lt,
+    apply A3,
+  },
+  {
+    right,
+    simp,
+    apply A3,
+  },
+  {
+    left,
+    rw ← real.of_rat_lt,  
+    apply A3,
+  },
+  {
+    right,
+    simp at A3,
+    apply A3,
+  },
+end
+
+lemma real.eq_add_of_sub_eq {a b c:real}:
+  a - b = c → a = b + c :=
+begin
+  intros A1,
+  linarith [A1],
+end
+
+
+lemma real.sub_add_sub {a b c:real}:(a - b) + (b - c) = a - c := by linarith
 

@@ -31,6 +31,11 @@ import formal_ml.sum
 import formal_ml.exp_bound
 import formal_ml.classical
 
+
+
+
+
+
 structure PAC_problem :=
 (Ω:Type*)                             -- Underlying outcome type
 (p:probability_space Ω)               -- underlying probability space
@@ -172,7 +177,7 @@ noncomputable def test_error (P:PAC_problem)
 -/
 noncomputable def fake_hypothesis (P:PAC_problem) (ε:nnreal)
   (i:P.Hi):event P.p :=
-  ((training_error P i) =ᵣ 0) ∧ₑ (event_const (test_error P i > ε))
+  ((training_error P i) =ᵣ 0) ∧ (event_const (test_error P i > ε))
 
 /-
   The event that all hypotheses with training error zero have test error ≤ ε.
@@ -203,6 +208,7 @@ begin
 end
 
 
+
 lemma example_correct_iff_not_example_error
   (P:PAC_problem) (i:P.Hi) (j:P.Di) (ω:P.Ω): ω ∉ (example_error P i j).val ↔
   ω ∈ (example_correct P i j).val :=
@@ -212,7 +218,7 @@ begin
 end
 
 lemma example_error_IID (P:PAC_problem) (i:P.Hi):
-  @events_IID P.Ω P.Di P.p P.FDi  (example_error P i) :=
+  @events_IID P.Ω P.Di P.p  (example_error P i) :=
 begin
   /-
     To prove that the errors of a particular hypothesis are IID, we must use an alternate
@@ -231,15 +237,15 @@ begin
   -/
   let Y:(P.Mβ ×ₘ P.Mγ)→ₘ (P.Mγ ×ₘ P.Mγ) := prod_measurable_fun ((P.H i) ∘m (mf_fst)) (mf_snd),
   begin
-  let S:@measurable_set _ (P.Mγ ×ₘ P.Mγ) := @measurable_set_ne P.γ P.Mγ P.HMEγ,
+  let S:@measurable_setB _ (P.Mγ ×ₘ P.Mγ) := @measurable_setB_ne P.γ P.Mγ P.HMEγ,
   begin
-  have A1:@random_variables_IID P.Ω P.p P.Di P.FDi (P.γ × P.γ) (P.Mγ ×ₘ P.Mγ)
+  have A1:@random_variables_IID P.Ω P.p P.Di (P.γ × P.γ) (P.Mγ ×ₘ P.Mγ)
   (λ j:P.Di, Y ∘r (P.D j) ),
   {
     apply compose_IID,
     apply P.IID,
   },
-  have A2:@events_IID  P.Ω P.Di P.p P.FDi (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×ₘ P.Mγ) (Y ∘r (P.D j)) S),
+  have A2:@events_IID  P.Ω P.Di P.p (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×ₘ P.Mγ) (Y ∘r (P.D j)) S),
   {
     apply rv_event_IID,
     apply A1,
@@ -259,7 +265,7 @@ begin
 end
 
 lemma example_correct_IID (P:PAC_problem) (i:P.Hi):
-  @events_IID P.Ω P.Di P.p P.FDi  (example_correct P i) :=
+  @events_IID P.Ω P.Di P.p  (example_correct P i) :=
 begin
   /-
     Similar to example_error_IID. Theoretically, we could prove it from example_error_IID.
@@ -267,18 +273,18 @@ begin
   -/
   let Y:(P.Mβ ×ₘ P.Mγ)→ₘ (P.Mγ ×ₘ P.Mγ) := prod_measurable_fun ((P.H i) ∘m (mf_fst)) (mf_snd),
   begin
-  let S:@measurable_set _ (P.Mγ ×ₘ P.Mγ) := {
+  let S:@measurable_setB _ (P.Mγ ×ₘ P.Mγ) := {
     val := {x:P.γ × P.γ|x.fst = x.snd},
-    property := P.HMEγ.is_measurable_eq,
+    property := P.HMEγ.measurable_set_eq,
   },
   begin
-  have A1:@random_variables_IID P.Ω P.p P.Di P.FDi (P.γ × P.γ) (P.Mγ ×ₘ P.Mγ)
+  have A1:@random_variables_IID P.Ω P.p P.Di (P.γ × P.γ) (P.Mγ ×ₘ P.Mγ)
   (λ j:P.Di, Y ∘r (P.D j) ),
   {
     apply compose_IID,
     apply P.IID,
   },
-  have A2:@events_IID  P.Ω P.Di P.p P.FDi (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×ₘ P.Mγ) (Y ∘r (P.D j)) S),
+  have A2:@events_IID  P.Ω P.Di P.p (λ j:P.Di, @rv_event P.Ω P.p _ (P.Mγ ×ₘ P.Mγ) (Y ∘r (P.D j)) S),
   {
     apply rv_event_IID,
     apply A1,
@@ -300,7 +306,7 @@ end
 lemma example_error_identical (P:PAC_problem) (i:P.Hi) (j j':P.Di):
   Pr[example_error P i j] = Pr[example_error P i j'] :=
 begin
-  have A1:@events_IID P.Ω P.Di P.p P.FDi  (example_error P i),
+  have A1:@events_IID P.Ω P.Di P.p  (example_error P i),
   {
     apply example_error_IID,
   },
@@ -438,7 +444,7 @@ begin
   unfold fake_hypothesis,
   have A1:decidable (test_error P i ≤ ↑ε),
   {
-    apply decidable_linear_order.decidable_le,
+    apply linear_order.decidable_le,
   },
   cases A1,
   {
@@ -524,5 +530,4 @@ begin
   unfold probably_approximately_correct,
   apply pac_bound,
 end
-
 

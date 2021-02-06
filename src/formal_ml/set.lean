@@ -275,13 +275,18 @@ begin
   apply @disjoint.comm (set α) _,
 end
 
+lemma set.disjoint_compl_right {α:Type*} (B:set α):disjoint B Bᶜ :=
+begin
+  rw disjoint_iff,
+  simp,
+end 
+
 lemma set.disjoint_inter_compl {α:Type*} (A B C:set α):disjoint (A ∩ B) (C∩ Bᶜ) :=
 begin
   apply set.disjoint_of_subset_left (set.inter_subset_right A B),
   apply set.disjoint_of_subset_right (set.inter_subset_right C Bᶜ),
-  apply set.disjoint_compl_right,
+  simp [disjoint_iff],
 end
-
 
 --In general, disjoint A C → disjoint (A ⊓ B) C
 lemma set.disjoint_inter_left {α:Type*} {A B C:set α}:
@@ -292,7 +297,6 @@ begin
   apply set.disjoint_of_subset_left _ A1,
   apply set.inter_subset_left,
 end
-
 
 --In general, disjoint A C → disjoint A (B ⊓ C)
 lemma set.disjoint_inter_right {α:Type*} {A B C:set α}:
@@ -319,7 +323,6 @@ begin
   apply exists.intro n A3,
 end
 
-
 lemma set.Union_le {α:Type*} {f:ℕ → set α} {S:set α}:
     (∀ i, f i ≤ S) → 
     set.Union f ≤ S :=
@@ -332,7 +335,6 @@ begin
   cases A2 with n A2,
   apply A1 n A2,
 end
-
 
 lemma supr_eq_Union {α:Type*}
     {f:ℕ → set α}:
@@ -350,7 +352,6 @@ begin
     apply @le_supr (set α) _ _,
   },
 end
-
 
 lemma empty_of_subset_empty {α:Type*} (X:set α):
     X ⊆ ∅ → X = ∅ :=
@@ -371,7 +372,6 @@ begin
   rw ← set.le_eq_subset,
   apply le_bot_iff,
 end
-
 
 lemma set.eq_univ_iff_univ_subset {α:Type*} {S:set α}:
   set.univ ⊆ S ↔ S = set.univ :=
@@ -433,4 +433,137 @@ begin
       apply A2,
     },
   },
+end
+
+lemma set.insert_inter_of_not_mem {α:Type*} {A B:set α} {x:α}:(x∉ B) → ((insert x A) ∩ B = A ∩ B) :=
+begin
+  intros A1,
+  ext a,
+  split;intros A2;simp at A2;simp,
+  {
+    cases A2 with A2 A3,
+    cases A2 with A2 A4,
+    {
+      subst A2,
+      exfalso,
+      apply A1 A3,
+    },
+    {
+      apply and.intro A4 A3,
+    },
+  },
+  {
+    apply and.intro (or.inr A2.left) A2.right, 
+  },
+end
+
+lemma set.inter_insert_of_not_mem {α:Type*} {A B:set α} {x:α}:(x∉ A) → (A ∩ (insert x B) = A ∩ B) :=
+begin
+  intros A1,
+  rw set.inter_comm,
+  rw set.insert_inter_of_not_mem A1,
+  rw set.inter_comm,
+end
+
+lemma set.not_mem_of_inter_insert {α:Type*} {A B:set α} {x:α}:(x∉ A) → (A ∩ (insert x B) = A ∩ B) :=
+begin
+  intros A1,
+  rw set.inter_comm,
+  rw set.insert_inter_of_not_mem A1,
+  rw set.inter_comm,
+end
+
+
+lemma set.inter_insert_of_mem {α:Type*} {A B:set α} {x:α}:(x∈ A) → (A ∩ (insert x B) = insert x (A ∩ B)) :=
+begin
+  intros A1,
+  rw set.insert_inter,
+  rw set.insert_eq_of_mem A1,
+end
+
+lemma set.mem_of_inter_insert {α:Type*} {A B C:set α} {x:α}:
+  (A ∩ (insert x B) = insert x (C)) → (x ∈ A) :=
+begin
+  intros A1,
+  have B1 := set.mem_insert x (C),
+  rw ← A1 at B1,
+  simp at B1,
+  apply B1,
+end
+
+
+lemma set.eq_of_insert_of_not_mem {α:Type*} {A B:set α} {x:α}:(x∉ A) → (x∉ B) → (insert x A  = insert x B)
+  → A = B :=
+begin
+  intros A1 A3 A2,
+  ext a;split;intros B1;have C1 := set.mem_insert_of_mem x B1,
+  {
+    rw A2 at C1,
+    apply set.mem_of_mem_insert_of_ne C1,
+    intros C2,
+    subst a,
+    apply A1 B1,
+  },
+  {
+    rw ← A2 at C1,
+    apply set.mem_of_mem_insert_of_ne C1,
+    intros C2,
+    subst a,
+    apply A3 B1,
+  },
+end
+
+lemma directed_superset_of_monotone_dual {α:Type*} {f:ℕ → set α}:
+  (@monotone ℕ (set α) _ (order_dual.preorder (set α)) f) → (directed superset f) 
+ := begin
+  intros h_mono,
+  intros i j,
+  cases (le_total i j) with h_i_le_j h_j_le_i,
+  { apply exists.intro j,
+    split,
+    apply h_mono,
+    apply h_i_le_j,
+    apply set.subset.refl },
+  { apply exists.intro i,
+    split,
+    apply set.subset.refl,
+    apply h_mono,
+    apply h_j_le_i },
+end
+
+lemma monotone_of_monotone_nat_dual_iff {α:Type*} {f:ℕ → set α}:
+  (@monotone ℕ (set α) _ (order_dual.preorder (set α)) f) ↔ (∀ (n:ℕ), f (n.succ) ⊆ f n) := begin
+  split,
+  { intros h_mono,
+    intros n,
+    apply h_mono,
+    apply le_of_lt (nat.lt_succ_self _) },
+  { intros h_mono_nat,
+    apply @monotone_of_monotone_nat (set α) (order_dual.preorder (set α)),
+    intros n,
+    apply h_mono_nat },
+end
+
+lemma directed_superset_of_monotone_nat_dual {α:Type*} {f:ℕ → set α}:
+  (∀ (n:ℕ), f (n.succ) ⊆ f n) → (directed superset f) := begin
+  rw ← monotone_of_monotone_nat_dual_iff,
+  apply directed_superset_of_monotone_dual,
+end
+
+/- Note: monotone is a stronger property than directed.
+   e.g., directed can be increasing or decreasing, or 
+   have a single maximal element in the middle. -/
+lemma directed_subset_of_monotone {α:Type*} {f:ℕ → set α}:
+  monotone f → (directed set.subset f) := begin
+  intros h_mono,
+  intros i j,
+  cases  (le_total i j),
+  { apply exists.intro j,
+    split,
+    apply h_mono h,
+    apply set.subset.refl },
+  { apply exists.intro i,
+    split,
+    apply set.subset.refl,
+    apply h_mono h },
 end

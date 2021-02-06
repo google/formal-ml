@@ -39,7 +39,7 @@ import formal_ml.classical
 lemma with_density_le_with_density {Ω:Type*} {M:measurable_space Ω}
   {μ:measure_theory.measure Ω} {x y:Ω → ennreal} 
   {S:set Ω}:
-  is_measurable S →
+  measurable_set S →
   (∀ ω ∈ S, x ω ≤ y ω) →  
   μ.with_density x S ≤ μ.with_density y S :=
 begin
@@ -64,11 +64,11 @@ begin
 end
 
 
---TODO(martinz): Remove measurability?
+--TODO: Remove measurability?
 lemma with_density_sup_of_le {Ω:Type*} {M:measurable_space Ω}
   {μ:measure_theory.measure Ω} {x y:Ω → ennreal} 
   {S:set Ω}:measurable x → measurable y →
-  is_measurable S →
+  measurable_set S →
   (∀ ω ∈ S, x ω ≤ y ω) →  
   μ.with_density (x⊔y) S = μ.with_density y S :=
 begin
@@ -84,8 +84,7 @@ begin
       rw set.indicator_of_mem A5A,
       rw set.indicator_of_mem A5A,
       rw sup_apply,
-      simp,
-      apply max_eq_right (A4 _ A5A),
+      simp [A4 _ A5A],
     },
     {
       rw set.indicator_of_not_mem A5A,
@@ -99,7 +98,7 @@ end
 lemma measure_theory.measure.sup_le_apply {Ω:Type*}
   {M:measurable_space Ω}
   {μ ν m:measure_theory.measure Ω}
-  {S:set Ω}:is_measurable S →
+  {S:set Ω}:measurable_set S →
   (μ ≤ m) →
   (ν ≤ m) → 
   (μ ⊔ ν) S ≤ m S :=

@@ -129,7 +129,7 @@ begin
   rw nnreal_exp_eq,
   have A1:((x:real) ≤ 1) ∨ (1 ≤ (x:real)),
   {
-    apply decidable_linear_order.le_total,
+    apply linear_order.le_total,
   },
   cases A1,
   {

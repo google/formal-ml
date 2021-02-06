@@ -147,7 +147,7 @@ lemma zero_lt_of_neg_lt (x:ℝ):(0 < x) → (-x < 0) := neg_lt_zero.mpr
 lemma div_pos_of_pos_of_pos {a b:ℝ}:(0 < a) → (0 < b) → 0 < (a/b) :=
 begin
   intros A1 A2,
-  rw division_ring.div_def,
+  rw div_def,
   apply mul_pos,
   apply A1,
   rw inv_pos,

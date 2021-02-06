@@ -27,20 +27,12 @@ import topology.instances.ennreal
    Could move those to a separate file.
 -/
 
-
-
-
-
-
 lemma topological_space_le_def {α:Type*} (S T:topological_space α):
   S ≤ T ↔
   (T.is_open ≤ S.is_open) :=
 begin
   refl,
 end
-
-
-
 
 lemma topological_space_generate_from_refl {α:Type*} (T:topological_space α):
   (topological_space.generate_from (T.is_open)) = T :=
@@ -158,7 +150,7 @@ begin
     apply set.subset_union_right
   },
   {
-    intros,
+    intros w a a_1,
     have A1:S ⊆ w.is_open,
     {
       apply (@le_generate_from_iff_subset_is_open α S w).mp a,
@@ -265,9 +257,9 @@ begin
   apply nnreal.topological_semiring.to_has_continuous_add,
 end
 
-lemma continuous2_real_add: continuous2 real.decidable_linear_ordered_comm_ring.add :=
+lemma continuous2_real_add: continuous2 real.linear_ordered_comm_ring.add :=
 begin
-  have A1:real.decidable_linear_ordered_comm_ring.add = (@has_add.add ℝ _) := rfl,
+  have A1:real.linear_ordered_comm_ring.add = (@has_add.add ℝ _) := rfl,
   rw A1,
   rw ← has_continuous_add_iff_continuous2,
   apply real.topological_semiring.to_has_continuous_add,
@@ -319,6 +311,7 @@ lemma continuous_intro {α β:Type*} {Tα:topological_space α} {Tβ:topological
       (∀ U∈ Gβ, is_open (f⁻¹' U)) →
       (@continuous α β Tα Tβ f) :=
 begin
+  rw continuous_def,
   intros A1 A2 S A3,
   --unfold topological_space.is_topological_basis at A1,
   have A4:(∃ X⊆ Gβ, S = set.sUnion X),
@@ -384,7 +377,7 @@ lemma continuous_intro2 {α β:Type*} {Tα:topological_space α}
       (@continuous α β Tα (topological_space.generate_from Gβ) f) :=
 begin
   intros A0 A1,
-  unfold continuous,
+  rw continuous_def,
   intros U A2,
   have A3:@topological_space.generate_open β Gβ U,
   {
@@ -687,3 +680,4 @@ begin
     }
   },
 end
+

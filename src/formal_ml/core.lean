@@ -32,9 +32,9 @@ begin
 end
 
 
-lemma lt_or_not_lt {α:Type*} [D:decidable_linear_order α] {x y:α}:(x<y)∨ ¬ (x< y) :=
+lemma lt_or_not_lt {α:Type*} [D:linear_order α] {x y:α}:(x<y)∨ ¬ (x< y) :=
 begin
-  have A1:decidable (x<y) := decidable_linear_order.decidable_lt x y,
+  have A1:decidable (x<y) := linear_order.decidable_lt x y,
   cases A1,
   {
     right,
@@ -47,9 +47,9 @@ begin
 end
 
 
-lemma le_or_not_le {α:Type*} [D:decidable_linear_order α] {x y:α}:(x≤y)∨ ¬(x≤y) :=
+lemma le_or_not_le {α:Type*} [D:linear_order α] {x y:α}:(x≤y)∨ ¬(x≤y) :=
 begin
-  have A1:decidable (x≤y) := decidable_linear_order.decidable_le x y,
+  have A1:decidable (x≤y) := linear_order.decidable_le x y,
   cases A1,
   {
     right,
@@ -83,6 +83,17 @@ lemma le_func_def2 {α β:Type*} [preorder β] {f g:α → β}:(f ≤ g) ↔ (�
 begin
   refl,
 end
+
+
+lemma function.le_trans {α β:Type*} [partial_order β] {f g h:α → β}:f ≤ g → g ≤ h → f ≤ h :=
+begin
+  intros A1 A2,
+  intro x,
+  apply le_trans,
+  apply A1,
+  apply A2,
+end
+
 
 lemma classical.some_func {α β:Type*} {P:α → β → Prop}:
     (∀ a:α, ∃ b:β,  P a b) → (∃ f:α → β, ∀ a:α, P a (f a)) :=
@@ -177,5 +188,57 @@ begin
   rw add_comm b c,
   apply canonically_ordered_comm_semiring.add_le_add_left,
   apply A1,
+end
+
+--This seems to be legitimately new.
+lemma  lt_iff_le_not_eq {α:Type*} [linear_order α] {a b:α}:
+    (a < b) ↔ ((a ≤ b) ∧  (a ≠ b)) :=
+begin
+  split;intros A1,
+  {
+    split,
+    {
+      apply le_of_lt A1,
+    },
+    {
+      apply ne_of_lt A1,
+    },
+  },
+  {
+    rw lt_iff_le_not_le,
+    split,
+    {
+      apply A1.left,
+    },
+    {
+      intro A2,
+      apply A1.right,
+      apply  le_antisymm,
+      apply A1.left,
+      apply A2,
+    },
+  },
+end
+
+lemma le_add_of_nonneg {β:Type*} [ordered_add_comm_monoid β] (a b:β):
+  0 ≤ b → a ≤ a + b :=
+begin
+  intros A1,
+  have B1:a + 0 ≤ a + b,
+  {
+    apply @add_le_add,
+    apply le_refl a,
+    apply A1,
+  },
+  rw add_zero at B1,
+  apply B1,
+end
+
+
+lemma le_add_nonnegative {β:Type*} [canonically_ordered_add_monoid β] (a b:β):
+  a ≤ a + b :=
+begin
+  apply le_add_of_nonneg,
+  apply zero_le,
 end
 

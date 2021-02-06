@@ -35,6 +35,7 @@ import formal_ml.int
 import formal_ml.with_density_compose_eq_multiply
 import formal_ml.classical
 import formal_ml.restrict
+import formal_ml.with_top
 
 /-
   This does not prove the classic Hahn decomposition theorem for signed measures.
@@ -54,548 +55,17 @@ import formal_ml.restrict
   and difference in each half, and combine them back together. This in turn
   helps to prove the Lebesgue-Radon-Nikodym theorem.
 
-  Note that {S|is_measurable S ∧ μ.restrict S ≤ ν.restrict S} is a ring of sets.
+  Note that {S|measurable_set S ∧ μ.restrict S ≤ ν.restrict S} is a ring of sets.
 
  -/
+
+
+
 
 lemma nonnegative_fn {α β:Type*} [canonically_ordered_add_monoid β] {f:α → β}:0 ≤ f :=
 begin
   intro x,
   simp,
-end
-
-lemma nnreal.add_lt_of_lt_sub {a b c:nnreal}:a < b - c → a + c < b :=
-begin
-  cases (decidable.em (c ≤ b)) with B1 B1,
-  {
-    repeat {rw ← nnreal.coe_lt_coe <|> rw nnreal.coe_add},
-    rw nnreal.coe_sub B1,
-    intro B2,
-    linarith,
-  },
-  {
-    intros A1,
-    rw nnreal.sub_eq_zero at A1,
-    exfalso,
-    simp at A1,
-    apply A1,
-    apply le_of_not_le B1,
-  },
-end
-
-lemma nnreal.lt_sub_of_add_lt {a b c:nnreal}:a + c < b → a < b - c :=
-begin
-  intro A1,
-  have B1:c ≤ b,
-  {
-    have B1A := le_of_lt A1,
-    have B1B:a + c ≤ a + b,
-    {
-      have B1BA:b ≤ a + b,
-      {
-        rw add_comm,
-        apply le_add_nonnegative _ _,
-      },
-      apply le_trans B1A B1BA,
-    },
-    simp at B1B,
-    apply B1B,
-  },
-  revert A1,
-  repeat {rw ← nnreal.coe_lt_coe <|> rw nnreal.coe_add},
-  rw nnreal.coe_sub B1,
-  intros,
-  linarith,
-end
-
-lemma nnreal.le_sub_add {a b c:nnreal}:b ≤ c → c ≤ a → 
-a ≤ a - b + c := 
-begin
-  repeat {rw ← nnreal.coe_le_coe},
-  repeat {rw nnreal.coe_add},
-  intros A1 A2,
-  repeat {rw nnreal.coe_sub},
-  linarith,
-  apply le_trans A1 A2,
-end
-
-
-
-lemma nnreal.lt_of_add_le_of_le_of_sub_lt {a b c d e:nnreal}:
-    a + b ≤ c → d ≤ b → c - e < a → d < e := 
-begin
-  rw ← nnreal.coe_le_coe,
-  rw ← nnreal.coe_le_coe,
-  rw ← nnreal.coe_lt_coe,
-  rw ← nnreal.coe_lt_coe,
-  rw nnreal.coe_add,
-  cases (le_or_lt e c) with B1 B1,
-  {
-    rw nnreal.coe_sub B1,
-    rw ← nnreal.coe_le_coe at B1,
-    intros,linarith,
-  },
-  {   
-    rw nnreal.sub_eq_zero (le_of_lt B1),
-    rw ← nnreal.coe_lt_coe at B1,
-    rw nnreal.coe_zero,
-    intros,linarith,
-  },
-end
-
-lemma nnreal.inv_as_fraction {c:nnreal}:(1)/(c) = (c)⁻¹ := 
-begin
-  rw nnreal.div_def,
-  rw one_mul,
-end
-
-
-lemma nnreal.lt_of_add_lt_of_pos {a b c:nnreal}:
-      b + c ≤ a →
-      0 < b →
-      c < a :=
-begin
-  rw ← nnreal.coe_le_coe,
-  rw ← nnreal.coe_lt_coe,
-  rw ← nnreal.coe_lt_coe,
-  rw nnreal.coe_add,
-  rw nnreal.coe_zero,
-  intros,
-  linarith,
-end
-
-
-lemma nnreal.mul_le_mul_of_le_left {a b c:nnreal}:
-  a ≤ b → c * a ≤ c * b :=
-begin
-  intro A1,
-  apply ordered_comm_monoid.mul_le_mul_left,
-  apply A1,
-end
-
-lemma with_top.not_none_lt {α:Type*} [preorder α] (a:with_top α):
-  ¬(@has_lt.lt (with_top α) _  (none:with_top α) a):=
-begin
-  intro A1,
-  rw lt_iff_le_not_le at A1,
-  cases A1 with A1 A2,
-  apply A2,
-  apply with_top.le_none,
-end
-
-lemma with_top.not_none_le_some {α:Type*} [partial_order α] (a:α):
-  ¬(@has_le.le (with_top α) _ (none) (some a)):=
-begin
-  intro A1,
-  have B1:(some a) ≠ (none:with_top α),
-  {
-    simp,
-  },
-  have B3:(@has_le.le (with_top α) _ (some a) (none)) := with_top.le_none,
-  have B4 := @le_antisymm (with_top α) _ (some a) (none) B3 A1,
-  apply B1,
-  apply B4
-end
-
-
--- TODO: everything used below here.
-lemma ennreal.inv_as_fraction {c:ennreal}:(1)/(c) = (c)⁻¹ := 
-begin
-  rw ennreal.div_def,
-  rw one_mul,
-end
-
-lemma ennreal.add_lt_of_lt_sub {a b c:ennreal}:a < b - c → a + c < b :=
-begin
-  --intros AX A1,
-  cases a;cases b;cases c;try {simp},
-  {
-    rw ← ennreal.coe_add,
-    apply with_top.some_lt_none,
-  },
-  {
-    repeat {rw ← ennreal.coe_sub 
-            <|> rw ennreal.coe_lt_coe
-            <|> rw ← ennreal.coe_add},
-    apply nnreal.add_lt_of_lt_sub,
-  },
-end
-
-
-lemma ennreal.lt_sub_of_add_lt {a b c:ennreal}: a + c < b → a < b - c :=
-begin
-  --intros AX A1,
-  cases a;cases b;cases c;try {simp},
-  {
-    repeat {rw ← ennreal.coe_sub 
-            <|> rw ennreal.coe_lt_coe
-            <|> rw ← ennreal.coe_add},
-    apply nnreal.lt_sub_of_add_lt,
-  },
-end
-
-
-lemma ennreal.eq_zero_or_zero_lt {x:ennreal}:¬(x=0) → (0 < x) :=
-begin
-  intro A1,
-  have A2:= @lt_trichotomy ennreal _ x 0,
-  cases A2,
-  {
-    exfalso,
-    apply @ennreal.not_lt_zero x,
-    apply A2,
-  },
-  cases A2,
-  {
-    exfalso,
-    apply A1,
-    apply A2,
-  },
-  {
-    apply A2,
-  },
-end
-
---TODO: everything used below here.
-
-lemma ennreal.sub_eq_of_add_of_not_top_of_le {a b c:ennreal}:a = b + c →
-  c ≠ ⊤ →
-  c ≤ a → a - c = b :=
-begin
-  intros A1 A4 A2,
-  cases c,
-  {
-    exfalso,
-    simp at A4,
-    apply A4,
-  },
-  cases a,
-  {
-    simp,
-    cases b,
-    {
-      refl,
-    },
-    exfalso,
-    simp at A1,
-    rw ← ennreal.coe_add at A1,
-    apply ennreal.top_ne_coe A1,
-  },
-  cases b,
-  {
-    simp at A1,
-    exfalso,
-    apply A1,
-  },
-  {
-    repeat {rw ennreal.some_eq_coe},
-    rw ← ennreal.coe_sub,
-    rw ennreal.coe_eq_coe,
-    repeat {rw ennreal.some_eq_coe at A1},
-    rw ← ennreal.coe_add at A1,
-    rw ennreal.coe_eq_coe at A1,
-    repeat {rw ennreal.some_eq_coe at A2},
-    rw ennreal.coe_le_coe at A2,
-    apply nnreal.sub_eq_of_add_of_le A1 A2,
-  },
-end
-
-lemma ennreal.eq_add_of_sub_eq {a b c:ennreal}:b ≤ a →
-  a - b = c → a = b + c :=
-begin
-  intros A1 A2,
-  cases a;cases b,
-  {
-    simp,
-  },
-  {
-    cases c,
-    {
-      simp,
-    },
-    exfalso,
-    simp at A2,
-    apply A2,
-  },
-  {
-    exfalso,
-    apply with_top.not_none_le_some _ A1,
-  },
-  simp at A2,
-  rw ← ennreal.coe_sub at A2,
-  cases c,
-  {
-    exfalso,
-    simp at A2,
-    apply A2,
-  },
-  {
-    simp,
-    rw ← ennreal.coe_add,
-    rw ennreal.coe_eq_coe,
-    simp at A2,
-    simp at A1,
-    apply nnreal.eq_add_of_sub_eq A1 A2,
-  },
-end
-
-
-lemma ennreal.sub_lt_sub_of_lt_of_le {a b c d:ennreal}:a < b →
-  c ≤ d →
-  d ≤ a →
-  a - d < b - c :=
-begin
-  intros A1 A2 A3,
-  have B1:(⊤:ennreal) = none := rfl,
-  have B2:∀ n:nnreal,  (some n) = n,
-  {
-    intro n,
-    refl,
-  },
-  cases a,
-  {
-    exfalso,
-    apply @with_top.not_none_lt nnreal _ b A1,
-  },
-  cases d,
-  {
-    exfalso,
-    apply @with_top.not_none_le_some nnreal _ a A3,
-  },
-  cases c,
-  {
-    exfalso,
-    apply @with_top.not_none_le_some nnreal _ d A2,
-  },
-  cases b,
-  {
-    simp,
-    rw ← ennreal.coe_sub,
-    rw B1,
-    rw ← B2,
-    apply with_top.some_lt_none,
-  },
-  repeat {rw B2},
-  repeat {rw ← ennreal.coe_sub},
-  rw ennreal.coe_lt_coe,
-  apply nnreal.sub_lt_sub_of_lt_of_le,
-  repeat {rw B2 at A1},
-  rw ennreal.coe_lt_coe at A1,
-  apply A1,
-  
-  repeat {rw B2 at A2},
-  rw ennreal.coe_le_coe at A2,
-  apply A2,
-
-  repeat {rw B2 at A3},
-  rw ennreal.coe_le_coe at A3,
-  apply A3,
-end
-
-
-lemma ennreal.le_sub_add {a b c:ennreal}:b ≤ c → c ≤ a → 
-a ≤ a - b + c := 
-begin
-  cases a;cases b;cases c;try {simp},
-  rw ← ennreal.coe_sub,
-  rw ← ennreal.coe_add,
-  rw ennreal.coe_le_coe,
-  apply nnreal.le_sub_add,
-end
-
-
-lemma ennreal.add_sub_cancel {a b:ennreal}:b < ⊤ → a + b - b = a :=
-begin
-  cases a;cases b;try {simp},
-end
-
-
-lemma ennreal.exists_coe {x:ennreal}:x < ⊤ → ∃ v:nnreal, x = v :=
-begin
-  cases x;try {simp},
-end
-
-
-
-lemma ennreal.lt_of_add_le_of_le_of_sub_lt {a b c d e:ennreal}:c < ⊤ →
-    a + b ≤ c → d ≤ b → c - e < a → d < e := 
-begin
-  cases c,simp,
-  cases a;cases b;cases d;cases e;try {simp},
-  rw ← ennreal.coe_add,
-  rw ← ennreal.coe_sub,
-  rw ennreal.coe_le_coe,
-  rw ennreal.coe_lt_coe,
-  apply nnreal.lt_of_add_le_of_le_of_sub_lt,
-end
-
-
-lemma ennreal.coe_sub_lt_self {a:nnreal} {b:ennreal}:
-     0 < a  → 0 < b →
-     (a:ennreal) - b < (a:ennreal) :=
-begin
-  cases b;simp,
-  intros A1 A2,
-  rw ← ennreal.coe_sub,
-  rw ennreal.coe_lt_coe,
-  apply nnreal.sub_lt_self A1 A2,
-end 
-
-lemma ennreal.lt_of_lt_top_of_add_lt_of_pos {a b c:ennreal}:a < ⊤ →
-      b + c ≤ a →
-      0 < b →
-      c < a :=
-begin
-  cases a;simp;
-  cases b;cases c;simp,
-  rw ← ennreal.coe_add,
-  rw ennreal.coe_le_coe,
-  apply nnreal.lt_of_add_lt_of_pos,
-end
-
-
-/-
-  enneral could be a linear_ordered_comm_group_with_zero,
-  and therefore a ordered_comm_monoid.
-  HOWEVER, I am not sure how to integrate this.
-  I am going to just prove the basic results from the class.
-  NOTE that this is strictly more general than
-  ennreal.mul_le_mul_left.
--/
-lemma ennreal.mul_le_mul_of_le_left {a b c:ennreal}:
-  a ≤ b → c * a ≤ c * b :=
-begin
-  cases a;cases b;cases c;simp;
-  try {
-    cases (classical.em (c=0)) with B1 B1,
-    {
-      subst c,
-      simp,
-    },
-    {
-      have B2:(c:ennreal) * ⊤ = ⊤,
-      {
-        rw ennreal.mul_top,
-        rw if_neg,
-        intro B2A,
-        apply B1,
-        simp at B2A,
-        apply B2A,
-      },
-      rw B2,
-      {apply le_refl _ <|> simp},
-    },
-  },
-  {
-    cases (classical.em (b=0)) with B1 B1,
-    {
-      subst b,
-      simp,
-    },
-    {
-      have B2:⊤ * (b:ennreal) = ⊤,
-      {
-        rw ennreal.top_mul,
-        rw if_neg,
-        intro B2A,
-        apply B1,
-        simp at B2A,
-        apply B2A,
-      },
-      rw B2,
-      simp,
-    },
-  },
-  rw ← ennreal.coe_mul,
-  rw ← ennreal.coe_mul,
-  rw ennreal.coe_le_coe,
-  apply nnreal.mul_le_mul_of_le_left,
-end
-
-
-lemma ennreal.inverse_le_of_le {a b:ennreal}:
-  a ≤ b →
-  b⁻¹ ≤ a⁻¹ :=
-begin
-  intros A2,
-  cases (classical.em (a = 0)) with A1 A1,
-  {
-    subst a,
-    simp,
-  },
-
-  cases b,
-  {
-    simp,
-  },
-  cases (classical.em (b = 0)) with C1 C1,
-  {
-    subst b,
-    simp at A2,
-    exfalso,
-    apply A1,
-    apply A2,
-  },
-  simp,
-  simp at A2,
-  have B1: (a⁻¹ * b⁻¹) * a ≤  (a⁻¹ * b⁻¹) * b,
-  {
-    apply ennreal.mul_le_mul_of_le_left A2,
-  },
-  rw mul_comm a⁻¹  b⁻¹ at B1,
-  rw mul_assoc at B1,
-  rw ennreal.inv_mul_cancel at B1,
-  rw mul_comm (b:ennreal)⁻¹  a⁻¹ at B1,
-  rw mul_assoc at B1,
-  rw mul_one at B1,
-  rw ennreal.inv_mul_cancel at B1,
-  rw mul_one at B1,
-  apply A2,
-  {
-    simp [C1],
-  },
-  {
-    simp,
-  },
-  {
-    apply A1,
-  },
-  {
-    rw ← lt_top_iff_ne_top,
-    apply lt_of_le_of_lt A2,
-    simp,  
-  },
-end
-
-
-lemma ennreal.nat_coe_add {a b:ℕ}:(a:ennreal) + (b:ennreal) = 
-    ((@has_add.add nat _ a  b):ennreal) :=
-begin
-  simp,
-end
-
-lemma ennreal.nat_coe_le_coe {a b:ℕ}:(a:ennreal) ≤ (b:ennreal) ↔ (a ≤ b) :=
-begin
-  have B1:(a:ennreal) = ((a:nnreal):ennreal),
-  {
-    simp,
-  }, 
-  have B2:(b:ennreal) = ((b:nnreal):ennreal),
-  {
-    simp,
-  }, 
-  rw B1,
-  rw B2,
-  rw ennreal.coe_le_coe,
-  split;intros A1,
-  {
-    simp at A1,
-    apply A1,
-  },
-  {
-    simp,
-    apply A1,
-  },
 end
 
 lemma ennreal.tsum {α:Type*} {f:α → ennreal}:tsum f = supr (λ s:finset α,s.sum f) :=
@@ -724,7 +194,7 @@ begin
       apply @le_Sup ennreal _ _,
       apply C3.left,
     },
-    apply @ennreal.le_of_forall_epsilon_le,
+    apply @ennreal.le_of_forall_pos_le_add,
     intros ε C4 C5,
     have C6 := nnreal.exists_unit_frac_lt_pos C4,
     cases C6 with n C6,
@@ -741,9 +211,10 @@ begin
         },
         rw C8A1,
         rw ← ennreal.coe_add,
-        rw ← ennreal.coe_div,
+        rw ← ennreal.coe_inv,
         rw ennreal.coe_le_coe,
         apply le_of_lt,
+        rw ← one_div,
         apply C6,
         simp,
       },
@@ -882,15 +353,15 @@ end
 def hahn_crazy_set {α:Type*} [M:measurable_space α] 
   (μ ν:measure_theory.measure α) (X:set α):Prop :=
     (μ X < ν X) ∧ 
-    is_measurable X ∧ 
-    (∀ X':set α,  (X' ⊆ X) → is_measurable X' → 
+    measurable_set X ∧ 
+    (∀ X':set α,  (X' ⊆ X) → measurable_set X' → 
     (μ.restrict X' ≤ ν.restrict X')→ (ν X' ≤ μ X') )
 
 lemma hahn_crazy_set_def' {α:Type*} [M:measurable_space α] 
   (μ ν:measure_theory.measure α) (X:set α):hahn_crazy_set μ ν X =
     ((μ X < ν X) ∧ 
-    is_measurable X ∧ 
-    (∀ X':set α,  (X' ⊆ X) → is_measurable X' → 
+    measurable_set X ∧ 
+    (∀ X':set α,  (X' ⊆ X) → measurable_set X' → 
     (μ.restrict X' ≤ ν.restrict X')→ (ν X' ≤ μ X') )) := rfl
 
 
@@ -903,7 +374,7 @@ lemma hahn_crazy_set_subset {α:Type*} [M:measurable_space α]
   (X:set α) (X':set α):
   hahn_crazy_set μ ν X → 
   X' ⊆ X →
-  is_measurable X' →
+  measurable_set X' →
   ν X' ≤ μ X' →
   hahn_crazy_set μ ν (X\X') :=
 begin
@@ -937,7 +408,7 @@ begin
       apply (measure_theory.measure_mono A2),
     },
   },
-  apply and.intro (is_measurable.diff A1.right.left A3),    
+  apply and.intro (measurable_set.diff A1.right.left A3),    
   intros X'' C1 C2,
   apply A1.right.right,
   apply @set.subset.trans α X'' (X \ X') X C1,
@@ -952,20 +423,20 @@ end
 --that is big ENOUGH.
 def hahn_crazy_diff_set {α:Type*} [M:measurable_space α]
   (μ ν:measure_theory.measure α)
-  (X:set α):set (set α) := { X':set α|X' ⊆ X ∧ is_measurable X' ∧ 
+  (X:set α):set (set α) := { X':set α|X' ⊆ X ∧ measurable_set X' ∧ 
                       μ X' < ν X'}
 
 lemma hahn_crazy_diff_set_def {α:Type*} [M:measurable_space α]
   (μ ν:measure_theory.measure α) (X:set α):hahn_crazy_diff_set μ ν X = 
-  { X':set α|X' ⊆ X ∧ is_measurable X' ∧ μ X' < ν X'} := rfl
+  { X':set α|X' ⊆ X ∧ measurable_set X' ∧ μ X' < ν X'} := rfl
 
 
 
 lemma not_restrict_le_elim {α:Type*} [M:measurable_space α]
   {μ ν:measure_theory.measure α} {X:set α}: 
-  is_measurable X →
+  measurable_set X →
   ¬(μ.restrict X ≤ ν.restrict X) →
-  (∃ X':set α, X'⊆ X ∧ is_measurable X' ∧ ν X' < μ X') :=
+  (∃ X':set α, X'⊆ X ∧ measurable_set X' ∧ ν X' < μ X') :=
 begin
   intros A1 A2,
   rw ← @decidable.not_forall_not _ _ (@classical.prop_decidable _),
@@ -1310,7 +781,7 @@ end
 lemma measure_Inter_eq_infi_nat' {α:Type*} [measurable_space α]
   {μ:measure_theory.measure α} {f:ℕ → set α}:
   (∀ n:ℕ,  f n.succ ⊆ f n) →
-  (∀ n, is_measurable (f n)) →
+  (∀ n, measurable_set (f n)) →
   (μ (f 0) < ⊤) → 
   μ (⋂ n, f n) =  ⨅ n, μ (f n)  :=
 begin
@@ -1327,7 +798,7 @@ end
 lemma measure_monotone_finite {α:Type*} [measurable_space α]
   {μ:measure_theory.measure α} {f:ℕ → set α}:
   (∀ n:ℕ,  f n.succ ⊆ f n) →
-  (∀ n, is_measurable (f n)) →
+  (∀ n, measurable_set (f n)) →
   (μ (f 0) < ⊤) →
   (∀ n, μ (f n) < ⊤) :=
 begin
@@ -1508,7 +979,7 @@ end
 
 lemma ennreal_telescope_helper {f:ℕ → ennreal}:
   (∀ n:ℕ,  f n.succ ≤ f n) →
-  (f 0) - (infi f) = (∑' n, (f n) - (f n.succ)) :=
+  (f 0) - (infi f) = (∑' (n:ℕ), (f n - (f (nat.succ n)))) :=
 begin
   intro A1,
   symmetry,
@@ -1533,9 +1004,10 @@ begin
   },
 end
 
+
 lemma ennreal_telescope {f:ℕ → ennreal}:
   (∀ n:ℕ,  f n.succ ≤ f n) →
-  (f 0) = (∑' n, (f n) - (f n.succ)) + (infi f) :=
+  (f 0) = (∑' (n:ℕ), ((f n) - (f (nat.succ n)))) + (infi f) :=
 begin
   intros A1,
   have B1 := ennreal_telescope_helper A1,
@@ -1548,7 +1020,7 @@ end
 lemma measure_Inter_telescope {α:Type*} [measurable_space α]
   {μ:measure_theory.measure α} {f:ℕ → set α}:
   (∀ n:ℕ,  f n.succ ⊆ f n) →
-  (∀ n, is_measurable (f n)) →
+  (∀ n, measurable_set (f n)) →
   (μ (f 0) < ⊤) →
   μ (f 0) = (∑' n, μ (f n \ (f (n.succ)))) + μ (⋂ n, f n) := 
 begin
@@ -1577,7 +1049,7 @@ end
 lemma measure_Inter_telescope' {α:Type*} [measurable_space α]
   {μ:measure_theory.measure α} {f:ℕ → set α}:
   (∀ n:ℕ,  f n.succ ⊆ f n) →
-  (∀ n, is_measurable (f n)) →
+  (∀ n, measurable_set (f n)) →
   (μ (f 0) < ⊤) →
   μ (⋂ n, f n) =
   μ (f 0) - (∑' n, μ (f n \ (f (n.succ)))) := 
@@ -1977,7 +1449,7 @@ begin
     have A4 := le_of_lt A3,
     rw nnreal.inv_as_fraction at A4,
     have A6 := nnreal.inverse_le_of_le _ A4,
-    rw nnreal.inv_inv at A6,
+    rw inv_inv' at A6,
     rw set.nonempty_def,
     apply exists.intro a.succ,
     simp,
@@ -2015,7 +1487,6 @@ begin
       have C2A:x < ⊤,
       {
         apply lt_trans A2,
-        rw ennreal.inv_as_fraction,
         simp,
         rw add_comm,
         
@@ -2030,7 +1501,7 @@ begin
     have C3 := lt_of_le_of_lt C2 A2,
     have C4 := le_of_lt C3,
     rw ennreal.inv_as_fraction at C4,
-    rw ennreal.inv_as_fraction at C4,
+    --rw ennreal.inv_as_fraction at C4,
     have C5 := ennreal.inverse_le_of_le C4,
     rw ennreal.inv_inv at C5,
     rw ennreal.inv_inv at C5,
@@ -2061,18 +1532,6 @@ begin
   have B1:((1:ennreal)/(b.succ:ennreal)) > 0,
   {
     simp,
-    have B1A:(b:ennreal) = ((b:nnreal):ennreal),
-    {
-      simp,
-    },
-    rw B1A,
-    have B1B:(1:ennreal) = ((1:nnreal):ennreal),
-    {
-      simp,
-    },
-    rw B1B,
-    rw ← ennreal.coe_add,
-    apply ennreal.coe_ne_top,
   },
   have B2 := A2 ((1:ennreal)/(b.succ:ennreal)) B1,
   rw eventually_at_top_iff at B2,
@@ -2089,6 +1548,7 @@ begin
   apply le_trans B5,
   apply floor_simple_fraction_bound,
   apply AX,
+  rw one_div,
   apply B4
 end
 
@@ -2165,7 +1625,7 @@ begin
       unfold next_hahn_crazy_set,
       apply set.diff_subset,
     },
-    have J2:∀ n:ℕ, is_measurable (h n),
+    have J2:∀ n:ℕ, measurable_set (h n),
     {
       intro n,
       have J2A := J0 n,
@@ -2243,9 +1703,9 @@ begin
         apply C3C,
       },
     },
-    have D1:is_measurable Z,
+    have D1:measurable_set Z,
     {
-      apply is_measurable.Inter,
+      apply measurable_set.Inter,
       apply J2,
     },
     have D3:Z ⊆ X,
@@ -2414,12 +1874,12 @@ its parent theorem.
  -/
 lemma hahn_unsigned_inequality_decomp_junior' {α:Type*} [M:measurable_space α]
     (μ ν:measure_theory.measure α) {X:set α} [A1:measure_theory.finite_measure ν]:
-    (is_measurable X) →
+    (measurable_set X) →
     (μ X < ν X) → 
     (∃ X':set α, 
       X' ⊆ X ∧
       μ X' < ν X' ∧
-      is_measurable X' ∧
+      measurable_set X' ∧
       μ.restrict X' ≤ ν.restrict X') :=
 begin
   intros A2 A3,
@@ -2527,7 +1987,7 @@ end
 --Replacing hahn_unsigned_inequality_decomp' (and hahn_unsigned_inequality_decomp).
 lemma hahn_unsigned_inequality_decomp' {α:Type*} [M:measurable_space α]
     (μ ν:measure_theory.measure α) [A1:measure_theory.finite_measure ν]: 
-    (∃ X:set α, is_measurable X ∧  μ.restrict X ≤ ν.restrict X ∧ ν.restrict (Xᶜ) ≤ μ.restrict (Xᶜ)) :=
+    (∃ X:set α, measurable_set X ∧  μ.restrict X ≤ ν.restrict X ∧ ν.restrict (Xᶜ) ≤ μ.restrict (Xᶜ)) :=
 begin
   /-
     What we want is the argmax of f on S: this is our candidate for X.
@@ -2536,15 +1996,15 @@ begin
     First, we construct an  M that is our candidate for X.
     It is the supremum of 
    -/
-  let S:set (set α) := {X:set α|is_measurable X ∧  μ.restrict X ≤ ν.restrict X},
+  let S:set (set α) := {X:set α|measurable_set X ∧  μ.restrict X ≤ ν.restrict X},
   let f:set α → ennreal := (λ T:set α, (ν T) - (μ T)),
   -- M is unused.
   let M:ennreal := Sup (f '' S),
   begin
     -- S is a ring of sets (closed under countable union).
-    have A2:S = {X:set α|is_measurable X ∧  μ.restrict X ≤ ν.restrict X} := rfl,
+    have A2:S = {X:set α|measurable_set X ∧  μ.restrict X ≤ ν.restrict X} := rfl,
     have A3:f = (λ T:set α, (ν T) - (μ T)) := rfl,
-    have A5:∀ X, is_measurable X → μ.restrict X ≤ ν.restrict X → μ X < ⊤,
+    have A5:∀ X, measurable_set X → μ.restrict X ≤ ν.restrict X → μ X < ⊤,
     {
       intros X A5A A5B,
       apply lt_of_le_of_lt (measure_theory.measure.le_of_restrict_le_restrict_self _ _ A5A A5B),
@@ -2569,7 +2029,7 @@ begin
         apply set.diff_subset,
         repeat {simp [B1A.left,B1B.left]},
       },
-      have E1:is_measurable (T2 \ T1),
+      have E1:measurable_set (T2 \ T1),
       {
         simp [B1A.left,B1B.left],
       },
@@ -2598,7 +2058,7 @@ begin
     have B2B:(∀ h:ℕ → set α, set.range h ⊆ S → monotone h → (supr h)∈ S),
     {
       intros h B2C B2D,
-      have B2BG:∀ n, is_measurable (h n) ∧  μ.restrict (h n) ≤ ν.restrict (h n),
+      have B2BG:∀ n, measurable_set (h n) ∧  μ.restrict (h n) ≤ ν.restrict (h n),
       {
         intro n,
         apply B2C,
@@ -2608,7 +2068,7 @@ begin
       rw supr_eq_Union,
       simp only [set.mem_set_of_eq],
       split,
-      apply is_measurable.Union,
+      apply measurable_set.Union,
       intros b,
       --simp at B2C,
       have B2BA:h b ∈ S,
@@ -2647,17 +2107,17 @@ begin
     have C1:=@Sup_apply_eq_supr_apply_of_closed'' (set α) _ S f B1 B2B B3 B4,
     cases C1 with g C1,
     apply exists.intro (supr g),
-    have E1:∀ n, is_measurable (g n) ∧ μ.restrict (g n) ≤ ν.restrict (g n),
+    have E1:∀ n, measurable_set (g n) ∧ μ.restrict (g n) ≤ ν.restrict (g n),
     {
       intro n,
       apply (C1.left n),
     },
     have E2:=λ n, (E1 n).left,
     have E3 := λ n, (E1 n).right,
-    have E4:is_measurable (supr g),
+    have E4:measurable_set (supr g),
     {
       rw supr_eq_Union,
-      apply is_measurable.Union,
+      apply measurable_set.Union,
       apply E2,
     },
     have C2:μ.restrict (supr g) ≤ ν.restrict (supr g),
@@ -2674,7 +2134,7 @@ begin
     {
       --intros X' D1 D2,
       apply restrict_le_restrict_of_le_subset,
-      apply is_measurable.compl E4,
+      apply measurable_set.compl E4,
       intros X' D1 D2, 
       apply le_of_not_lt _,
       intro D3,
@@ -2686,7 +2146,7 @@ begin
         apply @le_Sup ennreal _ _,
         simp,
         apply exists.intro (X'' ∪ supr g),
-        simp only [D4, E4, true_and, is_measurable.union, and_true, eq_self_iff_true],
+        simp only [D4, E4, true_and, measurable_set.union, and_true, eq_self_iff_true],
         --squeeze_simp [D4,D2,E4],
         apply restrict_le_restrict_union,
         repeat {simp [D4,C2,E4]},

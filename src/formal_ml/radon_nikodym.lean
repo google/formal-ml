@@ -69,10 +69,10 @@ begin
     },
   },    
   rw A3,
-  apply is_measurable.Union,
+  apply measurable_set.Union,
   intro b,
   apply A1 b,
-  apply is_ennreal_is_measurable_intro_Ioi,
+  apply is_ennreal_measurable_set_intro_Ioi,
 end 
 
 lemma monotone_set_indicator {Ω β:Type*} [has_zero β] [preorder β] {S:set Ω}:
@@ -96,7 +96,7 @@ end
 
 lemma supr_with_density_apply_eq_with_density_supr_apply {Ω:Type*} [measurable_space Ω] {μ:measure_theory.measure Ω}
     {h:ℕ → Ω → ennreal} {S:set Ω}:
-    is_measurable S →
+    measurable_set S →
     (∀ n:ℕ, measurable (h n)) →
     (monotone h) →
     supr (λ n:ℕ, μ.with_density (h n) S) = μ.with_density (supr h) S :=
@@ -136,14 +136,14 @@ end
 lemma ennreal_smul_measure_apply {α:Type*}
     [measurable_space α] (x:ennreal) 
     (μ:measure_theory.measure α)
-    (s:set α) (H:is_measurable s):
+    (s:set α) (H:measurable_set s):
     (x  • μ) s = x * (μ s) :=
 begin
   rw measure_theory.measure.smul_apply,
 end
 
 def measure_theory.measure.is_support {α:Type*} [measurable_space α]
-    (μ:measure_theory.measure α) (S:set α):Prop := is_measurable S ∧ μ (Sᶜ) = 0
+    (μ:measure_theory.measure α) (S:set α):Prop := measurable_set S ∧ μ (Sᶜ) = 0
 
 lemma outer_measure_measure_of_le {Ω:Type*} {μ ν:measure_theory.outer_measure Ω}:
     μ ≤ ν ↔
@@ -279,21 +279,21 @@ begin
     split;intros A3A;simp at A3A;simp;apply A3A,
   },
   rw A3,
-  apply is_measurable.union,
+  apply measurable_set.union,
   {
     apply A1,
-    apply is_ennreal_is_measurable_intro_Ioi,
+    apply is_ennreal_measurable_set_intro_Ioi,
   },
   {
     apply A2,
-    apply is_ennreal_is_measurable_intro_Ioi,
+    apply is_ennreal_measurable_set_intro_Ioi,
   },
 end
 
 lemma with_density_le_with_density {Ω:Type*} {M:measurable_space Ω}
   {μ:measure_theory.measure Ω} {x y:Ω → ennreal} 
   {S:set Ω}:
-  is_measurable S →
+  measurable_set S →
   (∀ ω ∈ S, x ω ≤ y ω) →  
   μ.with_density x S ≤ μ.with_density y S :=
 begin
@@ -328,229 +328,13 @@ end
   the fundamental theorem of calculus, provides a deep insight that can be easily used
   even by those who do not understand the nuances of the proof.
  -/
-lemma nnreal.mul_lt_mul_of_pos_of_lt 
-    {a b c:nnreal}:(0 < a) → (b < c) → (a * b < a * c) :=
-begin
-  intros A1 A2,
-  apply mul_lt_mul',
-  apply le_refl _,
-  apply A2,
-  simp,
-  apply A1,
-end
 
-/-
-  It is hard to generalize this.
- -/
-lemma nnreal.mul_pos_iff_pos_pos 
-    {a b:nnreal}:(0 < a * b) ↔ (0 < a)∧ (0 < b) :=
-begin
-  split;intros A1,
-  {
-    rw zero_lt_iff_ne_zero at A1,
-    repeat {rw zero_lt_iff_ne_zero},
-    split;intro B1;apply A1,
-    {
-       rw B1,
-       rw zero_mul,
-    },
-    {
-      rw B1,
-      rw mul_zero,
-    },
-  },
-  {
-    have C1:0 ≤ a * 0,
-    {
-      simp,
-    },
-    apply lt_of_le_of_lt C1,
-    apply nnreal.mul_lt_mul_of_pos_of_lt,
-    apply A1.left,
-    apply A1.right,
-  },
-end
-
-
-lemma nnreal.inv_mul_eq_inv_mul_inv {a b:nnreal}:(a * b)⁻¹=a⁻¹ * b⁻¹ :=
-begin
-  rw nnreal.mul_inv,
-  rw mul_comm,
-end
-
-lemma nnreal.pos_iff {a:nnreal}:0 < a ↔ a ≠ 0 :=
-begin
-  split;intros B1,
-  {
-    intros C1,
-    subst a,
-    simp at B1,
-    apply B1,
-  },
-  {
-    apply by_contradiction,
-    intros D1,
-    apply B1,
-    rw ← le_zero_iff_eq,
-    apply le_of_not_lt D1,
-  },
-end
-
-
-lemma ennreal.inv_mul_eq_inv_mul_inv {a b:ennreal}:(a≠ 0) → (b≠ 0) → (a * b)⁻¹=a⁻¹ * b⁻¹ :=
-begin
-  cases a;simp;cases b;simp,
-  intros A1 A2,
-  rw ← ennreal.coe_mul,
-  repeat {rw ← ennreal.coe_inv},
-  rw ← ennreal.coe_mul,
-  rw ennreal.coe_eq_coe,
-  apply @nnreal.inv_mul_eq_inv_mul_inv a b,
-  apply A2,
-  apply A1,
-  rw ← @nnreal.pos_iff (a * b),
-  rw nnreal.mul_pos_iff_pos_pos,
-  repeat {rw zero_lt_iff_ne_zero},
-  apply and.intro A1 A2,
-end
-
-
-lemma ennreal.div_dist {a b c:ennreal}:(b≠ 0) → (c≠ 0) → a/(b * c)=(a/b)/c :=
-begin
-  intros A1 A2,
-  rw ennreal.div_def,
-  rw ennreal.inv_mul_eq_inv_mul_inv,
-  rw ← mul_assoc,
-  rw ennreal.div_def,
-  rw ennreal.div_def,
-  apply A1,
-  apply A2,
-end
-
-
-lemma ennreal.div_eq_zero_iff {a b:ennreal}:a/b=0 ↔ (a = 0) ∨ (b = ⊤) :=
-begin
-  cases a;cases b;split;simp;intros A1;simp;simp at A1,
-end
-
-/-
-  Helper function to lift nnreal.exists_unit_frac_lt_pos to ennreal.
- -/
-lemma ennreal.exists_unit_frac_lt_pos' {ε:nnreal}:0 < ε → (∃ n:ℕ, (1/((n:ennreal) + 1)) < (ε:ennreal)) :=
-begin
-  intros A1,
---  simp at A1,
-  have C1:= nnreal.exists_unit_frac_lt_pos A1,   
-  cases C1 with n A1,
-  apply exists.intro n,
-  have D1:((1:nnreal):ennreal) = 1 := rfl,
-  rw ← D1,
-  have D2:((n:nnreal):ennreal) = (n:ennreal),
-  {
-    simp,
-  },
-  rw ← D2,
-  rw ← ennreal.coe_add,
-  rw ← ennreal.coe_div,
-  rw ennreal.coe_lt_coe,
-  apply A1,
-  simp,
-end
-
-
-lemma ennreal.exists_unit_frac_lt_pos {ε:ennreal}:0 < ε → (∃ n:ℕ, (1/((n:ennreal) + 1)) < ε) :=
-begin
-  cases ε,
-  {
-     intros A1,
-     have B1:(0:nnreal) < (1:nnreal),
-     {
-       apply zero_lt_one,
-     },
-     have B1:=ennreal.exists_unit_frac_lt_pos' B1,
-     cases B1 with n B1,
-     apply exists.intro n,
-     apply lt_of_lt_of_le B1,
-     simp,
-  },
-  {
-    intros A1,
-    simp at A1,
-    have C1:= ennreal.exists_unit_frac_lt_pos' A1,   
-    apply C1,
-  },
-end
-
-
-lemma ennreal.zero_of_le_all_unit_frac {x:ennreal}:
-    (∀ (n:ℕ), (x ≤ 1/((n:ennreal) + 1))) →  (x = 0) :=
-begin
-  intros A1,
-  rw ← not_exists_not at A1, 
-  apply by_contradiction,
-  intros B1,
-  apply A1,
-  have B2:0 < x,
-  {
-    rw  zero_lt_iff_ne_zero,
-    apply B1,
-  },
-  have B3:= ennreal.exists_unit_frac_lt_pos B2,
-  cases B3 with n B3,
-  apply exists.intro n,
-  apply not_le_of_lt,
-  apply B3,
-end
-
-
-
-lemma ennreal.unit_frac_pos {n:ℕ}:(1/((n:ennreal) + 1))>0 :=
-begin
-  simp,
-  intros B1,
-  rw ennreal.add_eq_top at B1,
-  simp at B1,
-  apply B1,
-end
-
-
-lemma ennreal.div_eq_top_iff {a b:ennreal}:a/b=⊤ ↔ 
-                             ((a = ⊤)∧(b≠ ⊤) )∨ ((a≠ 0)∧(b=0)):=
-begin
-  rw ennreal.div_def,
-  cases a;cases b;simp,
-end
-
-lemma ennreal.unit_frac_ne_top {n:ℕ}:(1/((n:ennreal) + 1))≠ ⊤ :=
-begin
-  intro A1, 
-  rw ennreal.div_eq_top_iff at A1,
-  simp at A1,
-  apply A1,
-end
-
-lemma lt_eq_le_compl {δ α:Type*}
-  [linear_order α] {f g : δ → α}:{a | f a < g a} ={a | g a ≤ f a}ᶜ :=
-begin
-    apply set.ext,
-    intros ω;split;intros A3A;simp;simp at A3A;apply A3A,
-end
-
-lemma ennreal.lt_add_self {a b:ennreal}:a < ⊤ → 0 < b → a < a + b :=
-begin
-  cases a;cases b;simp,
-  intros A1,
-  rw ← ennreal.coe_add,
-  rw ennreal.coe_lt_coe,
-  simp,
-  apply A1,
-end
 
 ---------------------------End theorems to move----------------------------------
 
 
 lemma simple_restrict_eq_indicator_const {Ω:Type*} {M:measurable_space Ω} 
-  (S:set Ω) (x:ennreal):(is_measurable S) →
+  (S:set Ω) (x:ennreal):(measurable_set S) →
   ⇑((measure_theory.simple_func.const Ω x).restrict S) = (set.indicator S (λ ω:Ω, x)) :=
 begin
   intro A1,
@@ -560,7 +344,7 @@ begin
 end
 
 lemma with_density_const_apply {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω)
-  {k:ennreal} {S:set Ω}:is_measurable S →
+  {k:ennreal} {S:set Ω}:measurable_set S →
    μ.with_density (λ ω:Ω, k) S = k * μ S :=
 begin
   intros B1,
@@ -569,21 +353,6 @@ begin
   rw measure_theory.simple_func.lintegral_eq_lintegral,
   rw measure_theory.simple_func.restrict_const_lintegral,
   repeat {apply B1},
-end
-
-lemma measure_theory.outer_measure.Inf_gen_nonempty3 {α:Type*} (m : set (measure_theory.outer_measure α))
-    (t:set α) :m.nonempty →
-  measure_theory.outer_measure.Inf_gen m t =
-   (⨅ (μ : measure_theory.outer_measure α) (H:μ∈ m), μ t) :=
-begin
-  intro A1,
-  have B1:∃ μ:measure_theory.outer_measure α, μ ∈ m,
-  {
-    rw set.nonempty_def at A1,
-    apply A1,
-  },
-  cases B1 with μ B1,
-  rw measure_theory.outer_measure.Inf_gen_nonempty2 _ μ B1,
 end
 
 lemma measure_theory.outer_measure.of_function_def2 
@@ -664,45 +433,6 @@ end
 
 
 
-lemma infi_le_trans {α β:Type*} [complete_lattice β] (a:α) (f:α → β) 
-    (b:β):(f a ≤ b) → (⨅ (c:α), (f c)) ≤ b :=
-begin
-  intros A1,
-  apply le_trans _ A1,
-  apply @infi_le _ _ _, 
-end
-
-/-
-  I saw this pattern a bunch below. It could be more widely used.
- -/
-lemma infi_set_le_trans {α β:Type*} [complete_lattice β] (a:α) (P:α → Prop) (f:α → β) 
-    (b:β):(P a) → (f a ≤ b) → (⨅ (c:α) (H:P c), f c) ≤ b :=
-begin
-  intros A1 A2,
-  apply infi_le_trans a,
-  rw infi_prop_def A1,
-  apply A2,
-end
-
-lemma infi_set_image {α β γ:Type*} [complete_lattice γ] (S:set α) (f:α → β) 
-    (g:β → γ):(⨅ (c∈ (f '' S)), g c) = ⨅  (a∈ S), (g ∘ f) a :=
-begin
-  apply le_antisymm;simp,
-  {
-    intros a B1,
-    apply infi_le_trans (f a),
-    apply infi_le_trans a,
-    rw infi_prop_def,
-    apply and.intro B1,
-    refl,
-  },
-  {
-    intros b a2 C1 C2,
-    apply infi_le_trans a2,
-    rw infi_prop_def C1,
-    rw C2,
-  },
-end
 
 
 
@@ -722,35 +452,13 @@ end
 
 
 
-
---Used in restrict_trimmed_of_trimmed
-lemma measure_theory.le_extend2 {α:Type*} [measurable_space α] {x:ennreal} 
-    {h:Π (s:set α), (is_measurable s)  → ennreal} (s:set α):
-  (Π (H:is_measurable s), (x ≤ h s H)) → (x ≤ measure_theory.extend h s) :=
-begin
-  intros A1,
-  cases (classical.em (is_measurable s)) with B1 B1,
-  {
-    apply le_trans (A1 B1),
-    apply measure_theory.le_extend,
-  },
-  {
-    unfold measure_theory.extend,
-    apply @le_infi ennreal _ _,
-    intros contra,
-    exfalso,
-    apply B1 contra,
-  },
-end 
-
-
 --Beautiful, but useless.
 lemma measure_theory.extend_le_extend_of_le {α:Type*} [measurable_space α]
- {f g : Π (s : set α), (is_measurable s)  → ennreal} (h_le_meas : ∀ (s : set α) (h:is_measurable s), f s h ≤ g s h) : 
+ {f g : Π (s : set α), (measurable_set s)  → ennreal} (h_le_meas : ∀ (s : set α) (h:measurable_set s), f s h ≤ g s h) : 
   (measure_theory.extend f ≤ measure_theory.extend g) :=
 begin
   intros s,
-  cases (classical.em (is_measurable s)) with h_is_meas h_is_not_meas,
+  cases (classical.em (measurable_set s)) with h_is_meas h_is_not_meas,
   { rw (measure_theory.extend_eq f h_is_meas),
     apply le_trans (h_le_meas s h_is_meas) (measure_theory.le_extend g h_is_meas) },
   { unfold measure_theory.extend,
@@ -779,19 +487,9 @@ begin
   exfalso, apply h_not_A h_A,
 end
 
-lemma measure_theory.measure.restrict_le_restrict_of_le {Ω:Type*} [measurable_space Ω]
-  {μ ν:measure_theory.measure Ω} (S:set Ω):
-  μ  ≤ ν → μ.restrict S ≤ ν.restrict S :=
-begin
-  intros A1,
-  apply measure_theory.measure.restrict_mono,
-  apply set.subset.refl,
-  apply A1,
-end
-
 lemma measure_theory.measure.add_compl_inter {Ω:Type*} [measurable_space Ω]
-  (μ:measure_theory.measure Ω) (S T:set Ω):(is_measurable S) → 
-  (is_measurable T) →
+  (μ:measure_theory.measure Ω) (S T:set Ω):(measurable_set S) → 
+  (measurable_set T) →
   (μ T = μ (S ∩ T) + μ (Sᶜ ∩ T)) :=
 begin
   intros A1 A2,
@@ -810,41 +508,8 @@ begin
   rw set.inter_comm,
   rw set.inter_comm _ T,
   apply set.disjoint_inter_compl,
-  apply is_measurable.inter A1 A2,
-  apply is_measurable.inter (is_measurable.compl A1) A2,
-end
-
-lemma measure_theory.measure.le_of_partition {Ω:Type*} [M:measurable_space Ω]
-  (μ ν:measure_theory.measure Ω) {S T:set Ω}:is_measurable S →
-  is_measurable T →
-  μ (S ∩ T) ≤ ν (S ∩ T) →
-  μ (Sᶜ ∩ T) ≤ ν (Sᶜ ∩ T) →
-  μ T ≤ ν T :=
-begin
-  intros A1 A2 A3 A4,
-  rw measure_theory.measure.add_compl_inter μ S T,
-  rw measure_theory.measure.add_compl_inter ν S T,
-  have B1:μ (S ∩ T) + μ (Sᶜ ∩ T) ≤ ν (S ∩ T) + μ (Sᶜ ∩ T),
-  {
-    apply add_le_add_right A3,
-  },
-  apply le_trans B1,
-  apply add_le_add_left A4,
-  repeat {assumption},
-end
-
-lemma Inf_le_Inf' {α:Type*} [complete_lattice α] {S T:set α}:(∀ t∈ T, ∃ s∈ S,
-  s ≤ t) → Inf S ≤ Inf T :=
-begin
-  intros A1,
-  apply @le_Inf,
-  intros t B1,
-  have B2 := A1 t B1,
-  cases B2 with s B2,
-  cases B2 with B2 B3,
-  apply le_trans _ B3,
-  apply @Inf_le,
-  apply B2
+  apply measurable_set.inter A1 A2,
+  apply measurable_set.inter (measurable_set.compl A1) A2,
 end
 
 lemma measure_theory.outer_measure.le_top_caratheodory {Ω:Type*} [M:measurable_space Ω]:
@@ -855,11 +520,11 @@ begin
 end
 
 lemma measure_theory.measure.of_measurable_apply' {α:Type*} [M:measurable_space α]
-(m : Π (s : set α), is_measurable s → ennreal)
-  (m0 : m ∅ is_measurable.empty = 0)
-  (mU : ∀ {{f : ℕ → set α}} (h : ∀i, is_measurable (f i)),
+(m : Π (s : set α), measurable_set s → ennreal)
+  (m0 : m ∅ measurable_set.empty = 0)
+  (mU : ∀ {{f : ℕ → set α}} (h : ∀i, measurable_set (f i)),
     pairwise (disjoint on f) →
-    m (⋃i, f i) (is_measurable.Union h) = (∑'i, m (f i) (h i))) (S:set α):
+    m (⋃i, f i) (measurable_set.Union h) = (∑'i, m (f i) (h i))) (S:set α):
   measure_theory.measure.of_measurable m m0 mU S = 
   measure_theory.induced_outer_measure m _ m0 S :=
 begin
@@ -890,12 +555,12 @@ begin
 end
 
 lemma measure_theory.outer_measure.extend_top {Ω:Type*} [M:measurable_space Ω]:
-  (measure_theory.extend (λ (s : set Ω) (_x : is_measurable s), (⊤:measure_theory.outer_measure Ω) s))=(λ (s:set Ω), (@ite (s=∅) (classical.prop_decidable (s=∅)) ennreal 0 ⊤)) :=
+  (measure_theory.extend (λ (s : set Ω) (_x : measurable_set s), (⊤:measure_theory.outer_measure Ω) s))=(λ (s:set Ω), (@ite (s=∅) (classical.prop_decidable (s=∅)) ennreal 0 ⊤)) :=
 begin
   apply funext,
   intro S,
   rw measure_theory.outer_measure.top_eq,
-  cases (classical.em (is_measurable S)) with B1 B1,
+  cases (classical.em (measurable_set S)) with B1 B1,
   {
     unfold measure_theory.extend,
     rw infi_prop_def,
@@ -914,7 +579,7 @@ begin
 end
 
 lemma measure_theory.outer_measure.extend_top' {Ω:Type*} [M:measurable_space Ω]:
-  (measure_theory.extend (λ (s : set Ω) (_x : is_measurable s), (⊤:measure_theory.outer_measure Ω) s))=(⊤:measure_theory.outer_measure Ω) :=
+  (measure_theory.extend (λ (s : set Ω) (_x : measurable_set s), (⊤:measure_theory.outer_measure Ω) s))=(⊤:measure_theory.outer_measure Ω) :=
 begin
   rw measure_theory.outer_measure.extend_top,
   rw measure_theory.outer_measure.top_eq,
@@ -999,8 +664,8 @@ begin
   intros S,
   simp,
   intros f B1,
-  have B2:(∑' (i : ℕ), measure_theory.extend (λ (s : set Ω) (_x : is_measurable s), μ s) (f i)) ≤
-    ∑' (i : ℕ), measure_theory.extend (λ (s : set Ω) (_x : is_measurable s), ν s) (f i),
+  have B2:(∑' (i : ℕ), measure_theory.extend (λ (s : set Ω) (_x : measurable_set s), μ s) (f i)) ≤
+    ∑' (i : ℕ), measure_theory.extend (λ (s : set Ω) (_x : measurable_set s), ν s) (f i),
   {
     apply ennreal.tsum_le_tsum,
     unfold measure_theory.extend,
@@ -1012,7 +677,7 @@ begin
     apply B2A,
   },
   apply le_trans _ B2,
-  have B3:(⨅ (h : S ⊆ ⋃ (i : ℕ), f i),(∑' (i : ℕ), measure_theory.extend (λ (s : set Ω) (_x : is_measurable s), μ s) (f i))) = ∑' (i : ℕ), measure_theory.extend (λ (s : set Ω) (_x : is_measurable s), μ s) (f i),
+  have B3:(⨅ (h : S ⊆ ⋃ (i : ℕ), f i),(∑' (i : ℕ), measure_theory.extend (λ (s : set Ω) (_x : measurable_set s), μ s) (f i))) = ∑' (i : ℕ), measure_theory.extend (λ (s : set Ω) (_x : measurable_set s), μ s) (f i),
   {
     rw infi_prop_def,
     apply B1,
@@ -1020,7 +685,6 @@ begin
   rw ← B3,
   apply @infi_le ennreal _ _,
 end
-
 
 lemma measure_theory.measure.to_outer_measure_eq_top {Ω:Type*} [M:measurable_space Ω]:
    (⊤:measure_theory.measure Ω).to_outer_measure = ⊤ := 
@@ -1055,188 +719,11 @@ begin
   simp [le_add_nonnegative],
 end
 
-lemma measure_theory.measure.sub_restrict_comm {Ω:Type*} [M:measurable_space Ω]
-  (μ ν:measure_theory.measure Ω) {S:set Ω}:is_measurable S →
-  (μ - ν).restrict S = (μ.restrict S) - (ν.restrict S) :=
-begin
-  intro A1,
-  rw measure_theory.measure.sub_def,
-  rw measure_theory.measure.sub_def,
-  have G1:{d : measure_theory.measure Ω | μ ≤ d + ν}.nonempty,
-  {
-    apply @set.nonempty_of_mem _ _ μ,
-    simp,
-    apply measure_theory.measure.le_add,
-  },
-  rw measure_theory.measure.restrict_Inf_eq_Inf_restrict _ G1 A1,
-  apply le_antisymm,
-  {
-    apply @Inf_le_Inf' (measure_theory.measure Ω) _,
-    intros t B1,
-    simp at B1,
-    apply exists.intro (t.restrict S),
-    split,
-    {
-      simp,
-      apply exists.intro (t + (⊤:measure_theory.measure Ω).restrict Sᶜ),
-      split,
-      { rw add_assoc,
-        rw add_comm _ ν,
-        rw ← add_assoc,
-        rw measure_theory.measure.le_iff,
-        intros T E1,
-        have E2:is_measurable (S ∩ T) := is_measurable.inter A1 E1,
-        --rw measure_theory.measure.add_apply,
-        apply measure_theory.measure.le_of_partition _ _ A1 E1;
-          rw measure_theory.measure.add_apply,
-        {
-          rw measure_theory.measure.restrict_apply E2,
-          rw set.inter_assoc,
-          rw set.inter_comm _ Sᶜ,
-          rw ← set.inter_assoc,
-          rw set.inter_compl_self,
-          simp,
-          --rw measure_theory.measure.le_iff at B1,
-          have B2 := B1 (S ∩ T) E2,
-          rw measure_theory.measure.add_apply at B2,
-          rw measure_theory.measure.restrict_apply E2 at B2,
-          rw measure_theory.measure.restrict_apply E2 at B2,
-          have E3:S ∩ T ∩ S = S ∩ T,
-          {
-            rw set.inter_eq_self_of_subset_left,
-            apply set.inter_subset_left S T,
-          },
-          rw E3 at B2,
-          apply B2,
-        },
-        cases (@set.eq_empty_or_nonempty _ (Sᶜ ∩ T)) with E4 E4,
-        {
-          rw E4,
-          simp,
-        },
-        {
-          rw measure_theory.measure.restrict_apply,
-          have E5:Sᶜ ∩ T ∩ Sᶜ = Sᶜ ∩ T,
-          {
-            rw set.inter_eq_self_of_subset_left,
-            apply set.inter_subset_left Sᶜ T,
-          },
-          rw E5,
-          have E6:(⊤:measure_theory.measure Ω)(Sᶜ ∩ T) = (⊤:ennreal),
-          {
-            apply measure_theory.measure.top_apply,
-            apply E4,
-          },
-          rw E6,
-          simp,
-          apply is_measurable.inter (is_measurable.compl A1) E1,
-        },
-      },
-      {
-        apply measure_theory.measure.ext,
-        intros T D1,
-        rw measure_theory.measure.restrict_apply D1,
-        rw measure_theory.measure.restrict_apply D1,
-        rw measure_theory.measure.add_apply,
-        rw measure_theory.measure.restrict_apply (is_measurable.inter D1 A1),
-        have D2:T ∩ S ∩ Sᶜ = ∅,
-        {
-          rw set.inter_assoc,
-          simp,
-        },
-        rw D2,
-        simp,
-      },
-    },
-    {
-      apply measure_theory.measure.restrict_le_self,
-    },
-  },
-  {
-    apply @Inf_le_Inf' (measure_theory.measure Ω) _,
-    intros s C1,
-    simp at C1,
-    cases C1 with t C1,
-    cases C1 with C1 C2,
-    subst s,
-    apply exists.intro (t.restrict S),
-    split,
-    {
-      simp,
-      rw ← measure_theory.measure.restrict_add,
-      apply measure_theory.measure.restrict_le_restrict_of_le,
-      apply C1,
-    },
-    {
-      apply le_refl _,
-    },
-  },
-end
-
-lemma jordan_decomposition_junior_zero {Ω:Type*} [measurable_space Ω] 
-    (μ ν:measure_theory.measure Ω) (S:set Ω)
-  :μ.restrict S ≤ ν.restrict S → is_measurable S →
-  (μ - ν) S = 0 :=
-begin
-  intros A1 B1,
-  rw ← measure_theory.measure.restrict_apply_self _ B1,
-  rw measure_theory.measure.sub_restrict_comm,
-  rw measure_theory.measure.sub_eq_zero_of_le,
-  repeat {simp [*]},
-end
-
---This works with EITHER ν or μ being finite, or even ν S < ⊤.
-lemma jordan_decomposition_junior_apply {Ω:Type*} [measurable_space Ω] 
-    (μ ν:measure_theory.measure Ω) (S:set Ω) [AX:measure_theory.finite_measure ν]:
-  (ν.restrict S ≤ μ.restrict S) → (is_measurable S) →
-  (μ - ν) S = μ S - ν S :=
-begin
-  intros A1 B1,
-  rw ← measure_theory.measure.restrict_apply_self _ B1,
-  rw measure_theory.measure.sub_restrict_comm _ _,
-  rw @measure_theory.measure.sub_apply Ω _ _ _ S (measure_theory.finite_measure_restrict ν S) B1 A1,
-  repeat {rw measure_theory.measure.restrict_apply_self},
-  repeat {exact B1},
-end
-
-
-/--
-  A jordan decomposition of subtraction.
- -/
-lemma jordan_decomposition_nonneg_sub {Ω:Type*} [measurable_space Ω] 
-    (μ ν:measure_theory.measure Ω) (S T:set Ω) [A1:measure_theory.finite_measure μ]: 
-    is_measurable T → is_measurable S → μ.restrict S ≤ ν.restrict S →
-    ν.restrict Sᶜ ≤ μ.restrict Sᶜ →
-    (ν - μ) T = ν (S ∩ T) - μ (S ∩ T) :=
-begin
-  intros A3 A2 A5 A6,
-  
-  have B1:(ν - μ) T = (ν - μ) (S∩ T) + (ν - μ) (Sᶜ ∩ T),
-  {
-    rw measure_theory.measure.add_compl_inter,
-    apply A2,
-    apply A3,
-  },
-  have B2:(ν - μ) (S∩ T) = ν (S ∩ T) - μ (S ∩ T),
-  {
-    apply jordan_decomposition_junior_apply,
-    apply restrict_le_restrict_of_restrict_le_restrict_of_subset A5,
-    repeat {simp [A2,A3]},
-  },
-  have B3:(ν - μ) (Sᶜ ∩ T) = 0,
-  {
-    apply jordan_decomposition_junior_zero,
-    apply restrict_le_restrict_of_restrict_le_restrict_of_subset A6,
-    simp,
-    repeat {simp [A2,A3]},
-  },
-  rw [B1, B2, B3, add_zero],
-end
 
 --TODO: Move to hahn.lean (might be useful).
 lemma inter_le_inter_of_restrict_le_restrict {Ω:Type*} [M:measurable_space Ω] 
     {μ ν:measure_theory.measure Ω} {T U:set Ω}:μ.restrict T ≤ ν.restrict T → 
-    is_measurable T → is_measurable U → μ (T ∩ U) ≤ ν (T ∩ U) :=
+    measurable_set T → measurable_set U → μ (T ∩ U) ≤ ν (T ∩ U) :=
 begin
   intros A3 A1 A2,
   have B1:T ∩ U ⊆ T,
@@ -1248,7 +735,7 @@ end
 --This may be gotten by easier methods.
 lemma measure_theory.measure.sub_le_sub {Ω:Type*} [measurable_space Ω] 
     (μ ν:measure_theory.measure Ω) (T:set Ω) [A1:measure_theory.finite_measure μ]:
-    is_measurable T → (ν T - μ T) ≤ (ν - μ) T :=
+    measurable_set T → (ν T - μ T) ≤ (ν - μ) T :=
 begin
   intros A2,
   have B1 := hahn_unsigned_inequality_decomp' ν μ,
@@ -1264,8 +751,11 @@ begin
     have C4:ν (Uᶜ ∩ T) ≤ ν (Uᶜ ∩ T) - μ (Uᶜ ∩ T) + μ (Uᶜ ∩ T),
     {
       apply ennreal.le_sub_add_self,
-    }, 
+    },
+    have D1 :  ν (T ∩ Uᶜ) - μ (T ∩ Uᶜ) = ν (Uᶜ ∩ T) - μ (Uᶜ ∩ T),
+    { rw set.inter_comm }, 
     have C5 := add_le_add_right C4 (μ (U ∩ T)),
+    rw D1,
     apply le_trans _ C5,
     rw add_comm,
     apply add_le_add_left _ _,
@@ -1274,11 +764,10 @@ begin
   repeat {simp [B1,A2,C1]},
 end
 
-
 --This is a natural break between subtraction and Radon-Nikodym.
 lemma measure_theory.measure.is_support_def {α:Type*} [measurable_space α]
     (μ:measure_theory.measure α) (S:set α):
-    μ.is_support S = (is_measurable S ∧ μ (Sᶜ) = 0) := rfl
+    μ.is_support S = (measurable_set S ∧ μ (Sᶜ) = 0) := rfl
 
 def measure_theory.measure.perpendicular {α:Type*} [measurable_space α]
     (μ ν:measure_theory.measure α):Prop :=
@@ -1291,9 +780,10 @@ lemma measure_theory.measure.perpendicular_def {α:Type*} [measurable_space α]
     (∃ S T:set α, μ.is_support S ∧ ν.is_support T ∧  
     disjoint S T) := rfl
 
+
 lemma measure_theory.measure.perpendicular_def2 {α:Type*} [measurable_space α]
     (μ ν:measure_theory.measure α):μ.perpendicular ν ↔
-    (∃ S:set α,  is_measurable S ∧ μ S = 0 ∧  ν (Sᶜ) = 0) :=
+    (∃ S:set α,  measurable_set S ∧ μ S = 0 ∧  ν (Sᶜ) = 0) :=
 begin
   rw measure_theory.measure.perpendicular_def,
   split;intros B1,
@@ -1313,8 +803,8 @@ begin
     split,
     {
       cases B1 with C1 C2,
-      rw ← le_zero_iff_eq,
-      rw ← le_zero_iff_eq at C2,
+      rw ← nonpos_iff_eq_zero,
+      rw ← nonpos_iff_eq_zero at C2,
       apply le_trans _ C2,
       apply measure_theory.measure_mono,
       rw set.disjoint_iff_inter_eq_empty at B3,
@@ -1333,7 +823,7 @@ begin
     split,
     {
       rw measure_theory.measure.is_support_def,
-      apply and.intro (is_measurable.compl (B1.left)),
+      apply and.intro (measurable_set.compl (B1.left)),
       simp,
       apply B1.right.left,
     },
@@ -1352,7 +842,7 @@ end
 
 
 lemma measure_theory.measure.perpendicular_intro {α:Type*} [measurable_space α]
-    (μ ν:measure_theory.measure α) {S:set α}:is_measurable S → 
+    (μ ν:measure_theory.measure α) {S:set α}:measurable_set S → 
     μ S = 0 → ν (Sᶜ) = 0 →
 μ.perpendicular ν :=
 begin
@@ -1362,11 +852,11 @@ begin
 end
 
 lemma measure_theory.measure.not_perpendicular {α:Type*} [measurable_space α]
-    (μ ν:measure_theory.measure α) {S:set α}:(¬(μ.perpendicular ν)) → is_measurable S → 
+    (μ ν:measure_theory.measure α) {S:set α}:(¬(μ.perpendicular ν)) → measurable_set S → 
     μ S = 0 → 0 < ν (Sᶜ)  :=
 begin
   intros A1 A2 A3,
-  rw zero_lt_iff_ne_zero,
+  rw pos_iff_ne_zero,
   intros A4,
   apply A1,
   apply measure_theory.measure.perpendicular_intro μ ν A2 A3 A4,
@@ -1383,7 +873,7 @@ begin
   rw measure_theory.measure.perpendicular_def2 at A1,
   cases A1 with S A1,
   apply exists.intro Sᶜ,
-  apply and.intro (is_measurable.compl A1.left),
+  apply and.intro (measurable_set.compl A1.left),
   apply and.intro A1.right.right,
   simp,
   apply A1.right.left,
@@ -1403,19 +893,15 @@ begin
   apply measure_theory.measure.le_add,
 end
 
-lemma measure_theory.measure.smul_finite {α:Type*} [measurable_space α]
+--TODO:replace with `measure_theory.measure.smul_finite`
+lemma measure_theory.measure.smul_finite' {α:Type*} [measurable_space α]
    {μ:measure_theory.measure α} {ε:ennreal} [measure_theory.finite_measure μ]:
    ε ≠ ⊤ → (measure_theory.finite_measure (ε• μ)) :=
 begin  
   intros A1,
-  apply measure_theory.finite_measure_of_lt_top,
-  rw ennreal_smul_measure_apply,
-  apply ennreal.mul_lt_top,
+  apply measure_theory.measure.smul_finite,
   rw lt_top_iff_ne_top,
   apply A1,
-  apply measure_theory.measure_lt_top,
-  --apply A2,
-  simp,
 end 
 
 lemma set.compl_Union_eq_Inter_compl {α β:Type*} {f:α → set β}:(⋃ n, f n)ᶜ = (⋂ n, (f n)ᶜ) :=
@@ -1431,7 +917,7 @@ lemma measure_theory.measure.perpendicular_of {α:Type*} [M:measurable_space α]
    μ.perpendicular ν  :=
 begin
   intros A1,
-  have B1:∀ n:ℕ,(∃ S:set α,  is_measurable S ∧ μ S = 0 ∧ 
+  have B1:∀ n:ℕ,(∃ S:set α,  measurable_set S ∧ μ S = 0 ∧ 
           (ν - ((1/((n:ennreal) + 1))• μ)) (Sᶜ) = 0),
   {
     intros n,
@@ -1453,16 +939,16 @@ begin
       rw C1,
       rw set.compl_Union_eq_Inter_compl,
     },
-    have C3:is_measurable T,
+    have C3:measurable_set T,
     {
       rw C1,
-      apply is_measurable.Union,
+      apply measurable_set.Union,
       intro n,
       apply (B2 n).left,
     },
-    have C4:is_measurable Tᶜ,
+    have C4:measurable_set Tᶜ,
     {
-      apply is_measurable.compl C3,
+      apply measurable_set.compl C3,
     },
     have I1:∀ (n:ℕ), Tᶜ ⊆ (f n)ᶜ,
     {
@@ -1478,16 +964,16 @@ begin
        
     apply @measure_theory.measure.perpendicular_intro α _ μ ν T,
     {
-      apply is_measurable.Union,
+      apply measurable_set.Union,
       intro n,
       apply (B2 n).left,
     },
     {
        rw C1,
-       rw ← le_zero_iff_eq,
+       rw ← nonpos_iff_eq_zero,
        have D1:=@measure_theory.measure.Union_nat α _ μ f,
        apply le_trans D1,
-       rw le_zero_iff_eq,
+       rw nonpos_iff_eq_zero,
        have E1:(λ n, μ (f n)) = (λ (n:ℕ), (0:ennreal)),
        {
          apply funext,
@@ -1508,6 +994,7 @@ begin
           {
             apply measure_theory.measure.smul_finite,
             {
+              rw lt_top_iff_ne_top, 
               apply ennreal.unit_frac_ne_top,
             },
           },
@@ -1522,7 +1009,7 @@ begin
           have H1C:(ν) Tᶜ - ((1 / ((n:ennreal) + 1)) • μ) Tᶜ = 0, 
           --have H1B:(ν - (1 / ((n:ennreal) + 1)) • μ) Tᶜ = 0,
           {
-            rw ← le_zero_iff_eq,
+            rw ← nonpos_iff_eq_zero,
             apply le_trans H1B,
             rw ← (B2 n).right.right,
             apply measure_theory.measure_mono (I1 n), 
@@ -1572,14 +1059,14 @@ lemma measure_theory.measure.perpendicular_sub_elim {α:Type*} [measurable_space
     (μ:measure_theory.measure α) {ν:measure_theory.measure α} 
     [A2:measure_theory.finite_measure ν]: 
     ¬(μ.perpendicular (ν - μ)) → 
-    ∃ (S:set α), is_measurable S ∧ μ.restrict S ≤ ν.restrict S  ∧  0 < μ S :=
+    ∃ (S:set α), measurable_set S ∧ μ.restrict S ≤ ν.restrict S  ∧  0 < μ S :=
 begin
   intros A3,
   have B1:=hahn_unsigned_inequality_decomp' μ ν,
   cases B1 with X B1,
-  have C1:is_measurable (Xᶜ),
+  have C1:measurable_set (Xᶜ),
   {simp [B1]},
-  have B2 := jordan_decomposition_junior_zero 
+  have B2 := measure_theory.measure.sub_apply_eq_zero_of_restrict_le_restrict 
     ν μ Xᶜ B1.right.right C1,
   have B3 := B1.left,
   have B4:¬((ν - μ).perpendicular μ),
@@ -1611,7 +1098,7 @@ begin
   cases B1 with B1 B1,
   {
     exfalso,
-    rw zero_lt_iff_ne_zero at A1,
+    rw pos_iff_ne_zero at A1,
     apply A1,
     apply B1,
   },
@@ -1624,7 +1111,7 @@ end
 
 lemma with_density_indicator_eq_restrict {Ω:Type*} [M:measurable_space Ω] 
     (μ:measure_theory.measure Ω) {S:set Ω} {f:Ω → ennreal}:
-    (is_measurable S) → 
+    (measurable_set S) → 
     μ.with_density (set.indicator S f) = (μ.restrict S).with_density f :=
 begin
   intros A1, 
@@ -1652,7 +1139,7 @@ begin
 end
 
 
-lemma with_density_indicator_eq_restrict_smul {Ω:Type*} [M:measurable_space Ω] (μ:measure_theory.measure Ω) {S:set Ω} {k:ennreal}:(is_measurable S) → μ.with_density (set.indicator S (λ ω:Ω, k)) = k • μ.restrict S :=
+lemma with_density_indicator_eq_restrict_smul {Ω:Type*} [M:measurable_space Ω] (μ:measure_theory.measure Ω) {S:set Ω} {k:ennreal}:(measurable_set S) → μ.with_density (set.indicator S (λ ω:Ω, k)) = k • μ.restrict S :=
 begin
   intro A1,
   rw with_density_indicator_eq_restrict,
@@ -1660,7 +1147,7 @@ begin
   apply A1,
 end
 
-lemma smul_restrict_comm {Ω:Type*} [M:measurable_space Ω] (μ:measure_theory.measure Ω) {S:set Ω} {k:ennreal}:(is_measurable S) → (k • μ).restrict S = k • μ.restrict S :=
+lemma smul_restrict_comm {Ω:Type*} [M:measurable_space Ω] (μ:measure_theory.measure Ω) {S:set Ω} {k:ennreal}:(measurable_set S) → (k • μ).restrict S = k • μ.restrict S :=
 begin
   intros A1,
   apply measure_theory.measure.ext,
@@ -1668,7 +1155,7 @@ begin
   rw ennreal_smul_measure_apply _ _ _ B1,
   rw measure_theory.measure.restrict_apply B1,
   rw measure_theory.measure.restrict_apply B1,
-  rw ennreal_smul_measure_apply _ _ _ (is_measurable.inter B1 A1),
+  rw ennreal_smul_measure_apply _ _ _ (measurable_set.inter B1 A1),
 end
 
 
@@ -1733,8 +1220,8 @@ begin
       },
       rw C1,
       rw with_density_indicator_eq_restrict_smul _ B3.left,
-      rw ennreal_smul_measure_apply _ _ _ (is_measurable.univ),
-      rw measure_theory.measure.restrict_apply is_measurable.univ,
+      rw ennreal_smul_measure_apply _ _ _ (measurable_set.univ),
+      rw measure_theory.measure.restrict_apply measurable_set.univ,
       simp,
       apply and.intro (B1.left) C2,
     },
@@ -1772,7 +1259,7 @@ end
 
 lemma with_density_restrict_le_with_density_restrict_le_on_subset {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω)
   {x y:Ω → ennreal} {S:set Ω}:
-    (is_measurable S) →
+    (measurable_set S) →
     (∀ ω∈ S,  x ω ≤ y ω) → 
     (μ.with_density x).restrict S ≤ (μ.with_density y).restrict S :=
 begin
@@ -1803,7 +1290,7 @@ begin
 end
 
 lemma measure_theory.measure.le_restrict_add_restrict {Ω:Type*} [measurable_space Ω] {μ ν:measure_theory.measure Ω}
-  {S:set Ω}:is_measurable S → μ.restrict S ≤ ν.restrict S →  ν.restrict Sᶜ ≤ μ.restrict Sᶜ → 
+  {S:set Ω}:measurable_set S → μ.restrict S ≤ ν.restrict S →  ν.restrict Sᶜ ≤ μ.restrict Sᶜ → 
    μ ≤ μ.restrict Sᶜ + ν.restrict S :=
 begin
   intros B1 A1 A2,
@@ -1827,7 +1314,7 @@ end
 
 
 lemma measure_theory.measure.sup_eq {Ω:Type*} [measurable_space Ω] {μ ν:measure_theory.measure Ω}
-  (S:set Ω):is_measurable S → μ.restrict S ≤ ν.restrict S → ν.restrict Sᶜ ≤ μ.restrict Sᶜ → 
+  (S:set Ω):measurable_set S → μ.restrict S ≤ ν.restrict S → ν.restrict Sᶜ ≤ μ.restrict Sᶜ → 
    (μ ⊔ ν) = μ.restrict Sᶜ + ν.restrict S :=
 begin
   intros D1 A1 A2,
@@ -1862,17 +1349,17 @@ begin
      apply @add_le_add ennreal _,
      rw set.inter_comm,
      apply C2,
-     apply is_measurable.inter D1 C3,
+     apply measurable_set.inter D1 C3,
      rw set.inter_comm,
      apply C1,
-     apply is_measurable.inter (is_measurable.compl D1) C3,
+     apply measurable_set.inter (measurable_set.compl D1) C3,
      apply D1,
      apply C3,
   },
 end
 
 lemma measure_theory.measure.with_density_restrict_comm {Ω:Type*} [M:measurable_space Ω] (μ:measure_theory.measure Ω)
-  {x:Ω → ennreal} {S:set Ω}:is_measurable S → (μ.with_density x).restrict S = (μ.restrict S).with_density x :=
+  {x:Ω → ennreal} {S:set Ω}:measurable_set S → (μ.with_density x).restrict S = (μ.restrict S).with_density x :=
 begin
   intros A1,
   apply measure_theory.measure.ext,
@@ -1883,7 +1370,7 @@ begin
   rw ← measure_theory.lintegral_indicator,
   rw measure_theory.with_density_apply,
   rw measure_theory.lintegral_indicator,
-  repeat {assumption <|> apply is_measurable.inter},
+  repeat {assumption <|> apply measurable_set.inter},
 end
 
 
@@ -1915,7 +1402,7 @@ begin
   rw with_density_indicator_eq_restrict,
   rw measure_theory.measure.with_density_restrict_comm,
   rw measure_theory.measure.with_density_restrict_comm,
-  repeat {assumption <|> apply is_measurable_le <|> apply is_measurable_lt <|> apply measurable.indicator},
+  repeat {assumption <|> apply measurable_set_le <|> apply measurable_set_lt <|> apply measurable.indicator},
 end
 
 lemma with_density_sup {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.measure Ω)
@@ -1924,10 +1411,10 @@ lemma with_density_sup {Ω:Type*} {M:measurable_space Ω} (μ:measure_theory.mea
     measure_theory.measure.with_density μ x ⊔ measure_theory.measure.with_density μ y :=
 begin
   intros A1 A2,
-  have C1:=is_measurable_le A1 A2,
+  have C1:=measurable_set_le A1 A2,
   rw with_density_sup' μ A1 A2,
   rw measure_theory.measure.sup_eq {ω:Ω|x ω ≤ y ω},
-  have C1:=is_measurable_le A1 A2,
+  have C1:=measurable_set_le A1 A2,
   rw lt_eq_le_compl,
   {
     apply C1,
@@ -1940,7 +1427,7 @@ begin
   },
   {
     apply with_density_restrict_le_with_density_restrict_le_on_subset,
-    apply is_measurable.compl (C1),
+    apply measurable_set.compl (C1),
     simp,
     intros ω B3,
     apply le_of_lt B3,
@@ -1988,7 +1475,7 @@ begin
         subst b,
         cases B3A1 with B3A1 B3A3,
         have B3A4:μ.with_density f (set.univ) ≤ ν (set.univ),
-        {apply B3A3,apply is_measurable.univ},
+        {apply B3A3,apply measurable_set.univ},
         simp at B3A4,
         apply B3A4,
       },
@@ -2047,8 +1534,8 @@ begin
         -- supr ((λ (f : Ω → ennreal), ⇑(μ.with_density f) set.univ) ∘ f) =
         -- (λ (f : Ω → ennreal), ⇑(μ.with_density f) set.univ) (supr f)
         intros f B1G B1H,
-        --simp only [measure_theory.measure.restrict_univ, measure_theory.with_density_apply, is_measurable.univ],
-        simp only [measure_theory.measure.restrict_univ, is_measurable.univ],
+        --simp only [measure_theory.measure.restrict_univ, measure_theory.with_density_apply, measurable_set.univ],
+        simp only [measure_theory.measure.restrict_univ, measurable_set.univ],
         rw supr_with_density_apply_eq_with_density_supr_apply _ _ B1H,
         simp,
         intros n,
@@ -2097,7 +1584,7 @@ begin
         rw add_comm,
         have C4A:measure_theory.finite_measure (μ.with_density g),
         {
-          apply measure_theory.finite_measure_of_lt_top,
+          apply measure_theory.finite_measure.mk,
           rw A6,
           apply B3,
         },
@@ -2169,7 +1656,7 @@ def is_radon_nikodym_deriv  {Ω:Type*} {M:measurable_space Ω} (ν μ:measure_th
 
 lemma is_radon_nikodym_deriv_elim {Ω:Type*} {M:measurable_space Ω} (ν μ:measure_theory.measure Ω) (f:Ω → ennreal) (S:set Ω):
   (is_radon_nikodym_deriv ν μ f) →
-  (is_measurable S) →
+  (measurable_set S) →
   (∫⁻ (a : Ω), (set.indicator S f) a ∂ μ = ν S) :=
 begin
   intros A1 A2,
@@ -2191,7 +1678,7 @@ end
 
 lemma is_radon_nikodym_deriv_intro {Ω:Type*} {M:measurable_space Ω} (ν μ:measure_theory.measure Ω) (f:Ω → ennreal):
   (measurable f) →
-  (∀ S:set Ω, (is_measurable S) →
+  (∀ S:set Ω, (measurable_set S) →
   (∫⁻ (a : Ω), (set.indicator S f) a ∂ μ = ν S)) →
   (is_radon_nikodym_deriv ν μ f)  :=
 begin
@@ -2376,3 +1863,5 @@ begin
   simp at A3,
   apply A3,
 end
+
+

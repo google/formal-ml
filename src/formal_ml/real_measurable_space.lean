@@ -107,10 +107,10 @@ begin
 end
 
 
-lemma is_measurable_intro_Iio (α β: Type*) [M:measurable_space α] [_inst_1 : topological_space β]
+lemma measurable_set_intro_Iio (α β: Type*) [M:measurable_space α] [_inst_1 : topological_space β]
   [_inst_2 : @topological_space.second_countable_topology β _inst_1] [_inst_3 : linear_order β]
   [_inst_4 : @order_topology β _inst_1 (@partial_order.to_preorder β (@linear_order.to_partial_order β _inst_3))]
-  (f:α → β):(∀ b:β, is_measurable (set.preimage f {y|y < b})) → 
+  (f:α → β):(∀ b:β, measurable_set (set.preimage f {y|y < b})) → 
             (@measurable α β M  (borel β) f) :=
 begin
   intros A1,
@@ -126,111 +126,111 @@ end
 
 lemma is_nnreal_measurable_intro_Iio {α:Type*}
   [M:measurable_space α] (f:α → nnreal):
-  (∀ x:nnreal, is_measurable (set.preimage f {y|y < x})) →
+  (∀ x:nnreal, measurable_set (set.preimage f {y|y < x})) →
   (measurable f) :=
 begin
   rw nnreal_measurable_space_def,
-  apply is_measurable_intro_Iio,
+  apply measurable_set_intro_Iio,
 end
 
 lemma is_ennreal_measurable_intro_Iio {α:Type*}
   [M:measurable_space α] (f:α → ennreal):
-  (∀ x:ennreal, is_measurable (set.preimage f {y|y < x})) →
+  (∀ x:ennreal, measurable_set (set.preimage f {y|y < x})) →
   (measurable f) :=
 begin
   rw ennreal_measurable_space_def,
-  apply is_measurable_intro_Iio,
+  apply measurable_set_intro_Iio,
 end
 
 
 lemma is_real_measurable_intro_Iio {α:Type*}
   [M:measurable_space α] (f:α → real):
-  (∀ x:real, is_measurable (set.preimage f {y|y < x})) →
+  (∀ x:real, measurable_set (set.preimage f {y|y < x})) →
   (measurable f) :=
 begin
   rw real_measurable_space_def,
-  apply is_measurable_intro_Iio,
+  apply measurable_set_intro_Iio,
 end
 
 
 
-lemma is_is_measurable_intro_Iio (β: Type*) [_inst_1 : topological_space β]
+lemma measurable_set_set_intro_Iio (β: Type*) [_inst_1 : topological_space β]
   [_inst_2 : @topological_space.second_countable_topology β _inst_1] [_inst_3 : linear_order β]
   [_inst_4 : @order_topology β _inst_1 (@partial_order.to_preorder β (@linear_order.to_partial_order β _inst_3))]
-  (b:β):@is_measurable β (borel β) {y|y < b} :=
+  (b:β):@measurable_set β (borel β) {y|y < b} :=
 begin
   rw (@borel_eq_generate_Iio β _ _ _ _),
-  apply measurable_space.is_measurable_generate_from,
+  apply measurable_space.measurable_set_generate_from,
   simp,
   unfold set.Iio,
   apply exists.intro b,
   refl,
 end
 
-lemma is_nnreal_is_measurable_intro_Iio (x:nnreal):
-  (is_measurable {y|y < x}) :=
+lemma is_nnreal_measurable_set_intro_Iio (x:nnreal):
+  (measurable_set {y|y < x}) :=
 begin
   rw nnreal_measurable_space_def,
-  apply is_is_measurable_intro_Iio,
+  apply measurable_set_set_intro_Iio,
 end
 
-lemma is_ennreal_is_measurable_intro_Iio (x:ennreal):
-  (is_measurable {y|y < x}) :=
+lemma is_ennreal_measurable_set_intro_Iio (x:ennreal):
+  (measurable_set {y|y < x}) :=
 begin
   rw ennreal_measurable_space_def,
-  apply is_is_measurable_intro_Iio,
+  apply measurable_set_set_intro_Iio,
 end
 
-lemma is_real_is_measurable_intro_Iio (x:real):
-  (is_measurable {y|y < x}) :=
+lemma is_real_measurable_set_intro_Iio (x:real):
+  (measurable_set {y|y < x}) :=
 begin
   rw real_measurable_space_def,
-  apply is_is_measurable_intro_Iio,
+  apply measurable_set_set_intro_Iio,
 end
 
-lemma is_is_measurable_intro_Ioi (β: Type*) [_inst_1 : topological_space β]
+lemma measurable_set_set_intro_Ioi (β: Type*) [_inst_1 : topological_space β]
   [_inst_2 : @topological_space.second_countable_topology β _inst_1] [_inst_3 : linear_order β]
   [_inst_4 : @order_topology β _inst_1 (@partial_order.to_preorder β (@linear_order.to_partial_order β _inst_3))]
-  (b:β):@is_measurable β (borel β) {y|b < y} :=
+  (b:β):@measurable_set β (borel β) {y|b < y} :=
 begin
   rw (@borel_eq_generate_Ioi β _ _ _ _),
-  apply measurable_space.is_measurable_generate_from,
+  apply measurable_space.measurable_set_generate_from,
   simp,
   unfold set.Ioi,
   apply exists.intro b,
   refl,
 end
 
-lemma is_nnreal_is_measurable_intro_Ioi (x:nnreal):
-  (is_measurable {y|x < y}) :=
+lemma is_nnreal_measurable_set_intro_Ioi (x:nnreal):
+  (measurable_set {y|x < y}) :=
 begin
   rw nnreal_measurable_space_def,
-  apply is_is_measurable_intro_Ioi,
+  apply measurable_set_set_intro_Ioi,
 end
 
-lemma is_ennreal_is_measurable_intro_Ioi (x:ennreal):
-  (is_measurable {y|x < y}) :=
+lemma is_ennreal_measurable_set_intro_Ioi (x:ennreal):
+  (measurable_set {y|x < y}) :=
 begin
   rw ennreal_measurable_space_def,
-  apply is_is_measurable_intro_Ioi,
+  apply measurable_set_set_intro_Ioi,
 end
 
 
 
-lemma is_real_is_measurable_intro_Ioi (x:real):
-  (is_measurable {y|x < y}) :=
+lemma is_real_measurable_set_intro_Ioi (x:real):
+  (measurable_set {y|x < y}) :=
 begin
   rw real_measurable_space_def,
-  apply is_is_measurable_intro_Ioi,
+  apply measurable_set_set_intro_Ioi,
 end
 
 
 
 
-lemma is_measurable_intro_Ioi (α β: Type*) [M:measurable_space α] [_inst_1 : topological_space β]
+lemma measurable_set_intro_Ioi (α β: Type*) [M:measurable_space α] [_inst_1 : topological_space β]
   [_inst_2 : @topological_space.second_countable_topology β _inst_1] [_inst_3 : linear_order β]
   [_inst_4 : @order_topology β _inst_1 (@partial_order.to_preorder β (@linear_order.to_partial_order β _inst_3))]
-  (f:α → β):(∀ b:β, is_measurable (set.preimage f {y|b<  y})) → 
+  (f:α → β):(∀ b:β, measurable_set (set.preimage f {y|b<  y})) → 
             (@measurable α β M  (borel β) f) :=
 begin
   intros A1,
@@ -246,29 +246,29 @@ end
 
 lemma is_nnreal_measurable_intro_Ioi {α:Type*}
   [M:measurable_space α] (f:α → nnreal):
-  (∀ x:nnreal, is_measurable (set.preimage f {y|x < y})) →
+  (∀ x:nnreal, measurable_set (set.preimage f {y|x < y})) →
   (measurable f) :=
 begin
   rw nnreal_measurable_space_def,
-  apply is_measurable_intro_Ioi,
+  apply measurable_set_intro_Ioi,
 end
 
 lemma is_ennreal_measurable_intro_Ioi {α:Type*}
   [M:measurable_space α] (f:α → ennreal):
-  (∀ x:ennreal, is_measurable (set.preimage f {y|x < y})) →
+  (∀ x:ennreal, measurable_set (set.preimage f {y|x < y})) →
   (measurable f) :=
 begin
   rw ennreal_measurable_space_def,
-  apply is_measurable_intro_Ioi,
+  apply measurable_set_intro_Ioi,
 end
 
 lemma is_real_measurable_intro_Ioi {α:Type*}
   [M:measurable_space α] (f:α → real):
-  (∀ x:real, is_measurable (set.preimage f {y|x < y})) →
+  (∀ x:real, measurable_set (set.preimage f {y|x < y})) →
   (measurable f) :=
 begin
   rw real_measurable_space_def,
-  apply is_measurable_intro_Ioi,
+  apply measurable_set_intro_Ioi,
 end
 
 
@@ -289,7 +289,7 @@ begin
 end
 
 
-lemma Iio_Ici_compl (β: Type*) [L : linear_order β] (x:β):{y:β|x < y}={y:β|y ≤ x}ᶜ :=
+lemma Ioi_Iic_compl (β: Type*) [L : linear_order β] (x:β):{y:β|x < y}={y:β|y ≤ x}ᶜ :=
 begin
   intros,
   ext,split;intros A1,
@@ -305,7 +305,7 @@ begin
   }
 end
 
-lemma Ioi_Ici_compl (β: Type*) [L : linear_order β] (x:β):{y:β|x ≤ y}={y:β|y < x}ᶜ :=
+lemma Ici_Iio_compl (β: Type*) [L : linear_order β] (x:β):{y:β|x ≤ y}={y:β|y < x}ᶜ :=
 begin
   intros,
   ext,split;intros A1,
@@ -321,40 +321,46 @@ begin
   }
 end
 
-lemma is_measurable_intro_Iic (α β: Type*) [M:measurable_space α] [_inst_1 : topological_space β]
+lemma Iic_Ioi_compl (β: Type*) [L : linear_order β] (x:β):{y:β|y ≤ x}={y:β|x < y}ᶜ :=
+begin
+  ext, split; intros A1; simp; simp at A1; exact A1,
+end
+
+
+lemma measurable_set_intro_Iic (α β: Type*) [M:measurable_space α] [_inst_1 : topological_space β]
   [_inst_2 : @topological_space.second_countable_topology β _inst_1] [_inst_3 : linear_order β]
   [_inst_4 : @order_topology β _inst_1 (@partial_order.to_preorder β (@linear_order.to_partial_order β _inst_3))]
-  (f:α → β):(∀ b:β, is_measurable (set.preimage f {y|y ≤ b})) → 
+  (f:α → β):(∀ b:β, measurable_set (set.preimage f {y|y ≤ b})) → 
             (@measurable α β M  (borel β) f) :=
 begin
   intros A1,
-  apply is_measurable_intro_Ioi,
+  apply measurable_set_intro_Ioi,
   intros x,
   rw ← Iic_Iio_compl,
-  apply is_measurable.compl,
+  apply measurable_set.compl,
   apply A1,
 end
 
 lemma is_nnreal_measurable_intro_Iic {α:Type*}
   [M:measurable_space α] (f:α → nnreal):
-  (∀ x:nnreal, is_measurable (set.preimage f {y|y ≤ x})) →
+  (∀ x:nnreal, measurable_set (set.preimage f {y|y ≤ x})) →
   (measurable f) :=
 begin
   rw nnreal_measurable_space_def,
-  apply is_measurable_intro_Iic,
+  apply measurable_set_intro_Iic,
 end
 
-lemma is_measurable_elim_Iio (α β: Type*) [M:measurable_space α] [_inst_1 : topological_space β]
+lemma measurable_set_elim_Iio (α β: Type*) [M:measurable_space α] [_inst_1 : topological_space β]
   [_inst_2 : @topological_space.second_countable_topology β _inst_1] [_inst_3 : linear_order β]
   [_inst_4 : @order_topology β _inst_1 (@partial_order.to_preorder β (@linear_order.to_partial_order β _inst_3))]
   (f:α → β) (b:β):(@measurable α β M  (borel β) f) →
-(is_measurable (set.preimage f {y|y < b})) :=
+(measurable_set (set.preimage f {y|y < b})) :=
 begin
   intros A1,
   apply @measurable_elim α β M (borel β),
   apply A1,
   rw borel_eq_generate_Iio β,
-  apply measurable_space.is_measurable_generate_from,
+  apply measurable_space.measurable_set_generate_from,
   simp,
   apply exists.intro b,
   unfold set.Iio,
@@ -363,17 +369,59 @@ end
 lemma is_nnreal_measurable_elim_Iio {α:Type*}
   [M:measurable_space α] (f:α → nnreal) (x:nnreal):
   (measurable f) →
-  is_measurable (set.preimage f {y|y < x}) :=
+  measurable_set (set.preimage f {y|y < x}) :=
 begin
   rw nnreal_measurable_space_def,
-  apply is_measurable_elim_Iio,
+  apply measurable_set_elim_Iio,
 end
 
-lemma is_measurable_elim_Iic (α β: Type*) [M:measurable_space α] [_inst_1 : topological_space β]
+lemma measurable_set_set_intro_Ici (β: Type*) [_inst_1 : topological_space β]
+  [_inst_2 : @topological_space.second_countable_topology β _inst_1] [_inst_3 : linear_order β]
+  [_inst_4 : @order_topology β _inst_1 (@partial_order.to_preorder β (@linear_order.to_partial_order β _inst_3))]
+  (b:β):@measurable_set β (borel β) {y|b ≤ y} :=
+begin
+  rw Ici_Iio_compl,
+  apply measurable_set.compl,
+  apply measurable_set_set_intro_Iio,
+end
+
+lemma is_nnreal_measurable_set_intro_Ici 
+  (b:nnreal):measurable_set {y|b ≤ y} :=
+begin
+  apply measurable_set_set_intro_Ici,
+end
+
+--#check set.Iic_eq_compl_Ioi
+
+lemma measurable_set_set_intro_Iic (β: Type*) [_inst_1 : topological_space β]
+  [_inst_2 : @topological_space.second_countable_topology β _inst_1] [_inst_3 : linear_order β]
+  [_inst_4 : @order_topology β _inst_1 (@partial_order.to_preorder β (@linear_order.to_partial_order β _inst_3))]
+  (b:β):@measurable_set β (borel β) {y|y ≤ b} :=
+begin
+  rw Iic_Ioi_compl,
+  apply measurable_set.compl,
+  apply measurable_set_set_intro_Ioi,
+end
+
+lemma is_nnreal_measurable_set_intro_Iic 
+  (b:nnreal):measurable_set {y|b ≤ y} :=
+begin
+  apply measurable_set_set_intro_Ici,
+end
+
+lemma is_ennreal_measurable_set_intro_Iic 
+  (b:ennreal):measurable_set {y|b ≤ y} :=
+begin
+  apply measurable_set_set_intro_Ici,
+end
+
+
+
+lemma measurable_set_elim_Iic (α β: Type*) [M:measurable_space α] [_inst_1 : topological_space β]
   [_inst_2 : @topological_space.second_countable_topology β _inst_1] [_inst_3 : linear_order β]
   [_inst_4 : @order_topology β _inst_1 (@partial_order.to_preorder β (@linear_order.to_partial_order β _inst_3))]
   (f:α → β) (b:β):(@measurable α β M  (borel β) f) →
-(is_measurable (set.preimage f {y|y ≤ b})) :=
+(measurable_set (set.preimage f {y|y ≤ b})) :=
 begin
   intro A1,
   apply @measurable_elim α β M (borel β),
@@ -394,8 +442,8 @@ begin
      }
   },
   rw A2,
-  apply is_measurable.compl,
-  apply measurable_space.is_measurable_generate_from,
+  apply measurable_set.compl,
+  apply measurable_space.measurable_set_generate_from,
   simp,
   apply exists.intro b,
   refl,
@@ -404,19 +452,19 @@ end
 lemma is_nnreal_measurable_elim_Iic {α:Type*}
   [M:measurable_space α] (f:α → nnreal) (x:nnreal):
   (measurable f) →
-  (is_measurable (set.preimage f {y|y ≤ x})) :=
+  (measurable_set (set.preimage f {y|y ≤ x})) :=
 begin
   rw nnreal_measurable_space_def,
-  apply is_measurable_elim_Iic,
+  apply measurable_set_elim_Iic,
 end
 
 lemma is_real_measurable_elim_Iic {α:Type*}
   [M:measurable_space α] (f:α → real) (x:real):
   (measurable f) →
-  (is_measurable (set.preimage f {y|y ≤ x})) :=
+  (measurable_set (set.preimage f {y|y ≤ x})) :=
 begin
   rw real_measurable_space_def,
-  apply is_measurable_elim_Iic,
+  apply measurable_set_elim_Iic,
 end
 
 /-
@@ -441,8 +489,8 @@ begin
   },
   {
     intros,
-    apply measurable_space.is_measurable_generate_from,
-    unfold continuous at A1,
+    apply measurable_space.measurable_set_generate_from,
+    rw continuous_def at A1,
     apply A1,
     apply H,
   }
@@ -499,44 +547,44 @@ end
 
 
 -- Note: there used to be theorems like this in mathlib, but they disappeared
-lemma is_measurable_of_is_open {α:Type*} [topological_space α]
-    (S:set α):is_open S → measurable_space.is_measurable' (borel α) S :=
+lemma measurable_set_of_is_open {α:Type*} [topological_space α]
+    (S:set α):is_open S → measurable_space.measurable_set' (borel α) S :=
 begin
   rw borel_def,
-  apply measurable_space.is_measurable_generate_from,
+  apply measurable_space.measurable_set_generate_from,
 end
 
-lemma is_measurable_of_is_closed {α:Type*} [topological_space α]
-    (S:set α):is_closed S → measurable_space.is_measurable' (borel α) S :=
+lemma measurable_set_of_is_closed {α:Type*} [topological_space α]
+    (S:set α):is_closed S → measurable_space.measurable_set' (borel α) S :=
 begin
   intro A1,
   unfold is_closed at A1,
   have A2:S = ((Sᶜ)ᶜ),
   {
-    rw set.compl_compl,
+    rw compl_compl,
   },
   rw A2,
-  apply measurable_space.is_measurable_compl,
-  apply is_measurable_of_is_open,
+  apply measurable_space.measurable_set_compl,
+  apply measurable_set_of_is_open,
   apply A1,
 end
 
-lemma is_open_is_measurable_binary {α β:Type*} [topological_space α] [topological_space β]
+lemma is_open_measurable_set_binary {α β:Type*} [topological_space α] [topological_space β]
     [topological_space.second_countable_topology α]
     [topological_space.second_countable_topology β]
-    (S:set (α × β)):is_open S → measurable_space.is_measurable' (@prod.measurable_space α β (borel α) (borel β)) S :=
+    (S:set (α × β)):is_open S → measurable_space.measurable_set' (@prod.measurable_space α β (borel α) (borel β)) S :=
 begin
   rw borel_def_prod_second_countable,
-  apply is_measurable_of_is_open,
+  apply measurable_set_of_is_open,
 end
 
-lemma is_closed_is_measurable_binary {α β:Type*} [topological_space α] [topological_space β]
+lemma is_closed_measurable_set_binary {α β:Type*} [topological_space α] [topological_space β]
     [topological_space.second_countable_topology α]
     [topological_space.second_countable_topology β]
-    (S:set (α × β)):is_closed S → measurable_space.is_measurable' (@prod.measurable_space α β (borel α) (borel β)) S :=
+    (S:set (α × β)):is_closed S → measurable_space.measurable_set' (@prod.measurable_space α β (borel α) (borel β)) S :=
 begin
   rw borel_def_prod_second_countable,
-  apply is_measurable_of_is_closed,
+  apply measurable_set_of_is_closed,
 end
 
 
@@ -785,23 +833,34 @@ begin
   apply A1.is_closed_le',
 end
 
-lemma is_measurable_of_le {α:Type*} [T:topological_space α]
+lemma measurable_set_of_le {α:Type*} [T:topological_space α]
       [SC:topological_space.second_countable_topology α] [P:linear_order α]
-      [OT:order_topology α]:measurable_space.is_measurable' 
+      [OT:order_topology α]:measurable_space.measurable_set' 
       (@prod.measurable_space α α (borel α) (borel α))
       {p:α × α|p.fst ≤ p.snd} :=
 begin
-  apply is_closed_is_measurable_binary,
+  apply is_closed_measurable_set_binary,
   apply is_closed_le_alt,
 end
 
-lemma is_measurable_of_eq {α:Type*} [T:topological_space α]
+lemma measurable_set_of_eq {α:Type*} [T:topological_space α]
       [SC:topological_space.second_countable_topology α]
-      [T2:t2_space α]:measurable_space.is_measurable'
+      [T2:t2_space α]:measurable_space.measurable_set'
       (@prod.measurable_space α α (borel α) (borel α))
       {p:α × α|p.fst = p.snd} :=
 begin
-  apply is_closed_is_measurable_binary,
+  apply is_closed_measurable_set_binary,
   apply is_closed_diagonal,
 end
+
+lemma measurable_set_singleton_sc {α:Type*} [T:topological_space α]
+      [SC:topological_space.second_countable_topology α]
+      [T2:t2_space α]:∀ (a:α), measurable_space.measurable_set' (borel α)
+      ({a}:set α) :=
+begin
+  intros a,
+  apply measurable_set_of_is_closed,
+  apply is_closed_singleton,
+end
+
 

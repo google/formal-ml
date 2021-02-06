@@ -41,7 +41,7 @@ end
 
 lemma lt_succ_of_lt (m n:ℕ):(m < n) → (m < nat.succ n) :=
 begin
-  intros,
+  intros a,
   apply nat.lt_succ_of_le,
   apply ((@nat.lt_iff_le_not_le m n).mp a).left,
 end
@@ -54,7 +54,7 @@ end
 
 lemma lt_succ_imp_le (a b:ℕ):a < nat.succ b → a ≤ b :=
 begin
-  intros,
+  intros a_1,
   rw nat_lt_def at a_1,
   apply nat.le_of_succ_le_succ,
   assumption,
@@ -95,7 +95,6 @@ begin
   }
 end
 
---#check nat.factorial
 lemma nat_fact_nonzero {n:ℕ}:nat.factorial n ≠ 0 :=
 begin
   intro A1,

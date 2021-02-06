@@ -43,30 +43,6 @@ open finset
 -/
 
 
-
-lemma le_add_of_nonneg {β:Type*} [ordered_add_comm_monoid β] (a b:β):
-  0 ≤ b → a ≤ a + b :=
-begin
-  intros A1,
-  have B1:a + 0 ≤ a + b,
-  {
-    apply @add_le_add,
-    apply le_refl a,
-    apply A1,
-  },
-  rw add_zero at B1,
-  apply B1,
-end
-
-
-lemma le_add_nonnegative {β:Type*} [canonically_ordered_add_monoid β] (a b:β):
-  a ≤ a + b :=
-begin
-  apply le_add_of_nonneg,
-  apply zero_le,
-end
-
-
 --The core of this is finset.sum_const. However, there are not many lemmas that I found
 --around add_monoid.smul.
 lemma finset_sum_const {α:Type*} {S:finset α} {f:α → ennreal} {c:ennreal}:(∀ k, f k =c) →
@@ -132,6 +108,26 @@ begin
     exact A1,
     exact A1,
   }
+end
+
+
+lemma finset_prod_le {α β:Type*} [decidable_eq α]
+    [ordered_comm_monoid β] {S:finset α} {f g:α → β}
+  (h_le:∀ s∈ S, f s ≤ g s) : S.prod f ≤ S.prod g :=
+begin
+  revert h_le,
+  apply finset.induction_on S,
+  { simp },
+  { intros a s h_a_notin_s h_ind h_le,
+    rw finset.prod_insert h_a_notin_s,
+    rw finset.prod_insert h_a_notin_s,
+    apply mul_le_mul',
+    { apply h_le, simp },
+    apply h_ind,
+    intros a' h_a'_in_s,
+    apply h_le,
+    simp [h_a'_in_s],
+ },  
 end
 
 
@@ -273,7 +269,7 @@ lemma has_classical_limit_real (f:ℕ → real) (v:real):
   has_sum f v
   :=
 begin
-  intros,
+  intros a a_1,
   unfold has_sum,
   apply filter_tendsto_intro,
   intros,
@@ -439,16 +435,16 @@ lemma has_classical_limit_nnreal (f:ℕ → nnreal) (v:nnreal):
   has_sum f v
   :=
 begin
-  intros,
+  intros a a_1,
 
   apply (@nnreal.has_sum_coe _ f v).mp,
   apply has_classical_limit_real,
   {
-    intros,
+    intros n,
     simp,
   },
   {
-    intros,
+    intros e H,
     have A1:0 < e,
     {
       apply H,
@@ -472,7 +468,7 @@ begin
     },
     cases A3,
     apply exists.intro A3_w,
-    intros,
+    intros m' a_2,
     have A4:v < finset.sum (range m') f  + nnreal.of_real e,
     {
       apply A3_h,
@@ -483,7 +479,7 @@ begin
       rw finite_sum_real_eq_finite_sum2,
       apply (@sub_lt_iff_lt_add real _ (↑v) ↑(finset.sum (range m') (λ (a : ℕ), f a)) e).mpr,
       simp,
-      rw real.decidable_linear_ordered_comm_ring.add_comm,
+      rw real.linear_ordered_comm_ring.add_comm,
       have A5: (v:ℝ) < (((@finset.sum ℕ nnreal _ (range m') f) + nnreal.of_real e):ℝ),
       {
         apply A4,
@@ -492,7 +488,7 @@ begin
       {
         unfold nnreal.of_real,
         simp,
-        exact A2,
+        apply le_of_lt H,
       },
       rw A6 at A5,
       rw add_comm,
@@ -554,13 +550,13 @@ end
 
 
 
---Definitely this is in the mathlib libtary under a different name.
+--Definitely this is in the mathlib library under a different name.
 lemma disjoint_partition_sum_eq {α β:Type*} [decidable_eq α] [add_comm_monoid β]
   (f:α  → β) (S T:finset α):
   (T ≥ S) →
    S.sum f +  (T\S).sum f = T.sum f :=
 begin
-  intros,
+  intros a,
   have A1:disjoint S (T\ S),
   {
     apply (@disjoint.symm (finset α) _ (T \ S) S),
@@ -601,7 +597,7 @@ end
 lemma has_finite_sum (α β:Type*) [topological_space α] [add_comm_monoid α] [decidable_eq β] (f:β → α) (S:finset β):
   (∀ s∉ S, f s = 0) → (has_sum f (S.sum f)) :=
 begin
-  intros,
+  intros a,
   apply has_sum_sum_of_ne_finset_zero,
   apply a,
 end
@@ -611,7 +607,7 @@ lemma finite_sum_eq3 (α β:Type*) [topological_space α] [t2_space α] [add_com
   [decidable_eq β] (f:β → α) (S:finset β):
   (∀ s∉ S, f s = 0) → (tsum f) =  (S.sum f) :=
 begin
-  intros,
+  intros a,
   have A1:has_sum f (S.sum f),
   {
     apply has_finite_sum,
@@ -682,7 +678,7 @@ begin
       apply A2,
     },
     {
-      intros,
+      intros a s a_1 a_2 a_3 s_1 H,
       rw finset.sum_insert at a_3,
       rw nnreal_add_eq_zero_iff (f a) (finset.sum s f) at a_3,
       cases a_3 with A3 A4,
@@ -1635,7 +1631,6 @@ begin
 
         },
         rw A11,
-        simp,
         apply A1,
       }
     }
@@ -2078,7 +2073,7 @@ noncomputable def nnreal.conditionally_complete_lattice:conditionally_complete_l
 
 noncomputable instance nnreal.conditionally_complete_linear_order:conditionally_complete_linear_order nnreal := {
   .. nnreal.conditionally_complete_lattice,
-  .. nnreal.decidable_linear_order
+  .. nnreal.linear_order
 }
 
 
@@ -2181,5 +2176,73 @@ begin
     apply @set.nonempty_of_mem _ _ v,
     simp,
     apply A1,
+end
+
+lemma choose_sum_succ {d m : ℕ}:
+      (finset.range d).sum (λ (i : ℕ), m.choose i.succ) + 1 =
+    (finset.range d.succ).sum (λ (i : ℕ), m.choose (i)) :=
+begin
+  rw finset.sum_range_succ', simp,
+end
+
+lemma choose_sum_pred {d m : ℕ}:
+      (finset.range d).sum (λ (i : ℕ), m.choose i) =
+    (finset.range d.succ).sum (λ (i : ℕ), if (i = 0) then 0 else (m.choose i.pred)) :=
+begin
+  rw finset.sum_range_succ', simp,
+end
+
+lemma finset.sum_add {α β: Type*} [decidable_eq β] {S:finset β} [add_comm_monoid α] (f g:β → α):
+S.sum f + S.sum g = S.sum (f + g) :=
+begin
+  apply finset.induction_on S,
+  { simp },
+  intros a s h1 h2,
+  repeat {rw finset.sum_insert h1},
+  rw ← h2,  simp, rw add_assoc, rw ← add_assoc (s.sum f),
+  rw add_comm (s.sum f),
+  rw add_assoc (g a),
+  rw ← add_assoc, 
+end
+
+
+lemma choose_succ {d m : ℕ} :m.choose d.succ + m.choose d = m.succ.choose d.succ :=
+begin
+  simp [nat.choose],
+  ring,
+end
+
+lemma choose_sum_rec {d m : ℕ}:
+(finset.range d.succ).sum (λ (i : ℕ), m.choose i) +
+      (finset.range d).sum (λ (i : ℕ), m.choose i) =
+    (finset.range d.succ).sum (λ (i : ℕ), m.succ.choose i) :=
+begin
+  rw @choose_sum_pred d,
+  simp,
+  rw finset.sum_add,
+  apply finset.sum_congr,
+  refl,
+  intros x h1,
+  simp at h1,
+  cases x,
+  { simp },
+  { simp, rw if_neg, rw choose_succ, apply nat.succ_ne_zero },
+end
+
+lemma finset.sum_distrib_left {α:Type*} {β:Type*} [comm_semiring β] {f:β} {g:α → β} 
+    {S:finset α}:S.sum (λ a:α, f * (g a))=f * (S.sum g) :=
+begin
+  have A1:(λ a:α, f * (g a)) = (λ a:α, (add_monoid_hom.mul_left f).to_fun (g a)),
+  {
+    unfold add_monoid_hom.mul_left,
+  },
+  rw A1,
+  have A2:f * (S.sum g) = (add_monoid_hom.mul_left f).to_fun (S.sum g),
+  {
+    unfold add_monoid_hom.mul_left,
+  },
+  rw A2,
+  symmetry,
+  apply @add_monoid_hom.map_sum α β β _ _ (add_monoid_hom.mul_left f) g S,
 end
 

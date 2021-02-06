@@ -15,150 +15,137 @@ limitations under the License.
  -/
 import measure_theory.measurable_space
 import measure_theory.measure_space
-
-
+import measure_theory.outer_measure
 
 namespace measure_theory
 
-namespace outer_measure
-
-/-- The trimmed property of a measure μ states that μ.to_outer_measure.trim = μ.to_outer_measure.
-This theorem shows that a restricted trimmed outer measure is a trimmed outer measure. -/
-lemma restrict_trimmed_of_trimmed {α : Type*} [measurable_space α]
-    {μ : measure_theory.outer_measure α} {s : set α} (h_meas : is_measurable s) (h_eq_trim : μ.trim = μ) :
-    (measure_theory.outer_measure.restrict s μ).trim = (measure_theory.outer_measure.restrict s μ) :=
-begin
-  apply measure_theory.outer_measure.ext, intro t,
-  rw [trim_eq_infi, restrict_apply],
-  apply le_antisymm,
-  { have h_apply_eq_trim_apply : μ (t ∩ s) = μ.trim (t ∩ s), { rw h_eq_trim }, 
-    rw [h_apply_eq_trim_apply, trim_eq_infi], simp only [le_infi_iff, restrict_apply],
-    intros v h_subset h_meas_v,
-    apply @infi_le_of_le ennreal _ _ _ _ (v ∪ sᶜ),
-    repeat {apply @infi_le_of_le ennreal _ _ _ _ _},
-    apply μ.mono, rw set.subset_def,
-    simp only [set.mem_inter_eq, set.mem_union_eq, set.mem_compl_eq, and_imp],
-    intros x h_in_v_or_not_s h_in_s, cases h_in_v_or_not_s with h_in_v h_in_not_s, apply h_in_v,
-    exfalso, apply h_in_not_s h_in_s,
-    apply is_measurable.union h_meas_v (is_measurable.compl h_meas),
-    rw set.subset_def, intros x h_in_t,
-    have h_subset_x := (set.subset_def.mp h_subset) x,
-    rw [set.mem_inter_eq, and_imp] at h_subset_x,
-    rw [set.mem_union_eq, set.mem_compl_eq],
-    apply or.elim (classical.em (x ∈ s))  (λ h_in_v, or.inl (h_subset_x h_in_t h_in_v)) or.inr },
-  { simp only [le_infi_iff, restrict_apply], intros u h_subset h_meas_u, apply μ.mono,
-    simp only [set.inter_subset_right, set.subset_inter_iff, and_true],
-    apply set.subset.trans (set.inter_subset_left t s) h_subset },
-end
-
-lemma of_function_apply {α : Type*} 
-  {g : set α → ennreal} (h_empty : g ∅ = 0) (s: set α):
-  outer_measure.of_function g h_empty s = 
-  (⨅ (f : ℕ → set α) (h : s ⊆ set.Union f), ∑' n, g (f n)) := rfl
-
-/-- The value of the Infimum of a nonempty set of outer measures on a set is not simply
-the minimum value of a measure on that set: it is the infimum sum of measures of countable set of sets that 
-covers that set, where a different measure can be used for each set in the cover. -/ 
-lemma Inf_apply {α : Type*}
-  {s : set (measure_theory.outer_measure α)} {t : set α} (h : s.nonempty):
-  Inf s t = (⨅ (f : ℕ →  set α) (h : t ⊆ set.Union f), ∑' n, ⨅  (μ : outer_measure α) (h2 : μ ∈ s), μ (f n)) := 
-begin
-  rw set.nonempty_def at h, cases h with μ h, 
-  rw [Inf_eq_of_function_Inf_gen, of_function_apply],
-  apply le_antisymm; simp; intros f h_subset; apply @infi_le_of_le ennreal _ _ _ _ f;
-  apply @infi_le_of_le ennreal _ _ _ _ h_subset; apply ennreal.tsum_le_tsum; intro n;
-  rw Inf_gen_nonempty2 _ _ h; apply le_refl _,
-end
-
-/-- This proves that Inf and restrict commute for outer measures. -/
-lemma restrict_Inf_eq_Inf_restrict {α : Type*} 
-  (s : set (measure_theory.outer_measure α)) {t : set α} (h_nonempty : s.nonempty) :
-  measure_theory.outer_measure.restrict t (Inf s) = Inf ((measure_theory.outer_measure.restrict t) '' s) := 
-begin
-  have h_nonempty_image : ((measure_theory.outer_measure.restrict t) '' s).nonempty,
-  { apply set.nonempty_image_iff.mpr h_nonempty },
-  ext1 u, rw restrict_apply, 
-  repeat {rw Inf_apply},
-  apply le_antisymm; simp only [set.mem_image, infi_exists, le_infi_iff]; intros f h_subset,
-  { apply @infi_le_of_le ennreal _ _ _ _ (λ n, (f n) ∩ t),
-    apply @infi_le_of_le ennreal _ _ _ _ _,
-    apply ennreal.tsum_le_tsum, simp only [and_imp, set.mem_image, infi_exists, le_infi_iff],
-    intros n μ₁ h_exists, cases h_exists with μ₂ h_constraints, cases h_constraints with h_μ₂_in_s h_restrict_eq, subst μ₁,
-    apply @infi_le_of_le ennreal _ _ _ _ μ₂,
-    apply @infi_le_of_le ennreal _ _ _ _ h_μ₂_in_s,
-    { simp [le_refl] },
-    { rw set.subset_def, intros x h_x_in_union, rw set.mem_inter_eq at h_x_in_union,
-      have h_exists := (set.mem_Union.mp ((set.subset_def.mp h_subset) x h_x_in_union.left)), cases h_exists with i h_x_in_f_i, 
-      rw set.mem_Union, apply exists.intro i, rw set.mem_inter_eq, apply and.intro h_x_in_f_i h_x_in_union.right } },
-  { apply @infi_le_of_le ennreal _ _ _ _ (λ n, (f n) ∪ tᶜ),
-    apply @infi_le_of_le ennreal _ _ _ _ _,
-    apply ennreal.tsum_le_tsum, simp, intros n μ h_nonempty,
-    apply @infi_le_of_le ennreal _ _ _ _ (restrict t μ),
-    apply @infi_le_of_le ennreal _ _ _ _ μ,
-    apply @infi_le_of_le ennreal _ _ _ _ _,
-    simp only [restrict_apply], apply μ.mono,
-    { rw set.subset_def, simp only [and_imp, set.mem_inter_eq, set.mem_union_eq, set.mem_compl_eq],
-      intros x h_in_f_n_or_notin_t h_x_in_t, cases h_in_f_n_or_notin_t with h_x_in_f_n h_x_notin_t,
-      apply h_x_in_f_n, exfalso, apply h_x_notin_t, apply h_x_in_t },
-    { simp [h_nonempty] },  
-    { rw set.subset_def, intros x h_x_in_u,
-      rw [set.mem_Union],
-      have h_subset_x := (set.subset_def.mp h_subset) x,
-      simp only [and_imp, set.mem_Union, set.mem_inter_eq] at h_subset_x,
-      cases (classical.em (x ∈ t)) with h_x_in_t h_x_notin_t,
-      have h_exists_i := h_subset_x h_x_in_u h_x_in_t, cases h_exists_i with i x_in_f_i,
-      apply exists.intro i, apply (or.inl x_in_f_i),
-      apply exists.intro 0,
-      rw [set.mem_union_eq, set.mem_compl_eq],
-      apply or.inr h_x_notin_t } },
-  repeat {assumption}, 
-end
-
-end outer_measure
-
 namespace measure
 
-/--This lemma shows that `restrict` and `to_outer_measure` commute. Note that the LHS has a 
-restrict on measures and the RHS has a restrict on outer measures. -/
-lemma restrict_to_outer_measure_eq_to_outer_measure_restrict {α : Type*} [measurable_space α]
-    {μ : measure α} {s : set α} (h : is_measurable s) :
-    (μ.restrict s).to_outer_measure = measure_theory.outer_measure.restrict s (μ.to_outer_measure) :=
+
+lemma inter_add_inter_compl {α:Type*} [measurable_space α]
+  (μ : measure α) (s t : set α)  (A2 : measurable_set s) (A1 : measurable_set t) :
+  (μ (s ∩ t) + μ (s ∩ tᶜ)) = μ s :=
 begin
-  ext1 t,
-  rw [outer_measure.restrict_apply, restrict, restrictₗ, coe_to_outer_measure, lift_linear,
-    linear_map.coe_mk, ← outer_measure.measure_of_eq_coe, ← coe_to_outer_measure, 
-    to_measure_to_outer_measure, outer_measure.restrict_trimmed_of_trimmed h, 
-    outer_measure.measure_of_eq_coe, outer_measure.restrict_apply, coe_to_outer_measure],
-  apply trimmed,
+  rw ← measure_union _
+       (measurable_set.inter A2 A1) (measurable_set.inter A2 (measurable_set.compl A1)),  
+  rw set.inter_union_compl,
+  apply set.disjoint_of_subset (set.inter_subset_right s t) (set.inter_subset_right s tᶜ),
+  apply @disjoint_compl_right (set α) t _,
 end
 
-/--This lemma shows that `Inf` and `restrict` commute for measures. -/
-lemma restrict_Inf_eq_Inf_restrict {α:Type*} [measurable_space α]
-  (s : set (measure_theory.measure α)) {T : set α} (AX : s.nonempty) (A1 : is_measurable T) :
-  (Inf s).restrict T = Inf ((λ μ:measure_theory.measure α, μ.restrict T) '' s) := 
+lemma restrict_sub_eq_restrict_sub_restrict {Ω : Type*} [M : measurable_space Ω]
+  (μ ν : measure Ω) {s : set Ω} (h_meas_s : measurable_set s) :
+  (μ - ν).restrict s = (μ.restrict s) - (ν.restrict s) :=
 begin
-  ext1 s2 B1,
-  have h_image_comm : (λ (x : measure_theory.measure α), (x.restrict T).to_outer_measure) =
-    (λ (x : measure_theory.measure α), (measure_theory.outer_measure.restrict T) x.to_outer_measure),
-  { ext1 x, rw restrict_to_outer_measure_eq_to_outer_measure_restrict A1 },
-  rw [Inf_apply B1, restrict_apply B1, Inf_apply (is_measurable.inter B1 A1), set.image_image,
-    h_image_comm, ← set.image_image _ to_outer_measure,
-    ← outer_measure.restrict_Inf_eq_Inf_restrict,
-    outer_measure.restrict_apply],
-  apply set.nonempty_image_iff.mpr AX,
+  repeat {rw sub_def},
+  have h_nonempty : {d | μ ≤ d + ν}.nonempty,
+  { apply @set.nonempty_of_mem _ _ μ, simp, intros t h_meas,
+    apply le_add_right (le_refl (μ t)) },
+  rw restrict_Inf_eq_Inf_restrict h_nonempty h_meas_s,
+  have h_Inf_le_Inf : ∀ s' t' : set (measure Ω),
+                      (∀ b ∈ t', ∃ a ∈ s', a ≤ b) → Inf s' ≤ Inf t',
+  { intros s' t' h, 
+    rw le_Inf_iff, intros b h_b_in_t', 
+    have h_exists_a := h b h_b_in_t', cases h_exists_a with a h_a, 
+    cases h_a with h_a_in_s' h_a_le_b,
+    apply Inf_le_of_le h_a_in_s' h_a_le_b },  
+  apply le_antisymm,
+  { apply h_Inf_le_Inf,
+    intros ν' h_ν'_in, simp at h_ν'_in, apply exists.intro (ν'.restrict s),
+    split,
+    { simp, apply exists.intro (ν' + (⊤ : measure_theory.measure Ω).restrict sᶜ),
+      split,
+      { rw [add_assoc, add_comm _ ν, ← add_assoc, measure_theory.measure.le_iff],
+        intros t h_meas_t,
+        have h_inter_inter_eq_inter : ∀ t' : set Ω , t ∩ t' ∩ t' = t ∩ t',
+        { intro t', rw set.inter_eq_self_of_subset_left, apply set.inter_subset_right t t' },
+        have h_meas_t_inter_s : measurable_set (t ∩ s) :=
+        measurable_set.inter h_meas_t h_meas_s,
+        rw [← inter_add_inter_compl μ t s h_meas_t h_meas_s,
+            ← inter_add_inter_compl 
+              (ν' + ν + (⊤ : measure Ω).restrict sᶜ) t s h_meas_t h_meas_s],
+        apply add_le_add _ _; rw add_apply,
+        { have h_restrict : ∀ μ₂ : measure Ω, μ₂ (t ∩ s) = μ₂.restrict s (t ∩ s),
+          { intro μ₂, rw [restrict_apply h_meas_t_inter_s], 
+            rw [(h_inter_inter_eq_inter s)] },
+          apply le_add_right _,
+          rw [add_apply, h_restrict μ, h_restrict ν], apply h_ν'_in _ h_meas_t_inter_s },
+        cases (@set.eq_empty_or_nonempty _ (t ∩ sᶜ)) with h_inter_empty h_inter_nonempty,
+        { simp [h_inter_empty] },
+        { have h_meas_inter_compl := 
+          measurable_set.inter h_meas_t (measurable_set.compl h_meas_s),
+          rw [restrict_apply h_meas_inter_compl, h_inter_inter_eq_inter sᶜ],
+          have h_mu_le_add_top : μ ≤ ν' + ν + ⊤,
+          { rw add_comm,
+            have h_le_top : μ ≤ ⊤ := le_top,
+            apply (λ t₂ h_meas, le_add_right (h_le_top t₂ h_meas)) },
+          apply h_mu_le_add_top _ h_meas_inter_compl } },
+      { ext1 t h_meas_t,
+        simp [restrict_apply h_meas_t,
+              restrict_apply (measurable_set.inter h_meas_t h_meas_s),
+              set.inter_assoc] } },
+    { apply restrict_le_self } },
+  { apply h_Inf_le_Inf,
+    intros s h_s_in, cases h_s_in with t h_t, cases h_t with h_t_in h_t_eq, subst s,
+    apply exists.intro (t.restrict s), split,
+    { rw [set.mem_set_of_eq, ← restrict_add], 
+      apply restrict_mono (set.subset.refl _) h_t_in },
+    { apply le_refl _ } },
+end
+
+lemma restrict_apply_self {α : Type*} [measurable_space α]
+  (μ : measure α) {s : set α} (h_meas_s : measurable_set s) :
+  (μ.restrict s) s = μ s :=
+begin
+  rw [restrict_apply h_meas_s, set.inter_self],
+end 
+
+lemma sub_apply_eq_zero_of_restrict_le_restrict {Ω:Type*} [measurable_space Ω] 
+    (μ ν:measure_theory.measure Ω) (s:set Ω) 
+  (h_le : μ.restrict s ≤ ν.restrict s) (h_meas_s : measurable_set s) :
+  (μ - ν) s = 0 :=
+begin
+  rw [← restrict_apply_self _ h_meas_s, restrict_sub_eq_restrict_sub_restrict,
+      sub_eq_zero_of_le],
+  repeat {simp [*]},
 end
 
 end measure
 
 end measure_theory
 
-/-
-  This collection of theorems shows that 
-  {S|is_measurable S ∧ μ.restrict S ≤ ν.restrict S} is a ring of sets.
- -/
+def measure_theory.finite_measure_of_le {Ω:Type*} [M:measurable_space Ω] 
+  (μ ν : measure_theory.measure Ω) [measure_theory.finite_measure ν] (H:μ ≤ ν):
+  measure_theory.finite_measure μ :=
+begin
+  apply measure_theory.finite_measure.mk (lt_of_le_of_lt (H set.univ measurable_set.univ) _),
+  apply measure_theory.measure_lt_top ν,
+end 
+
+def measure_theory.finite_measure_restrict {Ω:Type*} [M:measurable_space Ω] 
+  (μ:measure_theory.measure Ω) [measure_theory.finite_measure μ] (S:set Ω):
+  measure_theory.finite_measure (μ.restrict S) :=
+begin
+  have A1:= @measure_theory.measure.restrict_le_self Ω M μ S,
+  apply measure_theory.finite_measure_of_le (μ.restrict S) μ A1,
+end
+
+--This works with EITHER ν or μ being finite, or even ν S < ⊤.
+lemma jordan_decomposition_junior_apply {Ω:Type*} [measurable_space Ω] 
+    (μ ν:measure_theory.measure Ω) (S:set Ω) [AX:measure_theory.finite_measure ν]:
+  (ν.restrict S ≤ μ.restrict S) → (measurable_set S) →
+  (μ - ν) S = μ S - ν S :=
+begin
+  intros A1 B1,
+  rw ← measure_theory.measure.restrict_apply_self _ B1,
+  rw measure_theory.measure.restrict_sub_eq_restrict_sub_restrict _ _,
+  rw @measure_theory.measure.sub_apply Ω _ _ _ S (measure_theory.finite_measure_restrict ν S) B1 A1,
+  repeat {rw measure_theory.measure.restrict_apply_self},
+  repeat {exact B1},
+end
 
 lemma measure_theory.measure.restrict_apply_subset {α : Type*} [measurable_space α]
-  (μ : measure_theory.measure α) {S T : set α} (h₁ : is_measurable S)
+  (μ : measure_theory.measure α) {S T : set α} (h₁ : measurable_set S)
   (h₂ : S ⊆ T) : (μ.restrict T) S = μ S :=
 begin
   rw measure_theory.measure.restrict_apply h₁,
@@ -169,8 +156,8 @@ lemma le_of_subset_of_restrict_le_restrict {α:Type*} [measurable_space α]
   {μ ν:measure_theory.measure α} {S T:set α}:
   T ⊆ S →
   (μ.restrict S) ≤ ν.restrict S →
-  is_measurable S →
-  is_measurable T →  μ T ≤ ν T :=
+  measurable_set S →
+  measurable_set T →  μ T ≤ ν T :=
 begin
   intros A3 A2 A1 A4,
   rw measure_theory.measure.le_iff at A2,
@@ -180,27 +167,12 @@ begin
   apply B3,
 end
 
-
-lemma restrict_le_restrict_of_le_subset {α:Type*} [measurable_space α]
-  {μ ν:measure_theory.measure α} {S:set α} (H:is_measurable S):
-  (∀ T:set α, T ⊆ S → is_measurable T → μ T ≤ ν T) →
-  (μ.restrict S) ≤ ν.restrict S :=
-begin
-  intros A1,
-  rw measure_theory.measure.le_iff,
-  intros s A2,
-  repeat {rw measure_theory.measure.restrict_apply A2},
-  apply A1,
-  {simp},
-  {simp [is_measurable.inter,H,A2]},
-end
-
 lemma restrict_le_restrict_of_restrict_le_restrict_of_subset {α:Type*} [measurable_space α]
     {μ ν:measure_theory.measure α} {X Y:set α}:
     μ.restrict X ≤ ν.restrict X →
     Y ⊆ X →
-    is_measurable X →
-    is_measurable Y →
+    measurable_set X →
+    measurable_set Y →
     μ.restrict Y ≤ ν.restrict Y :=
 begin
   intros A1 A2 A3 A4,
@@ -211,15 +183,50 @@ begin
   have A6:S ∩ Y ⊆ X,
   {apply set.subset.trans _ A2, simp},
   apply le_of_subset_of_restrict_le_restrict A6 A1 A3,
-  repeat {simp [is_measurable.inter,*]},
+  repeat {simp [measurable_set.inter,*]},
+end
+
+
+/--
+  A jordan decomposition of subtraction.
+ -/
+lemma jordan_decomposition_nonneg_sub {Ω:Type*} [M:measurable_space Ω] 
+    (μ ν:measure_theory.measure Ω) (S T:set Ω) [A1:measure_theory.finite_measure μ]: 
+    measurable_set T → measurable_set S → μ.restrict S ≤ ν.restrict S →
+    ν.restrict Sᶜ ≤ μ.restrict Sᶜ →
+    (ν - μ) T = ν (T ∩ S) - μ (T ∩ S) :=
+begin
+  intros A3 A2 A5 A6,
+  rw ← measure_theory.measure.inter_add_inter_compl (ν - μ) _ _ A3 A2,
+  rw jordan_decomposition_junior_apply ν μ (T ∩ S),
+  rw measure_theory.measure.sub_apply_eq_zero_of_restrict_le_restrict ν μ (T ∩ Sᶜ),
+  rw add_zero,
+  apply @restrict_le_restrict_of_restrict_le_restrict_of_subset Ω M ν μ Sᶜ (T ∩ Sᶜ) A6,
+  repeat {simp [A2, A3]},
+  apply @restrict_le_restrict_of_restrict_le_restrict_of_subset Ω M μ ν S (T ∩ S) A5,
+  repeat {simp [A2, A3]},
+end
+
+lemma restrict_le_restrict_of_le_subset {α:Type*} [measurable_space α]
+  {μ ν:measure_theory.measure α} {S:set α} (H:measurable_set S):
+  (∀ T:set α, T ⊆ S → measurable_set T → μ T ≤ ν T) →
+  (μ.restrict S) ≤ ν.restrict S :=
+begin
+  intros A1,
+  rw measure_theory.measure.le_iff,
+  intros s A2,
+  repeat {rw measure_theory.measure.restrict_apply A2},
+  apply A1,
+  {simp},
+  {simp [measurable_set.inter,H,A2]},
 end
 
 lemma restrict_le_restrict_union {α:Type*} [measurable_space α]
     {μ ν:measure_theory.measure α} {X Y:set α}:
     μ.restrict X ≤ ν.restrict X →
     μ.restrict Y ≤ ν.restrict Y →
-    is_measurable X →
-    is_measurable Y →
+    measurable_set X →
+    measurable_set Y →
     μ.restrict (X ∪ Y) ≤ ν.restrict (X ∪ Y) :=
 begin
   intros A1 A2 A3 A4,
@@ -230,7 +237,7 @@ begin
   apply measure_theory.measure.add_le_add A1 _,
   apply restrict_le_restrict_of_restrict_le_restrict_of_subset A2,
   apply set.diff_subset,
-  repeat {simp [set.disjoint_diff, is_measurable.inter, is_measurable.diff,*]},
+  repeat {simp [set.disjoint_diff, measurable_set.inter, measurable_set.diff,*]},
 end
 
 lemma set.directed_has_subset_of_monotone {α:Type*} {f:ℕ → set α}:
@@ -256,7 +263,7 @@ end
 lemma restrict_le_restrict_m_Union {α:Type*} [measurable_space α]
     (μ ν:measure_theory.measure α) {f:ℕ → set α}:
     monotone f →
-    (∀ n:ℕ, is_measurable (f n)) →
+    (∀ n:ℕ, measurable_set (f n)) →
     (∀ n:ℕ, μ.restrict (f n) ≤ ν.restrict (f n)) → 
     (μ.restrict (set.Union f) ≤  ν.restrict (set.Union f)) :=
 begin
@@ -272,15 +279,6 @@ begin
   apply @le_supr ennreal _ _,
   repeat {simp [set.directed_has_subset_of_monotone,*]}, 
 end
-
---Used in radon-nikodym, but let's keep restrict lemmas together.
-lemma measure_theory.measure.restrict_apply_self {α:Type*} [measurable_space α]
-  (μ:measure_theory.measure α) {S:set α} (H:is_measurable S):
-  (μ.restrict S) S = μ S :=
-begin
-  rw measure_theory.measure.restrict_apply H,
-  simp,
-end 
 
 lemma nnreal.add_sub_add_eq_sub_add_sub {a b c d:nnreal} : c ≤ a → d ≤ b →
   a + b - (c + d) = (a - c) + (b - d) :=
@@ -307,8 +305,8 @@ lemma le_measurable_add {α:Type*} [M:measurable_space α]
     (μ ν:measure_theory.measure α) {X Y:set α}:
     μ X < ⊤ →
     μ Y < ⊤ →
-    is_measurable X →
-    is_measurable Y →
+    measurable_set X →
+    measurable_set Y →
     μ X ≤ ν X →
     μ Y ≤ ν Y →
     disjoint X Y →
@@ -320,7 +318,7 @@ begin
 end
 
 lemma measure_theory.measure.le_of_restrict_le_restrict_self {α:Type*} [measurable_space α]
-  (μ ν:measure_theory.measure α) {S:set α} (H:is_measurable S):
+  (μ ν:measure_theory.measure α) {S:set α} (H:measurable_set S):
   (μ.restrict S) ≤ ν.restrict S  → μ S ≤  ν S :=
 begin
   intro A1,
@@ -331,8 +329,8 @@ lemma restrict_le_restrict_add {α:Type*} [M:measurable_space α]
     (μ ν:measure_theory.measure α) {X Y:set α}:
     μ X < ⊤ →
     μ Y < ⊤ →
-    is_measurable X →
-    is_measurable Y →
+    measurable_set X →
+    measurable_set Y →
     μ.restrict X ≤ ν.restrict X → 
     μ.restrict Y ≤ ν.restrict Y →
     disjoint X Y →
@@ -343,3 +341,4 @@ begin
       (measure_theory.measure.le_of_restrict_le_restrict_self _ _ A3 A5) 
       (measure_theory.measure.le_of_restrict_le_restrict_self _ _ A4 A6) A7,
 end
+

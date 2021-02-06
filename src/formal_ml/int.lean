@@ -253,3 +253,52 @@ lemma int.pred_lt_self {a:int}:a.pred < a :=
 begin
   rw int.pred_lt_iff,
 end
+
+
+def monoid_hom_nat_int:monoid_hom nat int := {
+  to_fun := int.of_nat,
+  map_mul' := begin
+    intros x y,
+    simp,
+  end,
+  map_one' := rfl,
+}
+
+def add_monoid_hom_nat_int:add_monoid_hom nat int := {
+  to_fun := int.of_nat,
+  map_add' := begin
+    intros x y,
+    simp,
+  end,
+  map_zero' := rfl,
+}
+
+
+def ring_hom_nat_int:ring_hom nat int := {
+  ..monoid_hom_nat_int,
+  ..add_monoid_hom_nat_int,
+}
+
+lemma ring_hom_nat_int_to_fun_def {n:ℕ}:
+    ring_hom_nat_int.to_fun n = n := rfl
+
+lemma int.coe_nat_eq_coe_nat {a b:ℕ}:(a:ℤ) = (b:ℤ) ↔ a = b :=
+begin
+ 
+  split;intros A1,
+  {
+    simp at A1,
+    apply A1,
+  },
+  {
+    simp,
+    apply A1,
+  },
+end
+
+lemma ring_hom_nat_int_eq {a b:ℕ}:(ring_hom_nat_int.to_fun a)=(ring_hom_nat_int.to_fun b) ↔ a = b :=
+begin
+  repeat {rw ring_hom_nat_int_to_fun_def},
+  rw int.coe_nat_eq_coe_nat,
+end
+

@@ -39,7 +39,7 @@ begin
   apply finset.mem_filter,
   split,
   {
-     intros,
+     intros a_1,
      cases a_1,
      assumption,
   },
@@ -174,11 +174,11 @@ begin
     simp,
   },
   {
-    intros,
+    intros a_1 s B1 B2 B3,
     have A1:a = a_1 ∨ a∈ s,
     {
       apply insert_or,
-      apply a_4,
+      assumption,
     },
     rw finset_max_def,
     rw finset.fold_insert_idem,
@@ -192,7 +192,7 @@ begin
     },
     {
       right,
-      apply a_3,
+      apply B2,
       apply A1,
     }
   }
@@ -204,7 +204,7 @@ lemma finset_range_bound (A:finset ℕ):∃ n, (A⊆ finset.range n) :=
 begin
   apply exists.intro (nat.succ (finset_max A)),
   rw finset.subset_iff,
-  intros,
+  intros x a,
   apply mem_finset_intro,
   have A1:x ≤ finset_max A,
   {
@@ -275,7 +275,7 @@ lemma sum_insert_add {α β:Type*} [decidable_eq α] [add_comm_monoid β] (f:α 
   (a∉ S)→
   (((insert a S).sum  f)=(f a) + (S.sum f)) :=
 begin
-  intros,
+  intros a_1,
   apply fold_insert,
   apply a_1,
 end
@@ -296,19 +296,19 @@ begin
     simp,
   },
   {
-    intros,
+    intros a s B1 B2 B3,
     simp,
     have A1:disjoint S s,
     {
       apply insert_disjoint_imp_disjoint,
-      apply a_3,
+      apply B3,
     },
     have A2:a∉ S,
     {
       have A3:disjoint (insert a s) S,
       {
         apply finset_disjoint_symm,
-        apply a_3,
+        apply B3,
       },
       apply finset_disjoint_elim,
       apply A3,
@@ -318,7 +318,7 @@ begin
     rw sum_insert_add,
     have A2:S.sum f + s.sum f =  (S ∪ s).sum f,
     {
-      apply a_2,
+      apply B2,
       apply A1,
     },
     rw ← A2,
@@ -327,14 +327,14 @@ begin
     simp,
     apply add_assoc,
     rw finset.mem_union,
-    intro,
+    intro a_4,
     cases a_4,
     {
       apply A2,
       apply a_4,
     },
     {
-      apply a_1,
+      apply B1,
       apply a_4,
     },
     assumption,
@@ -548,10 +548,6 @@ begin
   },
 end
 
-
-
-
-
 instance finset.pairwise_union.is_commutative {α:Type*} [D:decidable_eq α]:
   is_commutative (finset (finset α)) (@finset.pairwise_union α D) := {
   comm := finset.pairwise_union.comm
@@ -624,7 +620,7 @@ begin
 end
 
 
-lemma finset.Union_insert' {α β:Type*} [E:encodable β]
+lemma finset.Union_insert' {α β:Type*} 
     [D:decidable_eq β] {f:β → set α} {b:β} {S:finset β}:
    (⋃ (b':β) (H:b'∈ (insert b S)), f b') = 
    (f b) ∪ (⋃ (b':β) (H:b'∈ S), f b') := 
@@ -640,3 +636,158 @@ begin
   rw finset.powerset_insert,
   refl,
 end
+
+lemma finset.subset_of_not_mem_of_subset_insert {α:Type*} [decidable_eq α] {x:α} {S T:finset α}:x∉ S →
+  S ⊆ insert x T → S ⊆ T :=
+begin
+  intros A1 A2,
+  rw finset.subset_iff,
+  rw finset.subset_iff at A2,
+  intros a B1,
+  have B2 := A2 B1,
+  rw finset.mem_insert at B2,
+  cases B2,
+  subst a,
+  exfalso,
+  apply A1,
+  apply B1,
+  apply B2,
+end
+
+def finset.to_set_of_sets {α:Type*} (C:finset (finset α)):set (set α) :=
+  (λ c:finset α, (↑c:set α)) '' (↑C:set (finset α))
+
+
+lemma finset.mem_to_set_of_sets {α:Type*} {C:finset (finset α)} {c:finset α}:
+  (↑c ∈ (C.to_set_of_sets)) ↔ c ∈ C :=
+begin
+  unfold finset.to_set_of_sets,
+  simp,
+end
+
+lemma finset.mem_to_set_of_sets' {α:Type*} {C:finset (finset α)} {c:set α}:
+  c∈ C.to_set_of_sets ↔ ∃ c' ∈ C, c=(↑c') :=
+begin
+  unfold finset.to_set_of_sets,
+  split;intro A1,
+  {
+    simp at A1,
+    cases A1 with c' A1,
+    apply exists.intro c',
+    apply exists.intro A1.left,
+    rw A1.right,
+  },
+  {
+    simp,
+    cases A1 with c' A1,
+    apply exists.intro c',
+    cases A1 with A1 A2,
+    simp [A1, A2],
+  },
+end
+
+--Note: S could be either empty or have a unique element.
+lemma finset.card_identical_elements {α:Type*} [decidable_eq α] {S:finset α}:
+   (∀ a b:α,  a ∈ S → b ∈ S → a=b ) → S.card ≤ 1 :=
+begin
+  --intros A1,
+  apply finset.induction_on S,
+  {
+    simp,
+  },
+  {
+    intros a s B1 B2 B3,
+    have C1:s = ∅,
+    {
+      rw ← finset.subset_empty,
+      rw finset.subset_iff,
+      intros b C1A,
+      exfalso,
+      apply B1,
+      have C1B:a = b,
+      {
+        apply B3;simp [C1A],
+      },
+      rw C1B,
+      apply C1A,
+    },
+    rw C1,
+    simp,
+  },
+end
+
+lemma finset.eq_of_insert_of_not_mem {α:Type*} [decidable_eq α] {A B:finset α} {x:α}:(x∉ A) → (x∉ B) → (insert x A  = insert x B)
+  → A = B :=
+begin
+  intros A1 A3 A2,
+  ext a;split;intros B1;have C1 := finset.mem_insert_of_mem B1,
+  {
+    rw A2 at C1,
+    apply finset.mem_of_mem_insert_of_ne C1,
+    intros C2,
+    subst a,
+    apply A1 B1,
+  },
+  {
+    rw ← A2 at C1,
+    apply finset.mem_of_mem_insert_of_ne C1,
+    intros C2,
+    subst a,
+    apply A3 B1,
+  },
+end
+
+
+lemma finset.insert_inter_eq_insert_inter_insert {α:Type*} [decidable_eq α]
+  {S T:finset α} {a:α}:(insert a S) ∩ (insert a T) = insert a (S ∩ T) :=
+begin
+  ext b,
+  split;intros A1,
+  {
+    rw finset.mem_insert,
+    simp at A1,
+    cases A1,
+    subst a,
+    simp,
+    cases A1 with A1 A2,
+    cases A1 with A1 A1,
+    apply or.inl A1,
+    simp [A1,A2],    
+  },
+  {
+    simp,
+    simp at A1,
+    cases A1 with A1 A1,
+    apply or.inl A1,
+    simp [A1],
+  },
+end
+
+lemma finset.exists_subset_card {α:Type*} [decidable_eq α] {S:finset α} {n:ℕ} (h:n ≤ S.card):∃ T:finset α, T.card = n ∧ T ⊆ S :=
+begin
+  --revert h,
+  revert n,
+ 
+  apply finset.induction_on S,
+  { intros n h, simp at h, subst h, apply exists.intro ∅, 
+    simp, split, refl, apply finset.subset.refl },
+  { intros a s h_not_mem h_ind n h,
+    simp [h_not_mem] at h,
+    cases decidable.em (n = s.card + 1) with h_eq h_ne,
+    apply exists.intro (insert a s),
+    split,
+    simp [h_not_mem],
+    rw h_eq,
+    apply finset.subset.refl,
+    have h_lt_succ:n < s.card + 1,
+    { rw lt_iff_le_and_ne, simp [h, h_ne] },
+    have h_n_le_card := nat.le_of_lt_succ h_lt_succ,
+    have h_ind' := h_ind h_n_le_card,
+    cases h_ind' with T h_ind',
+    apply exists.intro T,
+    simp [h_ind'],
+    apply finset.subset.trans h_ind'.right,
+    apply finset.subset_insert },
+end
+
+#check finset.inter_subset_inter

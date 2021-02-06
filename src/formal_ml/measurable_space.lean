@@ -29,18 +29,17 @@ begin
   refl,
 end
 
-
 lemma finset_union_measurable {α:Type*} {T:finset α} {β:Type*} [measurable_space β] {U:α → set β}:
-  (∀ t∈ T, is_measurable (U t)) →
-  is_measurable (⋃ x ∈ T, U x) :=
+  (∀ t∈ T, measurable_set (U t)) →
+  measurable_set (⋃ x ∈ T, U x) :=
 begin
-  intros,
+  intros a,
   have A1:(set.sUnion (set.image U ({a|a∈ T}:set α))) = (⋃ x ∈ T, U x),
   {
     simp,
   },
   rw ← A1,
-  apply is_measurable.sUnion,
+  apply measurable_set.sUnion,
   {
     apply set.countable.image,
     apply set.finite.countable,
@@ -58,16 +57,16 @@ begin
 end
 
 lemma finset_inter_measurable {α:Type*} {T:finset α} {β:Type*} [measurable_space β] {U:α → set β}:
-  (∀ t∈ T, is_measurable (U t)) →
-  is_measurable (⋂ x ∈ T, U x) :=
+  (∀ t∈ T, measurable_set (U t)) →
+  measurable_set (⋂ x ∈ T, U x) :=
 begin
-  intros,
+  intros a,
   have A1:(set.sInter (set.image U ({a|a∈ T}:set α))) = (⋂ x ∈ T, U x),
   {
     simp,
   },
   rw ← A1,
-  apply is_measurable.sInter,
+  apply measurable_set.sInter,
   {
     apply set.countable.image,
     apply set.finite.countable,
@@ -86,7 +85,7 @@ end
 
 lemma measurable_space_le_def {α:Type*}
   (M:measurable_space α) (M2:measurable_space α):
-  M.is_measurable' ≤  M2.is_measurable'
+  M.measurable_set' ≤  M2.measurable_set'
   ↔  M ≤ M2 :=
 begin
   refl,
@@ -94,7 +93,7 @@ end
 
 lemma measurable_space_le_def2 {α:Type*}
   (M:measurable_space α) (M2:measurable_space α):
-  (∀ X:set α, M.is_measurable' X → M2.is_measurable' X) ↔
+  (∀ X:set α, M.measurable_set' X → M2.measurable_set' X) ↔
    M ≤ M2 :=
 begin
   intros,
@@ -110,18 +109,18 @@ end
 -- Delete?
 lemma measurable_space_le_intro {α:Type*}
   (M:measurable_space α) (M2:measurable_space α):
-  (∀ X:set α, M.is_measurable' X → M2.is_measurable' X) →
+  (∀ X:set α, M.measurable_set' X → M2.measurable_set' X) →
    M ≤ M2 :=
 begin
-  intros,
-  have A1:M.is_measurable' ≤  M2.is_measurable'
+  intros a,
+  have A1:M.measurable_set' ≤  M2.measurable_set'
   ↔  M ≤ M2,
   {
     apply measurable_space_le_def,
   },
   apply A1.mp,
-  have A2:M.is_measurable' ≤ M2.is_measurable' ↔
-  (∀ X:set α, M.is_measurable' X → M2.is_measurable' X),
+  have A2:M.measurable_set' ≤ M2.measurable_set' ↔
+  (∀ X:set α, M.measurable_set' X → M2.measurable_set' X),
   {
     apply set_Prop_le_def,
   },
@@ -133,7 +132,7 @@ end
 
 lemma measurable_def {α β:Type*}
   [M1:measurable_space α] [M2:measurable_space β] (f:α → β):
-  (∀ B:(set β), (is_measurable B) → is_measurable (f ⁻¹' B))
+  (∀ B:(set β), (measurable_set B) → measurable_set (f ⁻¹' B))
   ↔ (measurable f) :=
 begin
   unfold measurable,
@@ -141,7 +140,7 @@ end
 
 lemma measurable_intro {α β:Type*}
   [measurable_space α] [measurable_space β] (f:α → β):
-  (∀ B:(set β), is_measurable B → is_measurable (f ⁻¹' B))
+  (∀ B:(set β), measurable_set B → measurable_set (f ⁻¹' B))
   → (measurable f) :=
 begin
   apply (measurable_def _).mp,
@@ -149,9 +148,9 @@ end
 
 lemma measurable_elim {α β:Type*}
   [measurable_space α] [measurable_space β] (f:α → β) (B:set β):
-  (measurable f)→ (is_measurable B) → (is_measurable (f ⁻¹' B)) :=
+  (measurable f)→ (measurable_set B) → (measurable_set (f ⁻¹' B)) :=
 begin
-  intros,
+  intros a a_1,
   apply (measurable_def _).mpr,
   apply a,
   apply a_1,
@@ -167,10 +166,10 @@ end
 
 
 lemma comap_elim {α β:Type*} [M2:measurable_space β] (f:α → β) (B:set β):
-  (is_measurable B) →
-  (M2.comap f).is_measurable'  (set.preimage f B) :=
+  (measurable_set B) →
+  (M2.comap f).measurable_set'  (set.preimage f B) :=
 begin
-  intros,
+  intros a,
   unfold measurable_space.comap,
   simp,
   apply exists.intro B,
@@ -183,10 +182,10 @@ end
 lemma measurable_comap {α β:Type*} [M1:measurable_space α] [M2:measurable_space β] (f:α → β):
   (M2.comap f) ≤ M1 → measurable f :=
 begin
-  intros,
+  intros a,
   apply measurable_intro,
-  intros,
-  have A1:(M2.comap f).is_measurable'  (set.preimage f B),
+  intros B a_1,
+  have A1:(M2.comap f).measurable_set'  (set.preimage f B),
   {
     apply comap_elim,
     apply a_1,
@@ -310,9 +309,9 @@ begin
   },
   rw ← A8 at A7,
   rw A7,
-  apply is_measurable.inter,
+  apply measurable_set.inter,
   {
-    apply measurable_space.is_measurable_generate_from,
+    apply measurable_space.measurable_set_generate_from,
     apply set.mem_union_left,
     simp,
     apply exists.intro A,
@@ -321,7 +320,7 @@ begin
     refl,
   },
   { 
-    apply measurable_space.is_measurable_generate_from,
+    apply measurable_space.measurable_set_generate_from,
     apply set.mem_union_right,
     simp,
     apply exists.intro B,
@@ -374,8 +373,8 @@ begin
          },
        },
        rw A7,
-       --apply measurable_space.is_measurable_generate_from,
-       apply is_measurable.sUnion,
+       --apply measurable_space.measurable_set_generate_from,
+       apply measurable_set.sUnion,
        apply set.countable.image,
        apply A2,
        intro U,
@@ -384,7 +383,7 @@ begin
        cases A8 with B A8,
        cases A8 with A8 A9,
        subst U,
-       apply measurable_space.is_measurable_generate_from,
+       apply measurable_space.measurable_set_generate_from,
        simp,
        apply exists.intro A,
        split,
@@ -416,8 +415,8 @@ begin
          },
        },
        rw A7,
-       --apply measurable_space.is_measurable_generate_from,
-       apply is_measurable.sUnion,
+       --apply measurable_space.measurable_set_generate_from,
+       apply measurable_set.sUnion,
        apply set.countable.image,
        apply A1,
        intro U,
@@ -426,7 +425,7 @@ begin
        cases A8 with A A8,
        cases A8 with A8 A9,
        subst U,
-       apply measurable_space.is_measurable_generate_from,
+       apply measurable_space.measurable_set_generate_from,
        simp,
        apply exists.intro A,
        split,
@@ -449,9 +448,9 @@ lemma preimage_compl {α β:Type*} (f:α → β) (S:set β):
   (f ⁻¹' Sᶜ) = ((f ⁻¹' S)ᶜ) :=
 begin
   ext,
-  split;intros,
+  split;intros a,
   {
-    intro,
+    intro a_1,
     unfold set.preimage at a,
     simp at a,
     apply a,
@@ -460,7 +459,7 @@ begin
   {
     unfold set.preimage,
     simp,
-    intro,
+    intro a_1,
     apply a,
     apply a_1,
   }
@@ -471,7 +470,7 @@ lemma preimage_Union {α β:Type*} (f:α → β) (g:ℕ → set β):
    (f ⁻¹' ⋃ (i : ℕ), g i)=(⋃ (i : ℕ), f ⁻¹' (g i)) :=
 begin
   ext,
-  split;intros,
+  split;intros a,
   {
     cases a with B a,
     cases a with H a,
@@ -513,13 +512,13 @@ end
 lemma generate_from_measurable {α β:Type*} [M:measurable_space α] [M2:measurable_space β]
    (X:set (set β)) (f:α → β):
    (measurable_space.generate_from X = M2)→
-   (∀ B∈ X, is_measurable (set.preimage f B))→
+   (∀ B∈ X, measurable_set (set.preimage f B))→
    (measurable f) :=
 begin
-  intros,
+  intros a a_1,
   apply measurable_intro,
-  intros,
-  have A1:@is_measurable β (measurable_space.generate_from X) B,
+  intros B a_2,
+  have A1:@measurable_set β (measurable_space.generate_from X) B,
   {
     rw a,
     apply a_2,
@@ -537,22 +536,22 @@ begin
   {
     simp,
   },
-  { -- ⊢ is_measurable (f ⁻¹' -A2_s)
+  { -- ⊢ measurable_set (f ⁻¹' -A2_s)
     rw preimage_compl,
-    apply measurable_space.is_measurable_compl,
+    apply measurable_space.measurable_set_compl,
     apply A2_ih,
     {
-      apply (is_measurable.compl_iff).mp,
+      apply (measurable_set.compl_iff).mp,
       apply A1,
     },
   },
   {
     rw preimage_Union,
-    apply measurable_space.is_measurable_Union,
-    intros,
+    apply measurable_space.measurable_set_Union,
+    intros i,
     apply A2_ih,
     {
-      apply A2_a,
+      apply A2_ᾰ,
     }
   }
 end
@@ -560,10 +559,10 @@ end
 
 lemma generate_from_self {α:Type*}
   (M:measurable_space α):
-  M = measurable_space.generate_from {s : set α|measurable_space.is_measurable' M s} :=
+  M = measurable_space.generate_from {s : set α|measurable_space.measurable_set' M s} :=
 begin
   ext,
-  split;intros,
+  split;intros a,
   {
     apply measurable_space.generate_measurable.basic,
     apply a,
@@ -574,14 +573,14 @@ begin
       apply a_H,
     },
     {
-      apply measurable_space.is_measurable_empty,
+      apply measurable_space.measurable_set_empty,
     },
     {
-      apply measurable_space.is_measurable_compl,
+      apply measurable_space.measurable_set_compl,
       apply a_ih,
     },
     {
-      apply measurable_space.is_measurable_Union,
+      apply measurable_space.measurable_set_Union,
       apply a_ih,
     },
   }
@@ -591,7 +590,7 @@ end
 lemma measurable_fun_comap_def {α β:Type*}
   [M2:measurable_space β]  (f:α → β):
   measurable_space.comap f M2 = measurable_space.generate_from
-  {s : set α|∃ (s' : set β), measurable_space.is_measurable' M2 s' ∧ f ⁻¹' s' = s} :=
+  {s : set α|∃ (s' : set β), measurable_space.measurable_set' M2 s' ∧ f ⁻¹' s' = s} :=
 begin
   unfold measurable_space.comap,
   apply generate_from_self,
@@ -611,8 +610,8 @@ begin
   have A1:@measurable _ _ _ (@prod.measurable_space β γ M2 M3) (λ a:α, prod.mk (X a) (Y a)),
   {
     have A1A:(@prod.measurable_space β  γ  M2 M3)=measurable_space.generate_from (
-      {s : set (β × γ) | ∃ (s' : set β), measurable_space.is_measurable' M2 s' ∧ prod.fst ⁻¹' s' = s} ∪
-      {s : set (β  × γ) | ∃ (s' : set γ), measurable_space.is_measurable' M3 s' ∧ prod.snd ⁻¹' s' = s}),
+      {s : set (β × γ) | ∃ (s' : set β), measurable_space.measurable_set' M2 s' ∧ prod.fst ⁻¹' s' = s} ∪
+      {s : set (β  × γ) | ∃ (s' : set γ), measurable_space.measurable_set' M3 s' ∧ prod.snd ⁻¹' s' = s}),
     {
       rw measurable_fun_product_measurableh,
       rw measurable_fun_comap_def,
@@ -626,7 +625,7 @@ begin
     },
     {
       intro BC,
-      intros,
+      intros H,
       cases H,
       {
         cases H with B H,
@@ -634,7 +633,7 @@ begin
         subst BC,
         have A1B:(λ (a : α), (X a, Y a)) ⁻¹' (prod.fst ⁻¹' B) = (X ⁻¹' B),
         {
-          ext,split;intros,
+          ext,split;intros a,
           {
             simp at a,
             apply a,
@@ -654,7 +653,7 @@ begin
         subst BC,
         have A1C:(λ (a : α), (X a, Y a)) ⁻¹' (prod.snd ⁻¹' C) = (Y ⁻¹' C),
         {
-          ext,split;intros,
+          ext,split;intros a,
           {
             simp at a,
             apply a,
@@ -682,7 +681,7 @@ lemma compose_measurable_fun_measurable {α β γ:Type*}
 begin
   intros B1 B2,
   apply measurable_intro,
-  intros,
+  intros B a,
   have A1:(X ∘ Y ⁻¹' B)=(Y ⁻¹' (X ⁻¹' B)),
   {
     refl,
@@ -694,19 +693,19 @@ begin
 end
 
 -- Constant functions are measurable.
--- Different than is_measurable.const
+-- Different than measurable_set.const
 lemma const_measurable {Ω:Type*} [measurable_space Ω] {β:Type*} [measurable_space β] (c:β):
   (measurable (λ ω:Ω, c)) :=
 begin
   apply measurable_const,
 end
 
-lemma is_measurable_of_le_of_is_measurable
+lemma measurable_set_of_le_of_measurable_set
 {α : Type*} {M1 : measurable_space α} {M2 : measurable_space α} 
   {X:set α}:
   M1 ≤ M2 →
-measurable_space.is_measurable' M1 X →
-   measurable_space.is_measurable' M2 X :=
+measurable_space.measurable_set' M1 X →
+   measurable_space.measurable_set' M2 X :=
 begin
   intros A2 A1,
   rw ← measurable_space_le_def2 at A2,
@@ -714,20 +713,20 @@ begin
   apply A1,
 end
 
--- cf. is_measurable_prod
-lemma is_measurable_prod' {β : Type*} {γ : Type*}
+-- cf. measurable_set_prod
+lemma measurable_set_prod' {β : Type*} {γ : Type*}
   {Mβ : measurable_space β} {Mγ : measurable_space γ} 
-  {X:set β} {Y:set γ}:is_measurable X →
-   is_measurable Y →
-   is_measurable (set.prod X Y) :=
+  {X:set β} {Y:set γ}:measurable_set X →
+   measurable_set Y →
+   measurable_set (set.prod X Y) :=
 begin
-  --apply is_measurable_of_le_of_is_measurable,
+  --apply measurable_set_of_le_of_measurable_set,
   intros A1 A2,
   rw generate_from_self Mβ,
   rw generate_from_self Mγ,
-  apply is_measurable_of_le_of_is_measurable,
+  apply measurable_set_of_le_of_measurable_set,
   apply prod_measurable_space_le,
-  apply measurable_space.is_measurable_generate_from,
+  apply measurable_space.measurable_set_generate_from,
   simp,
   apply exists.intro X,
   split,
@@ -739,7 +738,7 @@ begin
 end
 
 lemma measurable.preimage {α β:Type*} [measurable_space α] [measurable_space β] {f:α → β}
-   {S:set β}:measurable f → is_measurable S → is_measurable (set.preimage f S) :=
+   {S:set β}:measurable f → measurable_set S → measurable_set (set.preimage f S) :=
 begin
   intros A1 A2,
   apply A1,
@@ -749,7 +748,7 @@ end
 lemma measurable.if {α β:Type*}
   {Mα:measurable_space α} {Mβ:measurable_space β}
   {E:set α} {D:decidable_pred E}
-  {X Y:α → β}:is_measurable E →
+  {X Y:α → β}:measurable_set E →
   measurable X →
   measurable Y →
   measurable (λ a:α, if (E a) then (X a) else (Y a)) :=
@@ -757,18 +756,74 @@ begin
   intros A1 A2 A3,
   intros S B1,
   rw preimage_if,
-  apply is_measurable.union,
+  apply measurable_set.union,
   {
-    apply is_measurable.inter,
+    apply measurable_set.inter,
     apply A1,
     apply A2,
     apply B1,
   }, 
   {
-    apply is_measurable.inter,
-    apply is_measurable.compl,
+    apply measurable_set.inter,
+    apply measurable_set.compl,
     apply A1,
     apply A3,
     apply B1,
   },
 end 
+
+
+lemma measurable_set.pi' {α:Type*} [F:fintype α] {β:α → Type*} [M:∀ a, measurable_space (β a)]
+  {P:Π a, set (β a)} (T:set α):(∀ a, measurable_set (P a)) →
+  measurable_set (set.pi T P) := begin
+  classical,
+  intros A0,
+  have A1:(set.pi T P) = ⋂ (a ∈ T), ((λ (p:Π a, β a), p a) ⁻¹' (P a)),
+  { ext x, simp,  },
+  rw A1,
+  have A3:trunc (encodable α) := encodable.trunc_encodable_of_fintype α,
+  trunc_cases A3,
+  haveI:encodable α := A3,
+  apply measurable_set.Inter,
+  intros a',
+  cases classical.em (a' ∈ T) with A4 A4,
+  { have A5:(⋂ (H : a' ∈ T), (λ (p : Π (a : α), β a), p a') ⁻¹' P a') =
+            (λ (p : Π (a : α), β a), p a') ⁻¹' P a',
+    { ext, simp; split; intros A5_1,
+      apply A5_1 A4,
+      intros A5_2, apply A5_1 },
+      rw A5,
+    have A2:measurable_space.comap (λ (p:Π a, β a), p a') (M a') ≤ measurable_space.pi,
+    { simp [measurable_space.pi], apply @le_supr (measurable_space (Π a, β a)) _ _ _ (a') },
+    apply A2,
+    simp [measurable_space.comap],
+    apply exists.intro (P a'),
+    simp,
+    apply A0 a' },
+  { have A6:(⋂ (H : a' ∈ T), (λ (p : Π (a : α), β a), p a') ⁻¹' P a') = set.univ,
+    { ext, simp; intros A6_1,
+      apply absurd A4,
+      simp,apply A6_1 },
+    rw A6,
+    simp, },
+end
+
+
+--Unused.
+lemma measurable_space.generate_measurable_monotone {α:Type*} {s t:set (set α)}:
+  (s ⊆ t) → 
+  (∀ u, (measurable_space.generate_measurable s u → 
+          measurable_space.generate_measurable t u)) :=
+begin
+  intros h1 u h2,
+  induction h2 with u' h_u' u' h_u' h_ind f h_f h_ind,
+  { apply measurable_space.generate_measurable.basic,
+    apply h1,
+    apply h_u' },
+  { apply measurable_space.generate_measurable.empty },
+  { apply measurable_space.generate_measurable.compl,
+    apply h_ind },
+  { apply measurable_space.generate_measurable.union,
+    apply h_ind },
+end
+
