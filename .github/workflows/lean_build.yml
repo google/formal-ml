@@ -1,0 +1,15 @@
+on:
+  push:
+
+jobs:
+  build_project:
+    runs-on: ubuntu-latest
+    name: Build Lean project
+    steps:
+      - name: checkout project
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: build project
+        uses: leanprover-contrib/lean-build-action@master
